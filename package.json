@@ -1,7 +1,7 @@
 {
   "name": "themeparks",
   "version": "6.0.0",
-  "description": "A Node.js API client for the Themeparks API",
+  "description": "A JavaScript client for the ThemeParks.Wiki API",
   "license": "Unlicense",
   "main": "dist/index.js",
   "scripts": {

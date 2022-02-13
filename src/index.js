@@ -41,7 +41,7 @@ import EntitiesApi from './api/EntitiesApi';
 
 
 /**
-* A Node.js API client for the Themeparks API.<br>
+* A JavaScript client for the ThemeParks.Wiki API.<br>
 * The <code>index</code> module provides access to constructors for all the classes which comprise the public API.
 * <p>
 * An AMD (recommended!) or CommonJS application will generally do something equivalent to the following:
