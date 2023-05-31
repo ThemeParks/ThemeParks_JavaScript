@@ -80,6 +80,9 @@ class EntityLiveData {
             if (data.hasOwnProperty('showtimes')) {
                 obj['showtimes'] = ApiClient.convertToType(data['showtimes'], [LiveShowTime]);
             }
+            if (data.hasOwnProperty('operatingHours')) {
+                obj['operatingHours'] = ApiClient.convertToType(data['operatingHours'], [LiveShowTime]);
+            }
         }
         return obj;
     }
@@ -121,6 +124,11 @@ EntityLiveData.prototype['queue'] = undefined;
  * @member {Array.<module:model/LiveShowTime>} showtimes
  */
 EntityLiveData.prototype['showtimes'] = undefined;
+
+/**
+ * @member {Array.<module:model/LiveShowTime>} operatingHours
+ */
+EntityLiveData.prototype['operatingHours'] = undefined;
 
 
 

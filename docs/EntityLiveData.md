@@ -11,5 +11,6 @@ Name | Type | Description | Notes
 **lastUpdated** | **Date** |  | 
 **queue** | [**LiveQueue**](LiveQueue.md) |  | [optional] 
 **showtimes** | [**[LiveShowTime]**](LiveShowTime.md) |  | [optional] 
+**operatingHours** | [**[LiveShowTime]**](LiveShowTime.md) |  | [optional] 
 
 
