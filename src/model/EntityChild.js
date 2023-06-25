@@ -17,7 +17,7 @@ import EntityType from './EntityType';
 /**
  * The EntityChild model module.
  * @module model/EntityChild
- * @version 6.0.0
+ * @version 6.0.1
  */
 class EntityChild {
     /**

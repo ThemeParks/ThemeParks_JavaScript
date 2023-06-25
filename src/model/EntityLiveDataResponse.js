@@ -18,7 +18,7 @@ import EntityType from './EntityType';
 /**
  * The EntityLiveDataResponse model module.
  * @module model/EntityLiveDataResponse
- * @version 6.0.0
+ * @version 6.0.1
  */
 class EntityLiveDataResponse {
     /**

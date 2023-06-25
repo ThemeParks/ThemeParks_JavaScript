@@ -16,7 +16,7 @@ import ApiClient from '../ApiClient';
 /**
  * The DestinationParkEntry model module.
  * @module model/DestinationParkEntry
- * @version 6.0.0
+ * @version 6.0.1
  */
 class DestinationParkEntry {
     /**

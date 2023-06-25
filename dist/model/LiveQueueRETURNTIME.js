@@ -27,7 +27,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The LiveQueueRETURNTIME model module.
  * @module model/LiveQueueRETURNTIME
- * @version 6.0.0
+ * @version 6.0.1
  */
 var LiveQueueRETURNTIME = /*#__PURE__*/function () {
   /**

@@ -5,11 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 var _ApiClient = _interopRequireDefault(require("../ApiClient"));
-var _DiningAvailability = _interopRequireDefault(require("./DiningAvailability"));
-var _EntityType = _interopRequireDefault(require("./EntityType"));
-var _LiveQueue = _interopRequireDefault(require("./LiveQueue"));
-var _LiveShowTime = _interopRequireDefault(require("./LiveShowTime"));
-var _LiveStatusType = _interopRequireDefault(require("./LiveStatusType"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -29,22 +24,18 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
                                                                                                                                                                                                                                                                                                                                                                                                *
                                                                                                                                                                                                                                                                                                                                                                                                */
 /**
- * The EntityLiveData model module.
- * @module model/EntityLiveData
+ * The DiningAvailability model module.
+ * @module model/DiningAvailability
  * @version 6.0.1
  */
-var EntityLiveData = /*#__PURE__*/function () {
+var DiningAvailability = /*#__PURE__*/function () {
   /**
-   * Constructs a new <code>EntityLiveData</code>.
-   * @alias module:model/EntityLiveData
-   * @param id {String} 
-   * @param name {String} 
-   * @param entityType {module:model/EntityType} 
-   * @param lastUpdated {Date} 
+   * Constructs a new <code>DiningAvailability</code>.
+   * @alias module:model/DiningAvailability
    */
-  function EntityLiveData(id, name, entityType, lastUpdated) {
-    _classCallCheck(this, EntityLiveData);
-    EntityLiveData.initialize(this, id, name, entityType, lastUpdated);
+  function DiningAvailability() {
+    _classCallCheck(this, DiningAvailability);
+    DiningAvailability.initialize(this);
   }
 
   /**
@@ -52,103 +43,42 @@ var EntityLiveData = /*#__PURE__*/function () {
    * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
    * Only for internal use.
    */
-  _createClass(EntityLiveData, null, [{
+  _createClass(DiningAvailability, null, [{
     key: "initialize",
-    value: function initialize(obj, id, name, entityType, lastUpdated) {
-      obj['id'] = id;
-      obj['name'] = name;
-      obj['entityType'] = entityType;
-      obj['lastUpdated'] = lastUpdated;
-    }
+    value: function initialize(obj) {}
 
     /**
-     * Constructs a <code>EntityLiveData</code> from a plain JavaScript object, optionally creating a new instance.
+     * Constructs a <code>DiningAvailability</code> from a plain JavaScript object, optionally creating a new instance.
      * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
      * @param {Object} data The plain JavaScript object bearing properties of interest.
-     * @param {module:model/EntityLiveData} obj Optional instance to populate.
-     * @return {module:model/EntityLiveData} The populated <code>EntityLiveData</code> instance.
+     * @param {module:model/DiningAvailability} obj Optional instance to populate.
+     * @return {module:model/DiningAvailability} The populated <code>DiningAvailability</code> instance.
      */
   }, {
     key: "constructFromObject",
     value: function constructFromObject(data, obj) {
       if (data) {
-        obj = obj || new EntityLiveData();
-        if (data.hasOwnProperty('id')) {
-          obj['id'] = _ApiClient["default"].convertToType(data['id'], 'String');
+        obj = obj || new DiningAvailability();
+        if (data.hasOwnProperty('partySize')) {
+          obj['partySize'] = _ApiClient["default"].convertToType(data['partySize'], 'Number');
         }
-        if (data.hasOwnProperty('name')) {
-          obj['name'] = _ApiClient["default"].convertToType(data['name'], 'String');
-        }
-        if (data.hasOwnProperty('entityType')) {
-          obj['entityType'] = _EntityType["default"].constructFromObject(data['entityType']);
-        }
-        if (data.hasOwnProperty('status')) {
-          obj['status'] = _LiveStatusType["default"].constructFromObject(data['status']);
-        }
-        if (data.hasOwnProperty('lastUpdated')) {
-          obj['lastUpdated'] = _ApiClient["default"].convertToType(data['lastUpdated'], 'Date');
-        }
-        if (data.hasOwnProperty('queue')) {
-          obj['queue'] = _LiveQueue["default"].constructFromObject(data['queue']);
-        }
-        if (data.hasOwnProperty('showtimes')) {
-          obj['showtimes'] = _ApiClient["default"].convertToType(data['showtimes'], [_LiveShowTime["default"]]);
-        }
-        if (data.hasOwnProperty('operatingHours')) {
-          obj['operatingHours'] = _ApiClient["default"].convertToType(data['operatingHours'], [_LiveShowTime["default"]]);
-        }
-        if (data.hasOwnProperty('diningAvailability')) {
-          obj['diningAvailability'] = _ApiClient["default"].convertToType(data['diningAvailability'], [_DiningAvailability["default"]]);
+        if (data.hasOwnProperty('waitTime')) {
+          obj['waitTime'] = _ApiClient["default"].convertToType(data['waitTime'], 'Number');
         }
       }
       return obj;
     }
   }]);
-  return EntityLiveData;
+  return DiningAvailability;
 }();
 /**
- * @member {String} id
+ * @member {Number} partySize
  */
-EntityLiveData.prototype['id'] = undefined;
+DiningAvailability.prototype['partySize'] = undefined;
 
 /**
- * @member {String} name
+ * @member {Number} waitTime
  */
-EntityLiveData.prototype['name'] = undefined;
-
-/**
- * @member {module:model/EntityType} entityType
- */
-EntityLiveData.prototype['entityType'] = undefined;
-
-/**
- * @member {module:model/LiveStatusType} status
- */
-EntityLiveData.prototype['status'] = undefined;
-
-/**
- * @member {Date} lastUpdated
- */
-EntityLiveData.prototype['lastUpdated'] = undefined;
-
-/**
- * @member {module:model/LiveQueue} queue
- */
-EntityLiveData.prototype['queue'] = undefined;
-
-/**
- * @member {Array.<module:model/LiveShowTime>} showtimes
- */
-EntityLiveData.prototype['showtimes'] = undefined;
-
-/**
- * @member {Array.<module:model/LiveShowTime>} operatingHours
- */
-EntityLiveData.prototype['operatingHours'] = undefined;
-
-/**
- * @member {Array.<module:model/DiningAvailability>} diningAvailability
- */
-EntityLiveData.prototype['diningAvailability'] = undefined;
-var _default = EntityLiveData;
+DiningAvailability.prototype['waitTime'] = undefined;
+var _default = DiningAvailability;
 exports["default"] = _default;

@@ -26,7 +26,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The PriceData model module.
  * @module model/PriceData
- * @version 6.0.0
+ * @version 6.0.1
  */
 var PriceData = /*#__PURE__*/function () {
   /**

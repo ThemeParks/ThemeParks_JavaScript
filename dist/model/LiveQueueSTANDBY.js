@@ -26,7 +26,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The LiveQueueSTANDBY model module.
  * @module model/LiveQueueSTANDBY
- * @version 6.0.0
+ * @version 6.0.1
  */
 var LiveQueueSTANDBY = /*#__PURE__*/function () {
   /**

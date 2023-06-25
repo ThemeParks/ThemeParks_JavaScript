@@ -16,7 +16,7 @@ import ApiClient from '../ApiClient';
 /**
  * The TagData model module.
  * @module model/TagData
- * @version 6.0.0
+ * @version 6.0.1
  */
 class TagData {
     /**

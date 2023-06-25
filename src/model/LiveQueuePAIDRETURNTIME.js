@@ -18,7 +18,7 @@ import ReturnTimeState from './ReturnTimeState';
 /**
  * The LiveQueuePAIDRETURNTIME model module.
  * @module model/LiveQueuePAIDRETURNTIME
- * @version 6.0.0
+ * @version 6.0.1
  */
 class LiveQueuePAIDRETURNTIME {
     /**

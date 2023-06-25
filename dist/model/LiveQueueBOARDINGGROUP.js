@@ -27,7 +27,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The LiveQueueBOARDINGGROUP model module.
  * @module model/LiveQueueBOARDINGGROUP
- * @version 6.0.0
+ * @version 6.0.1
  */
 var LiveQueueBOARDINGGROUP = /*#__PURE__*/function () {
   /**

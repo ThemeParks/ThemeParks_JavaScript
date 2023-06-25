@@ -29,7 +29,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The EntityData model module.
  * @module model/EntityData
- * @version 6.0.0
+ * @version 6.0.1
  */
 var EntityData = /*#__PURE__*/function () {
   /**

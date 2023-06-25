@@ -20,7 +20,7 @@ import LiveQueueSTANDBY from './LiveQueueSTANDBY';
 /**
  * The LiveQueue model module.
  * @module model/LiveQueue
- * @version 6.0.0
+ * @version 6.0.1
  */
 class LiveQueue {
     /**

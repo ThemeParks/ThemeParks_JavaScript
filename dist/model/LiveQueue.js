@@ -30,7 +30,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The LiveQueue model module.
  * @module model/LiveQueue
- * @version 6.0.0
+ * @version 6.0.1
  */
 var LiveQueue = /*#__PURE__*/function () {
   /**

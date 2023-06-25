@@ -27,7 +27,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The EntityChild model module.
  * @module model/EntityChild
- * @version 6.0.0
+ * @version 6.0.1
  */
 var EntityChild = /*#__PURE__*/function () {
   /**

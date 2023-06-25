@@ -26,7 +26,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The LiveShowTime model module.
  * @module model/LiveShowTime
- * @version 6.0.0
+ * @version 6.0.1
  */
 var LiveShowTime = /*#__PURE__*/function () {
   /**

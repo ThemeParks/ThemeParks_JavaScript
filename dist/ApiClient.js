@@ -26,7 +26,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
                                                                                                                                                                                                                                                                                                                                                                                                */
 /**
 * @module ApiClient
-* @version 6.0.0
+* @version 6.0.1
 */
 /**
 * Manages low level client-server communications, parameter marshalling, etc. There should not be any need for an
@@ -63,7 +63,7 @@ var ApiClient = /*#__PURE__*/function () {
      * @default {}
      */
     this.defaultHeaders = {
-      'User-Agent': 'OpenAPI-Generator/6.0.0/Javascript'
+      'User-Agent': 'OpenAPI-Generator/6.0.1/Javascript'
     };
 
     /**

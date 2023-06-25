@@ -30,7 +30,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
 * Entities service.
 * @module api/EntitiesApi
-* @version 6.0.0
+* @version 6.0.1
 */
 var EntitiesApi = /*#__PURE__*/function () {
   /**

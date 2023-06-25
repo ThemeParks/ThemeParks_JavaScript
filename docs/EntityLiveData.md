@@ -12,5 +12,6 @@ Name | Type | Description | Notes
 **queue** | [**LiveQueue**](LiveQueue.md) |  | [optional] 
 **showtimes** | [**[LiveShowTime]**](LiveShowTime.md) |  | [optional] 
 **operatingHours** | [**[LiveShowTime]**](LiveShowTime.md) |  | [optional] 
+**diningAvailability** | [**[DiningAvailability]**](DiningAvailability.md) |  | [optional] 
 
 

@@ -17,7 +17,7 @@ import DestinationParkEntry from './DestinationParkEntry';
 /**
  * The DestinationEntry model module.
  * @module model/DestinationEntry
- * @version 6.0.0
+ * @version 6.0.1
  */
 class DestinationEntry {
     /**

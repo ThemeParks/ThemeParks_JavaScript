@@ -7,6 +7,7 @@ docs/DestinationEntry.md
 docs/DestinationParkEntry.md
 docs/DestinationsApi.md
 docs/DestinationsResponse.md
+docs/DiningAvailability.md
 docs/EntitiesApi.md
 docs/EntityChild.md
 docs/EntityChildrenResponse.md
@@ -38,6 +39,7 @@ src/model/BoardingGroupState.js
 src/model/DestinationEntry.js
 src/model/DestinationParkEntry.js
 src/model/DestinationsResponse.js
+src/model/DiningAvailability.js
 src/model/EntityChild.js
 src/model/EntityChildrenResponse.js
 src/model/EntityData.js
@@ -57,3 +59,4 @@ src/model/PriceData.js
 src/model/ReturnTimeState.js
 src/model/ScheduleEntry.js
 src/model/TagData.js
+test/model/DiningAvailability.spec.js

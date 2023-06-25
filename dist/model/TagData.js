@@ -26,7 +26,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The TagData model module.
  * @module model/TagData
- * @version 6.0.0
+ * @version 6.0.1
  */
 var TagData = /*#__PURE__*/function () {
   /**

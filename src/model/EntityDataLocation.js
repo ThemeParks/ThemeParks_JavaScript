@@ -16,7 +16,7 @@ import ApiClient from '../ApiClient';
 /**
  * The EntityDataLocation model module.
  * @module model/EntityDataLocation
- * @version 6.0.0
+ * @version 6.0.1
  */
 class EntityDataLocation {
     /**

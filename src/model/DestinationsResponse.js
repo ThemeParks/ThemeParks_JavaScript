@@ -17,7 +17,7 @@ import DestinationEntry from './DestinationEntry';
 /**
  * The DestinationsResponse model module.
  * @module model/DestinationsResponse
- * @version 6.0.0
+ * @version 6.0.1
  */
 class DestinationsResponse {
     /**

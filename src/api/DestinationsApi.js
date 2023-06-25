@@ -18,7 +18,7 @@ import DestinationsResponse from '../model/DestinationsResponse';
 /**
 * Destinations service.
 * @module api/DestinationsApi
-* @version 6.0.0
+* @version 6.0.1
 */
 export default class DestinationsApi {
 

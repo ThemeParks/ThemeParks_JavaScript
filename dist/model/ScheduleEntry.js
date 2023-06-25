@@ -26,7 +26,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The ScheduleEntry model module.
  * @module model/ScheduleEntry
- * @version 6.0.0
+ * @version 6.0.1
  */
 var ScheduleEntry = /*#__PURE__*/function () {
   /**

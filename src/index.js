@@ -17,6 +17,7 @@ import BoardingGroupState from './model/BoardingGroupState';
 import DestinationEntry from './model/DestinationEntry';
 import DestinationParkEntry from './model/DestinationParkEntry';
 import DestinationsResponse from './model/DestinationsResponse';
+import DiningAvailability from './model/DiningAvailability';
 import EntityChild from './model/EntityChild';
 import EntityChildrenResponse from './model/EntityChildrenResponse';
 import EntityData from './model/EntityData';
@@ -69,7 +70,7 @@ import EntitiesApi from './api/EntitiesApi';
 * </pre>
 * </p>
 * @module index
-* @version 6.0.0
+* @version 6.0.1
 */
 export {
     /**
@@ -101,6 +102,12 @@ export {
      * @property {module:model/DestinationsResponse}
      */
     DestinationsResponse,
+
+    /**
+     * The DiningAvailability model constructor.
+     * @property {module:model/DiningAvailability}
+     */
+    DiningAvailability,
 
     /**
      * The EntityChild model constructor.

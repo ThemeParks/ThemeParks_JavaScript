@@ -14,18 +14,18 @@
 import ApiClient from '../ApiClient';
 
 /**
- * The LiveQueueSTANDBY model module.
- * @module model/LiveQueueSTANDBY
+ * The DiningAvailability model module.
+ * @module model/DiningAvailability
  * @version 6.0.1
  */
-class LiveQueueSTANDBY {
+class DiningAvailability {
     /**
-     * Constructs a new <code>LiveQueueSTANDBY</code>.
-     * @alias module:model/LiveQueueSTANDBY
+     * Constructs a new <code>DiningAvailability</code>.
+     * @alias module:model/DiningAvailability
      */
     constructor() { 
         
-        LiveQueueSTANDBY.initialize(this);
+        DiningAvailability.initialize(this);
     }
 
     /**
@@ -37,16 +37,19 @@ class LiveQueueSTANDBY {
     }
 
     /**
-     * Constructs a <code>LiveQueueSTANDBY</code> from a plain JavaScript object, optionally creating a new instance.
+     * Constructs a <code>DiningAvailability</code> from a plain JavaScript object, optionally creating a new instance.
      * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
      * @param {Object} data The plain JavaScript object bearing properties of interest.
-     * @param {module:model/LiveQueueSTANDBY} obj Optional instance to populate.
-     * @return {module:model/LiveQueueSTANDBY} The populated <code>LiveQueueSTANDBY</code> instance.
+     * @param {module:model/DiningAvailability} obj Optional instance to populate.
+     * @return {module:model/DiningAvailability} The populated <code>DiningAvailability</code> instance.
      */
     static constructFromObject(data, obj) {
         if (data) {
-            obj = obj || new LiveQueueSTANDBY();
+            obj = obj || new DiningAvailability();
 
+            if (data.hasOwnProperty('partySize')) {
+                obj['partySize'] = ApiClient.convertToType(data['partySize'], 'Number');
+            }
             if (data.hasOwnProperty('waitTime')) {
                 obj['waitTime'] = ApiClient.convertToType(data['waitTime'], 'Number');
             }
@@ -58,14 +61,19 @@ class LiveQueueSTANDBY {
 }
 
 /**
+ * @member {Number} partySize
+ */
+DiningAvailability.prototype['partySize'] = undefined;
+
+/**
  * @member {Number} waitTime
  */
-LiveQueueSTANDBY.prototype['waitTime'] = undefined;
+DiningAvailability.prototype['waitTime'] = undefined;
 
 
 
 
 
 
-export default LiveQueueSTANDBY;
+export default DiningAvailability;
 

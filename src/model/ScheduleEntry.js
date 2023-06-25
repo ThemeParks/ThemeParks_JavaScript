@@ -16,7 +16,7 @@ import ApiClient from '../ApiClient';
 /**
  * The ScheduleEntry model module.
  * @module model/ScheduleEntry
- * @version 6.0.0
+ * @version 6.0.1
  */
 class ScheduleEntry {
     /**

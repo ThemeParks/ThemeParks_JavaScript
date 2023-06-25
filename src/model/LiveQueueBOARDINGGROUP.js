@@ -17,7 +17,7 @@ import BoardingGroupState from './BoardingGroupState';
 /**
  * The LiveQueueBOARDINGGROUP model module.
  * @module model/LiveQueueBOARDINGGROUP
- * @version 6.0.0
+ * @version 6.0.1
  */
 class LiveQueueBOARDINGGROUP {
     /**

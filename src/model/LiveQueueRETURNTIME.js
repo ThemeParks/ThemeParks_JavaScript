@@ -17,7 +17,7 @@ import ReturnTimeState from './ReturnTimeState';
 /**
  * The LiveQueueRETURNTIME model module.
  * @module model/LiveQueueRETURNTIME
- * @version 6.0.0
+ * @version 6.0.1
  */
 class LiveQueueRETURNTIME {
     /**

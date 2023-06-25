@@ -39,6 +39,12 @@ Object.defineProperty(exports, "DestinationsResponse", {
     return _DestinationsResponse["default"];
   }
 });
+Object.defineProperty(exports, "DiningAvailability", {
+  enumerable: true,
+  get: function get() {
+    return _DiningAvailability["default"];
+  }
+});
 Object.defineProperty(exports, "EntitiesApi", {
   enumerable: true,
   get: function get() {
@@ -164,6 +170,7 @@ var _BoardingGroupState = _interopRequireDefault(require("./model/BoardingGroupS
 var _DestinationEntry = _interopRequireDefault(require("./model/DestinationEntry"));
 var _DestinationParkEntry = _interopRequireDefault(require("./model/DestinationParkEntry"));
 var _DestinationsResponse = _interopRequireDefault(require("./model/DestinationsResponse"));
+var _DiningAvailability = _interopRequireDefault(require("./model/DiningAvailability"));
 var _EntityChild = _interopRequireDefault(require("./model/EntityChild"));
 var _EntityChildrenResponse = _interopRequireDefault(require("./model/EntityChildrenResponse"));
 var _EntityData = _interopRequireDefault(require("./model/EntityData"));

@@ -16,7 +16,7 @@ import ApiClient from '../ApiClient';
 /**
  * The LiveShowTime model module.
  * @module model/LiveShowTime
- * @version 6.0.0
+ * @version 6.0.1
  */
 class LiveShowTime {
     /**

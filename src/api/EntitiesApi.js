@@ -21,7 +21,7 @@ import EntityScheduleResponse from '../model/EntityScheduleResponse';
 /**
 * Entities service.
 * @module api/EntitiesApi
-* @version 6.0.0
+* @version 6.0.1
 */
 export default class EntitiesApi {
 

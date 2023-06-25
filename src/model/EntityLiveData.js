@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import DiningAvailability from './DiningAvailability';
 import EntityType from './EntityType';
 import LiveQueue from './LiveQueue';
 import LiveShowTime from './LiveShowTime';
@@ -20,7 +21,7 @@ import LiveStatusType from './LiveStatusType';
 /**
  * The EntityLiveData model module.
  * @module model/EntityLiveData
- * @version 6.0.0
+ * @version 6.0.1
  */
 class EntityLiveData {
     /**
@@ -83,6 +84,9 @@ class EntityLiveData {
             if (data.hasOwnProperty('operatingHours')) {
                 obj['operatingHours'] = ApiClient.convertToType(data['operatingHours'], [LiveShowTime]);
             }
+            if (data.hasOwnProperty('diningAvailability')) {
+                obj['diningAvailability'] = ApiClient.convertToType(data['diningAvailability'], [DiningAvailability]);
+            }
         }
         return obj;
     }
@@ -129,6 +133,11 @@ EntityLiveData.prototype['showtimes'] = undefined;
  * @member {Array.<module:model/LiveShowTime>} operatingHours
  */
 EntityLiveData.prototype['operatingHours'] = undefined;
+
+/**
+ * @member {Array.<module:model/DiningAvailability>} diningAvailability
+ */
+EntityLiveData.prototype['diningAvailability'] = undefined;
 
 
 

@@ -27,7 +27,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The DestinationEntry model module.
  * @module model/DestinationEntry
- * @version 6.0.0
+ * @version 6.0.1
  */
 var DestinationEntry = /*#__PURE__*/function () {
   /**

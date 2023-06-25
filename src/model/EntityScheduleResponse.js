@@ -18,7 +18,7 @@ import ScheduleEntry from './ScheduleEntry';
 /**
  * The EntityScheduleResponse model module.
  * @module model/EntityScheduleResponse
- * @version 6.0.0
+ * @version 6.0.1
  */
 class EntityScheduleResponse {
     /**

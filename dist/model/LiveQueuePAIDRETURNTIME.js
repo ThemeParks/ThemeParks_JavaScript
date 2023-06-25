@@ -28,7 +28,7 @@ function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input ==
 /**
  * The LiveQueuePAIDRETURNTIME model module.
  * @module model/LiveQueuePAIDRETURNTIME
- * @version 6.0.0
+ * @version 6.0.1
  */
 var LiveQueuePAIDRETURNTIME = /*#__PURE__*/function () {
   /**
