@@ -271,7 +271,7 @@ v7 is a full TypeScript rewrite. It replaces the v6 OpenAPI-Generator surface wi
 
 - **SDK documentation:** https://themeparks.github.io/ThemeParks_JavaScript/
 - **API reference:** https://themeparks.github.io/ThemeParks_JavaScript/modules.html
-- **Cookbook:** https://themeparks.github.io/ThemeParks_JavaScript/cookbook/
+- **Cookbook:** https://themeparks.github.io/ThemeParks_JavaScript/documents/cookbook.html
 - **Underlying API:** https://api.themeparks.wiki
 - **Issues:** https://github.com/ThemeParks/ThemeParks_JavaScript/issues
 - **Changelog:** [CHANGELOG.md](./CHANGELOG.md)

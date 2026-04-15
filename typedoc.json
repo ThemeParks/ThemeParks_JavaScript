@@ -5,6 +5,7 @@
   "exclude": ["**/node_modules/**", "src/_generated/**", "test/**", "scripts/**"],
   "name": "themeparks",
   "readme": "README.md",
+  "projectDocuments": ["docs/cookbook.md"],
   "includeVersion": true,
   "excludeInternal": true,
   "categorizeByGroup": true,
