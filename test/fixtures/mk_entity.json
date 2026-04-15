@@ -1,0 +1,15 @@
+{
+  "id": "75ea578a-adc8-4116-a54d-dccb60765ef9",
+  "name": "Magic Kingdom Park",
+  "slug": "magickingdompark",
+  "location": {
+    "latitude": 28.4160036778,
+    "longitude": -81.5811902834,
+    "pointsOfInterest": []
+  },
+  "parentId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "timezone": "America/New_York",
+  "entityType": "PARK",
+  "destinationId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "externalId": "80007944;entityType=theme-park"
+}

@@ -1,0 +1,1566 @@
+{
+  "id": "75ea578a-adc8-4116-a54d-dccb60765ef9",
+  "name": "Magic Kingdom Park",
+  "entityType": "PARK",
+  "timezone": "America/New_York",
+  "schedule": [
+    {
+      "date": "2026-04-15",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-15T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-15T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-15",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3700,
+            "currency": "USD",
+            "formatted": "$37.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": false
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2100,
+            "currency": "USD",
+            "formatted": "$21.00"
+          },
+          "available": false
+        }
+      ],
+      "closingTime": "2026-04-15T22:00:00-04:00",
+      "openingTime": "2026-04-15T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-15",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-16T00:00:00-04:00",
+      "description": "Extended Evening",
+      "openingTime": "2026-04-15T22:00:00-04:00"
+    },
+    {
+      "date": "2026-04-16",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-16T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-16T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-16",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3700,
+            "currency": "USD",
+            "formatted": "$37.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": false
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2100,
+            "currency": "USD",
+            "formatted": "$21.00"
+          },
+          "available": false
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 42900,
+            "currency": "USD",
+            "formatted": "$429.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-16T22:00:00-04:00",
+      "openingTime": "2026-04-16T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-17",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-17T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-17T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-17",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3700,
+            "currency": "USD",
+            "formatted": "$37.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": false
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2200,
+            "currency": "USD",
+            "formatted": "$22.00"
+          },
+          "available": false
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 42900,
+            "currency": "USD",
+            "formatted": "$429.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-17T23:00:00-04:00",
+      "openingTime": "2026-04-17T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-18",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-18T08:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-18T07:30:00-04:00"
+    },
+    {
+      "date": "2026-04-18",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3900,
+            "currency": "USD",
+            "formatted": "$39.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1400,
+            "currency": "USD",
+            "formatted": "$14.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2200,
+            "currency": "USD",
+            "formatted": "$22.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 44900,
+            "currency": "USD",
+            "formatted": "$449.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-18T23:00:00-04:00",
+      "openingTime": "2026-04-18T08:00:00-04:00"
+    },
+    {
+      "date": "2026-04-19",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-19T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-19T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-19",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3500,
+            "currency": "USD",
+            "formatted": "$35.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2100,
+            "currency": "USD",
+            "formatted": "$21.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 42900,
+            "currency": "USD",
+            "formatted": "$429.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-19T22:00:00-04:00",
+      "openingTime": "2026-04-19T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-20",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-20T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-20T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-20",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3700,
+            "currency": "USD",
+            "formatted": "$37.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2200,
+            "currency": "USD",
+            "formatted": "$22.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 42900,
+            "currency": "USD",
+            "formatted": "$429.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-20T22:00:00-04:00",
+      "openingTime": "2026-04-20T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-20",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-21T01:00:00-04:00",
+      "description": "Special Ticketed Event",
+      "openingTime": "2026-04-20T22:00:00-04:00"
+    },
+    {
+      "date": "2026-04-21",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-21T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-21T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-21",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3700,
+            "currency": "USD",
+            "formatted": "$37.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2100,
+            "currency": "USD",
+            "formatted": "$21.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 42900,
+            "currency": "USD",
+            "formatted": "$429.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-21T22:00:00-04:00",
+      "openingTime": "2026-04-21T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-22",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-22T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-22T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-22",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3700,
+            "currency": "USD",
+            "formatted": "$37.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2200,
+            "currency": "USD",
+            "formatted": "$22.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 42900,
+            "currency": "USD",
+            "formatted": "$429.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-22T22:00:00-04:00",
+      "openingTime": "2026-04-22T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-22",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-23T00:00:00-04:00",
+      "description": "Extended Evening",
+      "openingTime": "2026-04-22T22:00:00-04:00"
+    },
+    {
+      "date": "2026-04-23",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-23T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-23T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-23",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3700,
+            "currency": "USD",
+            "formatted": "$37.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2100,
+            "currency": "USD",
+            "formatted": "$21.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 42900,
+            "currency": "USD",
+            "formatted": "$429.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-23T23:00:00-04:00",
+      "openingTime": "2026-04-23T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-24",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-24T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-24T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-24",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3700,
+            "currency": "USD",
+            "formatted": "$37.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1400,
+            "currency": "USD",
+            "formatted": "$14.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2200,
+            "currency": "USD",
+            "formatted": "$22.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 44900,
+            "currency": "USD",
+            "formatted": "$449.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-24T23:00:00-04:00",
+      "openingTime": "2026-04-24T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-25",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-25T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-25T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-25",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3700,
+            "currency": "USD",
+            "formatted": "$37.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1400,
+            "currency": "USD",
+            "formatted": "$14.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2200,
+            "currency": "USD",
+            "formatted": "$22.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 42900,
+            "currency": "USD",
+            "formatted": "$429.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-25T23:00:00-04:00",
+      "openingTime": "2026-04-25T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-26",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-26T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-26T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-26",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3500,
+            "currency": "USD",
+            "formatted": "$35.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1500,
+            "currency": "USD",
+            "formatted": "$15.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2100,
+            "currency": "USD",
+            "formatted": "$21.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 41900,
+            "currency": "USD",
+            "formatted": "$419.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-26T22:00:00-04:00",
+      "openingTime": "2026-04-26T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-27",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-27T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-27T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-27",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3200,
+            "currency": "USD",
+            "formatted": "$32.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2100,
+            "currency": "USD",
+            "formatted": "$21.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 41900,
+            "currency": "USD",
+            "formatted": "$419.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-27T22:00:00-04:00",
+      "openingTime": "2026-04-27T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-28",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-28T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-28T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-28",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3500,
+            "currency": "USD",
+            "formatted": "$35.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1400,
+            "currency": "USD",
+            "formatted": "$14.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 39900,
+            "currency": "USD",
+            "formatted": "$399.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-28T22:00:00-04:00",
+      "openingTime": "2026-04-28T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-29",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-29T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-29T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-29",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3500,
+            "currency": "USD",
+            "formatted": "$35.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1400,
+            "currency": "USD",
+            "formatted": "$14.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 39900,
+            "currency": "USD",
+            "formatted": "$399.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-29T22:00:00-04:00",
+      "openingTime": "2026-04-29T09:00:00-04:00"
+    },
+    {
+      "date": "2026-04-29",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-30T00:00:00-04:00",
+      "description": "Extended Evening",
+      "openingTime": "2026-04-29T22:00:00-04:00"
+    },
+    {
+      "date": "2026-04-30",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-04-30T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-04-30T08:30:00-04:00"
+    },
+    {
+      "date": "2026-04-30",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3500,
+            "currency": "USD",
+            "formatted": "$35.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1400,
+            "currency": "USD",
+            "formatted": "$14.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 41900,
+            "currency": "USD",
+            "formatted": "$419.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-04-30T22:00:00-04:00",
+      "openingTime": "2026-04-30T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-01",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-01T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-01T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-01",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3500,
+            "currency": "USD",
+            "formatted": "$35.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 39900,
+            "currency": "USD",
+            "formatted": "$399.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-05-01T23:00:00-04:00",
+      "openingTime": "2026-05-01T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-02",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-02T08:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-02T07:30:00-04:00"
+    },
+    {
+      "date": "2026-05-02",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3200,
+            "currency": "USD",
+            "formatted": "$32.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1500,
+            "currency": "USD",
+            "formatted": "$15.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2100,
+            "currency": "USD",
+            "formatted": "$21.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 41900,
+            "currency": "USD",
+            "formatted": "$419.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-05-02T23:00:00-04:00",
+      "openingTime": "2026-05-02T08:00:00-04:00"
+    },
+    {
+      "date": "2026-05-03",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-03T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-03T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-03",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3200,
+            "currency": "USD",
+            "formatted": "$32.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 39900,
+            "currency": "USD",
+            "formatted": "$399.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-05-03T22:00:00-04:00",
+      "openingTime": "2026-05-03T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-04",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-04T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-04T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-04",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3500,
+            "currency": "USD",
+            "formatted": "$35.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 41900,
+            "currency": "USD",
+            "formatted": "$419.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-05-04T22:00:00-04:00",
+      "openingTime": "2026-05-04T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-04",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-05T01:00:00-04:00",
+      "description": "Special Ticketed Event",
+      "openingTime": "2026-05-04T22:00:00-04:00"
+    },
+    {
+      "date": "2026-05-05",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-05T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-05T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-05",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3500,
+            "currency": "USD",
+            "formatted": "$35.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 39900,
+            "currency": "USD",
+            "formatted": "$399.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-05-05T22:00:00-04:00",
+      "openingTime": "2026-05-05T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-06",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-06T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-06T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-06",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3200,
+            "currency": "USD",
+            "formatted": "$32.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        },
+        {
+          "id": "premierpass_80007944",
+          "name": "Lightning Lane Premier Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 37900,
+            "currency": "USD",
+            "formatted": "$379.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-05-06T22:00:00-04:00",
+      "openingTime": "2026-05-06T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-06",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-07T00:00:00-04:00",
+      "description": "Extended Evening",
+      "openingTime": "2026-05-06T22:00:00-04:00"
+    },
+    {
+      "date": "2026-05-07",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-07T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-07T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-07",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3200,
+            "currency": "USD",
+            "formatted": "$32.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-05-07T22:00:00-04:00",
+      "openingTime": "2026-05-07T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-08",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-08T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-08T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-08",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3200,
+            "currency": "USD",
+            "formatted": "$32.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1400,
+            "currency": "USD",
+            "formatted": "$14.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-05-08T22:00:00-04:00",
+      "openingTime": "2026-05-08T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-09",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-09T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-09T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-09",
+      "type": "OPERATING",
+      "purchases": [
+        {
+          "id": "lightninglanemultipass_80007944",
+          "name": "Lightning Lane Multi Pass",
+          "type": "PACKAGE",
+          "price": {
+            "amount": 3200,
+            "currency": "USD",
+            "formatted": "$32.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_16767284",
+          "name": "Lightning Lane for Seven Dwarfs Mine Train",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 1300,
+            "currency": "USD",
+            "formatted": "$13.00"
+          },
+          "available": true
+        },
+        {
+          "id": "lightninglane_411504498",
+          "name": "Lightning Lane for TRON Lightcycle / Run",
+          "type": "ATTRACTION",
+          "price": {
+            "amount": 2000,
+            "currency": "USD",
+            "formatted": "$20.00"
+          },
+          "available": true
+        }
+      ],
+      "closingTime": "2026-05-09T22:00:00-04:00",
+      "openingTime": "2026-05-09T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-10",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-10T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-10T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-10",
+      "type": "OPERATING",
+      "closingTime": "2026-05-10T22:00:00-04:00",
+      "openingTime": "2026-05-10T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-11",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-11T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-11T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-11",
+      "type": "OPERATING",
+      "closingTime": "2026-05-11T22:00:00-04:00",
+      "openingTime": "2026-05-11T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-11",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-12T01:00:00-04:00",
+      "description": "Special Ticketed Event",
+      "openingTime": "2026-05-11T22:00:00-04:00"
+    },
+    {
+      "date": "2026-05-12",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-12T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-12T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-12",
+      "type": "OPERATING",
+      "closingTime": "2026-05-12T22:00:00-04:00",
+      "openingTime": "2026-05-12T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-13",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-13T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-13T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-13",
+      "type": "OPERATING",
+      "closingTime": "2026-05-13T17:30:00-04:00",
+      "openingTime": "2026-05-13T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-14",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-14T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-14T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-14",
+      "type": "OPERATING",
+      "closingTime": "2026-05-14T22:00:00-04:00",
+      "openingTime": "2026-05-14T09:00:00-04:00"
+    },
+    {
+      "date": "2026-05-15",
+      "type": "TICKETED_EVENT",
+      "closingTime": "2026-05-15T09:00:00-04:00",
+      "description": "Early Entry",
+      "openingTime": "2026-05-15T08:30:00-04:00"
+    },
+    {
+      "date": "2026-05-15",
+      "type": "OPERATING",
+      "closingTime": "2026-05-15T22:00:00-04:00",
+      "openingTime": "2026-05-15T09:00:00-04:00"
+    }
+  ]
+}

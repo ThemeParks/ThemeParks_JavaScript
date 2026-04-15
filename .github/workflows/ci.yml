@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main, v7]
+  pull_request:
+    branches: [main, v7]
+
+jobs:
+  test:
+    name: Test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx prettier --check .
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test

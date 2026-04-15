@@ -1,0 +1,15 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs-site",
+  "exclude": ["**/node_modules/**", "src/_generated/**", "test/**", "scripts/**"],
+  "name": "themeparks",
+  "readme": "README.md",
+  "includeVersion": true,
+  "excludeInternal": true,
+  "categorizeByGroup": true,
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  }
+}

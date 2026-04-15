@@ -1,0 +1,46 @@
+name: Spec drift
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  drift:
+    name: Regenerate schema and run smoke tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run regenerate
+      - run: npm run build
+      - name: Run live smoke tests
+        id: smoke
+        continue-on-error: true
+        run: npm run test:live
+      - name: Open PR if schema changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          add-paths: src/_generated/schema.ts
+          branch: automated/spec-drift
+          commit-message: 'chore: regenerate schema from upstream spec'
+          title: 'chore: regenerate schema from upstream spec'
+          body: |
+            Automated schema regeneration from `api.themeparks.wiki` OpenAPI spec.
+          labels: automated, spec-drift
+      - name: Open issue if smoke tests failed
+        if: steps.smoke.outcome == 'failure'
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/SMOKE_FAILURE.md
+          update_existing: true

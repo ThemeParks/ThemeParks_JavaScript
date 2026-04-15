@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        patterns:
+          - 'typescript'
+          - 'tsup'
+          - 'vitest'
+          - 'eslint*'
+          - '@typescript-eslint/*'
+          - 'prettier'
+          - 'openapi-typescript'
+          - 'tsx'
+      types:
+        patterns:
+          - '@types/*'
+    commit-message:
+      prefix: 'deps'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'ci'

@@ -1,46 +1,58 @@
 {
   "name": "themeparks",
-  "version": "6.0.1",
-  "description": "A JavaScript client for the ThemeParks.Wiki API",
-  "license": "Unlicense",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "babel src -d dist",
-    "prepare": "npm run build",
-    "test": "mocha --require @babel/register --recursive"
-  },
-  "browser": {
-    "fs": false
-  },
-  "dependencies": {
-    "@babel/cli": "^7.0.0",
-    "superagent": "^5.3.0"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.0.0",
-    "@babel/plugin-proposal-class-properties": "^7.0.0",
-    "@babel/plugin-proposal-decorators": "^7.0.0",
-    "@babel/plugin-proposal-do-expressions": "^7.0.0",
-    "@babel/plugin-proposal-export-default-from": "^7.0.0",
-    "@babel/plugin-proposal-export-namespace-from": "^7.0.0",
-    "@babel/plugin-proposal-function-bind": "^7.0.0",
-    "@babel/plugin-proposal-function-sent": "^7.0.0",
-    "@babel/plugin-proposal-json-strings": "^7.0.0",
-    "@babel/plugin-proposal-logical-assignment-operators": "^7.0.0",
-    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.0.0",
-    "@babel/plugin-proposal-numeric-separator": "^7.0.0",
-    "@babel/plugin-proposal-optional-chaining": "^7.0.0",
-    "@babel/plugin-proposal-pipeline-operator": "^7.0.0",
-    "@babel/plugin-proposal-throw-expressions": "^7.0.0",
-    "@babel/plugin-syntax-dynamic-import": "^7.0.0",
-    "@babel/plugin-syntax-import-meta": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
-    "@babel/register": "^7.0.0",
-    "expect.js": "^0.3.1",
-    "mocha": "^8.0.1",
-    "sinon": "^7.2.0"
+  "version": "7.0.0-alpha.0",
+  "description": "Official SDK for the ThemeParks.wiki API",
+  "license": "MIT",
+  "repository": "github:ThemeParks/ThemeParks_JavaScript",
+  "homepage": "https://api.themeparks.wiki",
+  "bugs": "https://github.com/ThemeParks/ThemeParks_JavaScript/issues",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
   },
   "files": [
-    "dist"
-  ]
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "MIGRATION.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run test/unit",
+    "test:watch": "vitest test/unit",
+    "test:live": "vitest run test/live",
+    "lint": "eslint src test scripts",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "regenerate": "tsx scripts/regenerate.ts",
+    "docs": "typedoc",
+    "docs:serve": "npx serve docs-site",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "openapi-typescript": "^7.0.0",
+    "prettier": "^3.2.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.7.0",
+    "typedoc": "^0.28.19",
+    "typedoc-plugin-markdown": "^4.11.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.4.0"
+  }
 }
