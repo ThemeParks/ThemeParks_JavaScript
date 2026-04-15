@@ -1,2 +1,4 @@
-// Public exports land here in later tasks.
-export {};
+export { ThemeParks, type ThemeParksOptions } from './client';
+export { ApiError, NetworkError, RateLimitError, ThemeParksError, TimeoutError } from './errors';
+export { InMemoryLruCache, type Cache } from './cache';
+export type { Destinations, Entity, EntityChildren, EntityLive, EntitySchedule } from './raw';
