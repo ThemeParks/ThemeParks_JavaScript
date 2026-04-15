@@ -39,7 +39,7 @@ export class EntityHandle {
 
   async *walk(): AsyncIterable<EntityChild> {
     const res = await this.raw.getEntityChildren(this.id);
-    for (const child of (res as unknown as { children?: EntityChild[] }).children ?? []) {
+    for (const child of res.children ?? []) {
       yield child;
     }
   }
@@ -52,17 +52,13 @@ export class EntityHandle {
     );
     const startStr = start.toISOString().slice(0, 10);
     const endStr = end.toISOString().slice(0, 10);
-    const all = responses.flatMap(
-      (r) => (r as unknown as { schedule?: ScheduleEntry[] }).schedule ?? [],
-    );
+    const all = responses.flatMap((r) => r.schedule ?? []);
     return all
       .filter((e) => {
-        const d = (e as { date?: string }).date ?? '';
+        const d = e.date ?? '';
         return d >= startStr && d <= endStr;
       })
-      .sort((a, b) =>
-        ((a as { date?: string }).date ?? '').localeCompare((b as { date?: string }).date ?? ''),
-      );
+      .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''));
   }
 }
 
