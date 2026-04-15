@@ -1,6 +1,37 @@
 import { ApiError, NetworkError, RateLimitError, TimeoutError } from './errors';
 
 /**
+ * Minimal fetch-like function signature covering only what the SDK uses.
+ *
+ * Defined locally so consumers without the DOM lib (e.g. Node-only projects
+ * with `lib: ["ES2022"]` and older `@types/node`) don't pull `globalThis.fetch`,
+ * `Response`, or `RequestInit` into their emitted `.d.ts` when they import
+ * this SDK's types.
+ *
+ * At runtime the SDK still calls `globalThis.fetch` by default; this type is
+ * purely a structural subset so any spec-compatible `fetch` implementation
+ * (node's built-in, undici, whatwg-fetch, a user mock, etc.) satisfies it.
+ */
+export type FetchLike = (
+  input: string | URL,
+  init?: {
+    method?: string;
+    headers?: Record<string, string>;
+    signal?: AbortSignal;
+    body?: string;
+  },
+) => Promise<FetchLikeResponse>;
+
+export interface FetchLikeResponse {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  headers: { get(name: string): string | null };
+  json(): Promise<unknown>;
+  text(): Promise<string>;
+}
+
+/**
  * Retry configuration for the {@link Transport}.
  *
  * Semantics note: `max` is the number of **retries beyond the initial
@@ -29,7 +60,7 @@ export interface TransportOptions {
    * initial attempt, so `{ max: 3 }` permits up to 4 total calls.
    */
   retry: RetryConfig;
-  fetch: typeof globalThis.fetch;
+  fetch: FetchLike;
   sleep?: (ms: number) => Promise<void>;
 }
 
@@ -102,7 +133,7 @@ export class Transport {
       const timer = setTimeout(() => {
         controller.abort();
       }, this.opts.timeoutMs);
-      let response: Response;
+      let response: FetchLikeResponse;
       try {
         response = await this.opts.fetch(url, {
           method,
@@ -166,7 +197,7 @@ export class Transport {
     }
   }
 
-  private async safeParseBody(response: Response): Promise<unknown> {
+  private async safeParseBody(response: FetchLikeResponse): Promise<unknown> {
     const ct = response.headers.get('content-type') ?? '';
     if (!ct.includes('application/json')) {
       try {

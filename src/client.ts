@@ -2,7 +2,7 @@ import { InMemoryLruCache, ttlForPath, type Cache } from './cache';
 import { DestinationsApi } from './ergonomic/destinations';
 import { EntityHandle } from './ergonomic/entity';
 import { RawClient } from './raw';
-import { Transport, type RetryConfig } from './transport';
+import { Transport, type FetchLike, type RetryConfig } from './transport';
 
 const DEFAULT_BASE_URL = 'https://api.themeparks.wiki/v1';
 const PACKAGE_VERSION = '7.0.0-alpha.0';
@@ -11,7 +11,7 @@ const DEFAULT_USER_AGENT = `themeparks-sdk-js/${PACKAGE_VERSION}`;
 export interface ThemeParksOptions {
   baseUrl?: string;
   userAgent?: string;
-  fetch?: typeof globalThis.fetch;
+  fetch?: FetchLike;
   timeoutMs?: number;
   retry?: Partial<RetryConfig>;
   cache?: Cache | false | { maxEntries?: number };

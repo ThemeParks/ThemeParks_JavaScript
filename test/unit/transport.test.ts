@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Transport } from '../../src/transport';
+import { Transport, type FetchLike } from '../../src/transport';
 import { ApiError, NetworkError, RateLimitError, TimeoutError } from '../../src/errors';
 
 function jsonResponse(body: unknown, init: ResponseInit = {}): Response {
@@ -123,6 +123,30 @@ describe('Transport', () => {
       sleep: () => Promise.resolve(),
     });
     await expect(t.get('/x')).rejects.toMatchObject({ name: 'NetworkError' });
+  });
+
+  it('accepts a custom FetchLike-typed fetch implementation', async () => {
+    // Type-level exercise: assign to FetchLike without any DOM types in scope
+    // of the signature. Runtime uses a small mock.
+    const myFetch: FetchLike = (_input, _init) =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: {
+          get: (_name: string): string | null => 'application/json',
+        },
+        json: (): Promise<unknown> => Promise.resolve({ hello: 'world' }),
+        text: (): Promise<string> => Promise.resolve('{"hello":"world"}'),
+      });
+    const t = new Transport({
+      baseUrl: 'https://api.example/v1',
+      userAgent: 'test/1',
+      timeoutMs: 1000,
+      retry: { max: 0, on429: true },
+      fetch: myFetch,
+    });
+    await expect(t.get('/x')).resolves.toEqual({ hello: 'world' });
   });
 
   it('throws TimeoutError when the request exceeds timeoutMs', async () => {
