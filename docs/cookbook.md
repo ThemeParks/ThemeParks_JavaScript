@@ -8,12 +8,17 @@ Entity IDs used throughout:
 - Magic Kingdom: `75ea578a-adc8-4116-a54d-dccb60765ef9`
 - Walt Disney World Resort: `e957da41-3552-4cf6-b636-5babc5cbc4e5`
 
+Every example below is written as plain JavaScript with ES modules. Save any
+block as `test.mjs` and run it with `node test.mjs` (Node ≥18). For
+TypeScript just rename to `.ts` and run with `npx tsx test.ts` — the SDK
+ships full `.d.ts` types so TypeScript will infer the shapes automatically.
+
 ## Recipe 1 — Wait times in order (longest → shortest)
 
 Pull the live data for Magic Kingdom, keep only the rides that are reporting
 a wait time, and print them sorted from longest to shortest queue.
 
-```ts
+```js
 import { ThemeParks, currentWaitTime } from 'themeparks';
 
 const MAGIC_KINGDOM = '75ea578a-adc8-4116-a54d-dccb60765ef9';
@@ -23,7 +28,7 @@ const live = await tp.entity(MAGIC_KINGDOM).live();
 
 const waits = (live.liveData ?? [])
   .map((entry) => ({ name: entry.name, wait: currentWaitTime(entry) }))
-  .filter((w): w is { name: string; wait: number } => w.wait !== null)
+  .filter((w) => w.wait !== null)
   .sort((a, b) => b.wait - a.wait);
 
 for (const { name, wait } of waits) {
@@ -56,7 +61,7 @@ EXTRA_HOURS (early entry / extended evening), and TICKETED_EVENT (after-hours
 events). `range()` returns them all in chronological order across any month
 boundaries.
 
-```ts
+```js
 import { ThemeParks } from 'themeparks';
 
 const MAGIC_KINGDOM = '75ea578a-adc8-4116-a54d-dccb60765ef9';
@@ -98,14 +103,14 @@ coordinates by `entityType`:
 > tree in a single response, so even for the largest destinations this is
 > one HTTP request.
 
-```ts
+```js
 import { ThemeParks } from 'themeparks';
 
 const WALT_DISNEY_WORLD = 'e957da41-3552-4cf6-b636-5babc5cbc4e5';
 
 const tp = new ThemeParks();
 
-const byType = new Map<string, Array<{ name: string; lat: number; lng: number }>>();
+const byType = new Map();
 
 for await (const child of tp.entity(WALT_DISNEY_WORLD).walk()) {
   const loc = child.location;
@@ -154,7 +159,7 @@ RESTAURANT (218)
 There's no built-in HTTP logger to flip on (the SDK runs directly on platform
 `fetch`). The clean idiom is to pass a wrapping `fetch` implementation:
 
-```ts
+```js
 import { ThemeParks } from 'themeparks';
 
 const tp = new ThemeParks({
@@ -202,7 +207,7 @@ Lane) plus SINGLE_RIDER. The full set of variants is:
 
 Print all populated queue variants for every attraction at Magic Kingdom:
 
-```ts
+```js
 import { ThemeParks } from 'themeparks';
 
 const MAGIC_KINGDOM = '75ea578a-adc8-4116-a54d-dccb60765ef9';
@@ -259,8 +264,10 @@ TRON Lightcycle / Run                     LIGHTNING LANE $20.00, return 2026-04-
 If branching on every variant is too verbose, `narrowQueues(queue)` flattens
 all populated variants into a typed discriminated union you can switch over:
 
-```ts
+```js
 import { ThemeParks, narrowQueues } from 'themeparks';
+
+const MAGIC_KINGDOM = '75ea578a-adc8-4116-a54d-dccb60765ef9';
 
 const tp = new ThemeParks();
 const live = await tp.entity(MAGIC_KINGDOM).live();

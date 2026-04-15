@@ -14,7 +14,11 @@ Runs on Node 18+, evergreen browsers, Deno, Bun, and Cloudflare Workers. Zero ru
 
 ## Print live wait times
 
-```ts
+Every example in this README works as plain JavaScript — save as `.mjs` and
+run with `node`. To use them as TypeScript, rename to `.ts` and run with
+`npx tsx`; the SDK ships full `.d.ts` types so TypeScript infers everything.
+
+```js
 import { ThemeParks, currentWaitTime } from 'themeparks';
 
 const MAGIC_KINGDOM = '75ea578a-adc8-4116-a54d-dccb60765ef9';
@@ -56,7 +60,7 @@ Jungle Cruise                                      40 min
 
 Example:
 
-```ts
+```js
 const tp = new ThemeParks({
   userAgent: 'my-app/1.2.3 (+https://example.com)',
   timeoutMs: 15_000,
@@ -81,7 +85,7 @@ Each variant is exposed as a key on `entry.queue`. All are optional — `undefin
 
 ### Direct access
 
-```ts
+```js
 import { ThemeParks } from 'themeparks';
 
 const tp = new ThemeParks();
@@ -116,7 +120,7 @@ for (const entry of live.liveData ?? []) {
 
 If branching on every variant is too verbose, `narrowQueues(queue)` flattens all populated variants into a typed discriminated union:
 
-```ts
+```js
 import { ThemeParks, narrowQueues } from 'themeparks';
 
 const tp = new ThemeParks();
@@ -135,7 +139,7 @@ for (const entry of live.liveData ?? []) {
 
 ## Ergonomic helpers
 
-```ts
+```js
 import { ThemeParks } from 'themeparks';
 
 const tp = new ThemeParks();
@@ -159,17 +163,17 @@ console.log(`${entries.length} schedule entries`);
 
 Every ergonomic helper is built on top of `tp.raw`, which is a thin, typed 1:1 wrapper over the OpenAPI operations. Use it directly when you want the raw response shape:
 
-```ts
+```js
 const live = await tp.raw.getEntityLive('75ea578a-adc8-4116-a54d-dccb60765ef9');
 const dests = await tp.raw.getDestinations();
-const children = await tp.raw.getEntityChildren(wdw!.id);
+const children = await tp.raw.getEntityChildren('e957da41-3552-4cf6-b636-5babc5cbc4e5');
 ```
 
 ## Error handling
 
 All SDK errors inherit from `ThemeParksError`. The ones you'll typically catch:
 
-```ts
+```js
 import { ThemeParks, ApiError, RateLimitError, NetworkError, TimeoutError } from 'themeparks';
 
 const tp = new ThemeParks();
@@ -196,7 +200,7 @@ try {
 
 There's no built-in HTTP logger to flip on (we run directly on platform `fetch`). The clean idiom is to pass a wrapping `fetch` implementation:
 
-```ts
+```js
 import { ThemeParks } from 'themeparks';
 
 const tp = new ThemeParks({
@@ -226,13 +230,13 @@ The default client caches `GET` responses in-memory (LRU) with sensible per-endp
 
 ### Disable caching
 
-```ts
+```js
 const tp = new ThemeParks({ cache: false });
 ```
 
 ### Plug in your own adapter
 
-`Cache` is a structural interface — any object implementing `get`, `set`, and `delete` works. Redis, filesystem, IndexedDB, etc.:
+`Cache` is a structural interface — any object implementing `get`, `set`, and `delete` works. Redis, filesystem, IndexedDB, etc. (TypeScript shown; drop the annotations for plain JS):
 
 ```ts
 import { ThemeParks, type Cache } from 'themeparks';
