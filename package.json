@@ -30,9 +30,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest run --dir test/unit",
-    "test:watch": "vitest --dir test/unit",
-    "test:live": "vitest run --dir test/live",
+    "test": "vitest run test/unit",
+    "test:watch": "vitest test/unit",
+    "test:live": "vitest run test/live",
     "lint": "eslint src test scripts",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
