@@ -37,6 +37,8 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "regenerate": "tsx scripts/regenerate.ts",
+    "docs": "typedoc",
+    "docs:serve": "npx serve docs-site",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
@@ -48,6 +50,8 @@
     "prettier": "^3.2.0",
     "tsup": "^8.0.0",
     "tsx": "^4.7.0",
+    "typedoc": "^0.28.19",
+    "typedoc-plugin-markdown": "^4.11.0",
     "typescript": "^5.4.0",
     "vitest": "^1.4.0"
   }
