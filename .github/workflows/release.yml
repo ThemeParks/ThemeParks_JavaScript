@@ -22,7 +22,15 @@ jobs:
       - run: npm install -g npm@latest # trusted publishing requires npm >= 11.5.1
       - run: npm ci
       - run: npm run lint && npm run typecheck && npm test && npm run build
-      - run: npm publish --provenance --access public
+      - name: Publish
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ "$VERSION" == *-* ]]; then
+            # Prerelease (e.g. 7.0.0-alpha.1): do NOT tag as "latest"
+            npm publish --provenance --access public --tag next
+          else
+            npm publish --provenance --access public
+          fi
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
