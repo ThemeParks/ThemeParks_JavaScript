@@ -1,4 +1,5 @@
 import { InMemoryLruCache, ttlForPath, type Cache } from './cache';
+import { DestinationsApi } from './ergonomic/destinations';
 import { EntityHandle } from './ergonomic/entity';
 import { RawClient } from './raw';
 import { Transport, type RetryConfig } from './transport';
@@ -18,6 +19,7 @@ export interface ThemeParksOptions {
 
 export class ThemeParks {
   readonly raw: RawClient;
+  readonly destinations: DestinationsApi;
   readonly #baseUrl: string;
   private readonly transport: Transport;
   private readonly cache: Cache | null;
@@ -40,6 +42,7 @@ export class ThemeParks {
     this.cache = buildCache(options.cache);
     const cachingTransport = wrapTransportWithCache(this.transport, this.cache);
     this.raw = new RawClient(cachingTransport);
+    this.destinations = new DestinationsApi(this.raw);
   }
 
   entity(id: string): EntityHandle {
