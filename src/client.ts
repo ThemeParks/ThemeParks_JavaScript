@@ -1,4 +1,5 @@
 import { InMemoryLruCache, ttlForPath, type Cache } from './cache';
+import { EntityHandle } from './ergonomic/entity';
 import { RawClient } from './raw';
 import { Transport, type RetryConfig } from './transport';
 
@@ -39,6 +40,10 @@ export class ThemeParks {
     this.cache = buildCache(options.cache);
     const cachingTransport = wrapTransportWithCache(this.transport, this.cache);
     this.raw = new RawClient(cachingTransport);
+  }
+
+  entity(id: string): EntityHandle {
+    return new EntityHandle(this.raw, id);
   }
 
   toString(): string {
