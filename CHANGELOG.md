@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.0.0] - 2026-04-15
+
+First stable v7 release. After two alpha iterations (`alpha.0`/`alpha.1` blocked
+by CI release-pipeline issues, `alpha.2` published to `next` dist-tag) the
+public surface is unchanged. Also landed post-alpha.2:
+
+- Docs site deploys the hand-written cookbook alongside the generated API ref.
+- README and cookbook examples are plain JavaScript (previously mixed
+  TypeScript syntax into blocks labeled runnable).
+- Dependabot action bumps merged (`actions/checkout`, `deploy-pages`,
+  `upload-pages-artifact`, `create-pull-request`, `action-gh-release`).
+
 ## [7.0.0-alpha.0] - 2026-04-15
 
 ### Added

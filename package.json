@@ -1,6 +1,6 @@
 {
   "name": "themeparks",
-  "version": "7.0.0-alpha.2",
+  "version": "7.0.0",
   "description": "Official SDK for the ThemeParks.wiki API",
   "license": "MIT",
   "repository": "github:ThemeParks/ThemeParks_JavaScript",
