@@ -19,6 +19,7 @@ jobs:
           node-version: 20
           cache: npm
           registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@latest  # trusted publishing requires npm >= 11.5.1
       - run: npm ci
       - run: npm run lint && npm run typecheck && npm test && npm run build
       - run: npm publish --provenance --access public
