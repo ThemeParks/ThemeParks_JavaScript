@@ -33,16 +33,32 @@ export class DestinationsApi {
   }
 
   /**
-   * Find the first destination whose slug or name loosely matches `query`.
+   * Find the first destination whose slug or name matches `query`.
    *
    * Matching is case-insensitive and ignores non-alphanumeric characters on
-   * both sides, then checks substring containment. For example, the query
-   * `"waltdisneyworld"` matches a destination with slug
-   * `"walt-disney-world"`. Returns `undefined` when nothing matches.
+   * both sides. An exact normalized match on either `slug` or `name` wins
+   * over a substring match — so a query of `"walt-disney-world"` returns the
+   * destination with that exact slug even when another entry's slug/name
+   * contains it as a substring (e.g. `"walt-disney-world-extra"`). If no
+   * exact match is found, the first substring containment match is
+   * returned. Returns `undefined` when nothing matches.
    */
   async find(query: string): Promise<Destination | undefined> {
     const res = await this.list();
     const needle = normalize(query);
-    return (res.destinations as Destination[]).find((d) => matches(d, needle));
+    const destinations = (res.destinations ?? []) as Destination[];
+
+    // Pass 1: exact normalized match on slug or name.
+    for (const d of destinations) {
+      const slug = normalize(d.slug ?? '');
+      const name = normalize(d.name ?? '');
+      if (slug === needle || name === needle) return d;
+    }
+
+    // Pass 2: substring containment.
+    for (const d of destinations) {
+      if (matches(d, needle)) return d;
+    }
+    return undefined;
   }
 }

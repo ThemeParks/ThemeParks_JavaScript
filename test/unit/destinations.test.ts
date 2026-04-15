@@ -63,4 +63,29 @@ describe('destinations helper', () => {
     const d = await tp.destinations.find('waltdisneyworld');
     expect(d?.id).toBe('wdw');
   });
+
+  it('find prefers an exact normalized match over a substring match', async () => {
+    // Ordering matters: the "extra" entry is listed FIRST so that a pure
+    // substring scan would return it; the exact-match pass must still pick
+    // the canonical `walt-disney-world` entry.
+    const ambiguous = {
+      destinations: [
+        {
+          id: 'wdw-extra',
+          name: 'Walt Disney World Extra',
+          slug: 'walt-disney-world-extra',
+          parks: [],
+        },
+        {
+          id: 'wdw',
+          name: 'Walt Disney World Resort',
+          slug: 'walt-disney-world',
+          parks: [],
+        },
+      ],
+    };
+    const tp = new ThemeParks({ fetch: mockFetch(ambiguous), cache: false });
+    const d = await tp.destinations.find('walt-disney-world');
+    expect(d?.id).toBe('wdw');
+  });
 });
