@@ -37,6 +37,15 @@ export class EntityHandle {
     return this.raw.getEntityLive(this.id);
   }
 
+  /**
+   * Yield every descendant of this entity in a single API call.
+   *
+   * The ThemeParks API's `/children` endpoint returns the entire subtree in
+   * one response — this method just exposes it as an async iterator so
+   * callers can `for await` without flattening themselves. The root entity
+   * itself is not yielded. When the entity has no children (or the response
+   * omits the `children` array) the iterator completes without yielding.
+   */
   async *walk(): AsyncIterable<EntityChild> {
     const res = await this.raw.getEntityChildren(this.id);
     for (const child of res.children ?? []) {
