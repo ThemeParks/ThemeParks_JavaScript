@@ -4,430 +4,430 @@
  * Do not edit by hand. Run `npm run regenerate` to update.
  */
 export interface paths {
-  '/destinations': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/destinations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a list of supported destinations available on the live API */
+        get: operations["getDestinations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get a list of supported destinations available on the live API */
-    get: operations['getDestinations'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/entity/{entityID}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/entity/{entityID}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get entity document
+         * @description Get the full data document for a given entity. You can supply either a GUID or slug string.
+         */
+        get: operations["getEntity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get entity document
-     * @description Get the full data document for a given entity. You can supply either a GUID or slug string.
-     */
-    get: operations['getEntity'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/entity/{entityID}/children': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/entity/{entityID}/children": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get all children for a given entity document
+         * @description Fetch a list of all the children that belong to this entity. This is recursive, so a destination will return all parks and all rides within those parks.
+         */
+        get: operations["getEntityChildren"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get all children for a given entity document
-     * @description Fetch a list of all the children that belong to this entity. This is recursive, so a destination will return all parks and all rides within those parks.
-     */
-    get: operations['getEntityChildren'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/entity/{entityID}/live': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/entity/{entityID}/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get live data for this entity and any child entities
+         * @description Fetch this entity's live data (queue times, parade times, etc.) as well as all child entities. For a destination, this will include all parks within that destination.
+         */
+        get: operations["getEntityLiveData"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get live data for this entity and any child entities
-     * @description Fetch this entity's live data (queue times, parade times, etc.) as well as all child entities. For a destination, this will include all parks within that destination.
-     */
-    get: operations['getEntityLiveData'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/entity/{entityID}/schedule': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/entity/{entityID}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get entity schedule
+         * @description Fetch this entity's schedule for the next 30 days
+         */
+        get: operations["getEntityScheduleUpcoming"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get entity schedule
-     * @description Fetch this entity's schedule for the next 30 days
-     */
-    get: operations['getEntityScheduleUpcoming'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/entity/{entityID}/schedule/{year}/{month}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/entity/{entityID}/schedule/{year}/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get entity schedule for a specific month and year
+         * @description Fetch this entity's schedule for the supplied year and month
+         */
+        get: operations["getEntityScheduleYearMonth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get entity schedule for a specific month and year
-     * @description Fetch this entity's schedule for the supplied year and month
-     */
-    get: operations['getEntityScheduleYearMonth'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** @enum {string} */
-    EntityType: 'DESTINATION' | 'PARK' | 'ATTRACTION' | 'RESTAURANT' | 'HOTEL' | 'SHOW';
-    /** @enum {string} */
-    LiveStatusType: 'OPERATING' | 'DOWN' | 'CLOSED' | 'REFURBISHMENT';
-    /** @enum {string} */
-    ReturnTimeState: 'AVAILABLE' | 'TEMP_FULL' | 'FINISHED';
-    /** @enum {string} */
-    BoardingGroupState: 'AVAILABLE' | 'PAUSED' | 'CLOSED';
-    PriceData: {
-      amount: number;
-      currency: string;
-      formatted?: string;
+    schemas: {
+        /** @enum {string} */
+        EntityType: "DESTINATION" | "PARK" | "ATTRACTION" | "RESTAURANT" | "HOTEL" | "SHOW";
+        /** @enum {string} */
+        LiveStatusType: "OPERATING" | "DOWN" | "CLOSED" | "REFURBISHMENT";
+        /** @enum {string} */
+        ReturnTimeState: "AVAILABLE" | "TEMP_FULL" | "FINISHED";
+        /** @enum {string} */
+        BoardingGroupState: "AVAILABLE" | "PAUSED" | "CLOSED";
+        PriceData: {
+            amount: number;
+            currency: string;
+            formatted?: string;
+        };
+        LiveQueue: {
+            STANDBY?: {
+                waitTime?: number;
+            };
+            SINGLE_RIDER?: {
+                waitTime: number | null;
+            };
+            RETURN_TIME?: {
+                state: components["schemas"]["ReturnTimeState"];
+                /** Format: date-time */
+                returnStart: string | null;
+                /** Format: date-time */
+                returnEnd: string | null;
+            };
+            PAID_RETURN_TIME?: {
+                state: components["schemas"]["ReturnTimeState"];
+                /** Format: date-time */
+                returnStart: string | null;
+                /** Format: date-time */
+                returnEnd: string | null;
+                price: components["schemas"]["PriceData"];
+            };
+            BOARDING_GROUP?: {
+                allocationStatus: components["schemas"]["BoardingGroupState"];
+                currentGroupStart: number | null;
+                currentGroupEnd: number | null;
+                /** Format: date-time */
+                nextAllocationTime: string | null;
+                estimatedWait: number | null;
+            };
+            PAID_STANDBY?: {
+                waitTime: number | null;
+            };
+        };
+        LiveShowTime: {
+            type: string;
+            /** Format: date-time */
+            startTime?: string | null;
+            /** Format: date-time */
+            endTime?: string | null;
+        };
+        DiningAvailability: {
+            partySize?: number | null;
+            waitTime?: number | null;
+        };
+        TagData: {
+            tag: string;
+            tagName: string;
+            id?: string;
+            value?: string | number | Record<string, never>;
+        };
+        EntityData: {
+            id: string;
+            name: string;
+            entityType: components["schemas"]["EntityType"];
+            parentId?: string | null;
+            destinationId?: string | null;
+            timezone: string;
+            location?: {
+                latitude?: number;
+                longitude?: number;
+            } | null;
+            tags?: components["schemas"]["TagData"][];
+        };
+        EntityChild: {
+            id: string;
+            name: string;
+            entityType: components["schemas"]["EntityType"];
+            externalId?: string;
+            parentId?: string;
+            location?: {
+                latitude?: number | null;
+                longitude?: number | null;
+            } | null;
+        };
+        EntityChildrenResponse: {
+            id?: string;
+            name?: string;
+            entityType?: components["schemas"]["EntityType"];
+            timezone?: string;
+            children?: components["schemas"]["EntityChild"][];
+        };
+        EntityLiveData: {
+            id: string;
+            name: string;
+            entityType: components["schemas"]["EntityType"];
+            status?: components["schemas"]["LiveStatusType"];
+            /** Format: date-time */
+            lastUpdated: string;
+            queue?: components["schemas"]["LiveQueue"];
+            showtimes?: components["schemas"]["LiveShowTime"][];
+            operatingHours?: components["schemas"]["LiveShowTime"][];
+            diningAvailability?: components["schemas"]["DiningAvailability"][];
+        };
+        EntityLiveDataResponse: {
+            id?: string;
+            name?: string;
+            entityType?: components["schemas"]["EntityType"];
+            timezone?: string;
+            liveData?: components["schemas"]["EntityLiveData"][];
+        };
+        SchedulePriceObject: {
+            /** @enum {string|null} */
+            type?: "ADMISSION" | "PACKAGE" | "ATTRACTION" | null;
+            id?: string;
+            name?: string;
+            price?: components["schemas"]["PriceData"];
+            available?: boolean;
+        };
+        ScheduleEntry: {
+            /** Format: YYYY-MM-DD */
+            date: string;
+            /** Format: date-time */
+            openingTime: string;
+            /** Format: date-time */
+            closingTime: string;
+            /** @enum {string} */
+            type: "OPERATING" | "TICKETED_EVENT" | "PRIVATE_EVENT" | "EXTRA_HOURS" | "INFO";
+            purchases?: components["schemas"]["SchedulePriceObject"][];
+        };
+        EntityScheduleResponse: {
+            id?: string;
+            name?: string;
+            entityType?: components["schemas"]["EntityType"];
+            timezone?: string;
+            schedule?: components["schemas"]["ScheduleEntry"][];
+            /** @description Only included for destinations, this will list all parks within the destination */
+            parks?: components["schemas"]["EntityScheduleResponse"][];
+        };
+        DestinationParkEntry: {
+            id?: string;
+            name?: string;
+        };
+        DestinationEntry: {
+            id?: string;
+            name?: string;
+            slug?: string;
+            /** @description External entity ID from the source data provider */
+            externalId?: string;
+            parks?: components["schemas"]["DestinationParkEntry"][];
+        };
+        DestinationsResponse: {
+            destinations?: components["schemas"]["DestinationEntry"][];
+        };
     };
-    LiveQueue: {
-      STANDBY?: {
-        waitTime?: number;
-      };
-      SINGLE_RIDER?: {
-        waitTime: number | null;
-      };
-      RETURN_TIME?: {
-        state: components['schemas']['ReturnTimeState'];
-        /** Format: date-time */
-        returnStart: string | null;
-        /** Format: date-time */
-        returnEnd: string | null;
-      };
-      PAID_RETURN_TIME?: {
-        state: components['schemas']['ReturnTimeState'];
-        /** Format: date-time */
-        returnStart: string | null;
-        /** Format: date-time */
-        returnEnd: string | null;
-        price: components['schemas']['PriceData'];
-      };
-      BOARDING_GROUP?: {
-        allocationStatus: components['schemas']['BoardingGroupState'];
-        currentGroupStart: number | null;
-        currentGroupEnd: number | null;
-        /** Format: date-time */
-        nextAllocationTime: string | null;
-        estimatedWait: number | null;
-      };
-      PAID_STANDBY?: {
-        waitTime: number | null;
-      };
-    };
-    LiveShowTime: {
-      type: string;
-      /** Format: date-time */
-      startTime?: string | null;
-      /** Format: date-time */
-      endTime?: string | null;
-    };
-    DiningAvailability: {
-      partySize?: number | null;
-      waitTime?: number | null;
-    };
-    TagData: {
-      tag: string;
-      tagName: string;
-      id?: string;
-      value?: string | number | Record<string, never>;
-    };
-    EntityData: {
-      id: string;
-      name: string;
-      entityType: components['schemas']['EntityType'];
-      parentId?: string | null;
-      destinationId?: string | null;
-      timezone: string;
-      location?: {
-        latitude?: number;
-        longitude?: number;
-      } | null;
-      tags?: components['schemas']['TagData'][];
-    };
-    EntityChild: {
-      id: string;
-      name: string;
-      entityType: components['schemas']['EntityType'];
-      externalId?: string;
-      parentId?: string;
-      location?: {
-        latitude?: number | null;
-        longitude?: number | null;
-      } | null;
-    };
-    EntityChildrenResponse: {
-      id?: string;
-      name?: string;
-      entityType?: components['schemas']['EntityType'];
-      timezone?: string;
-      children?: components['schemas']['EntityChild'][];
-    };
-    EntityLiveData: {
-      id: string;
-      name: string;
-      entityType: components['schemas']['EntityType'];
-      status?: components['schemas']['LiveStatusType'];
-      /** Format: date-time */
-      lastUpdated: string;
-      queue?: components['schemas']['LiveQueue'];
-      showtimes?: components['schemas']['LiveShowTime'][];
-      operatingHours?: components['schemas']['LiveShowTime'][];
-      diningAvailability?: components['schemas']['DiningAvailability'][];
-    };
-    EntityLiveDataResponse: {
-      id?: string;
-      name?: string;
-      entityType?: components['schemas']['EntityType'];
-      timezone?: string;
-      liveData?: components['schemas']['EntityLiveData'][];
-    };
-    SchedulePriceObject: {
-      /** @enum {string|null} */
-      type?: 'ADMISSION' | 'PACKAGE' | 'ATTRACTION' | null;
-      id?: string;
-      name?: string;
-      price?: components['schemas']['PriceData'];
-      available?: boolean;
-    };
-    ScheduleEntry: {
-      /** Format: YYYY-MM-DD */
-      date: string;
-      /** Format: date-time */
-      openingTime: string;
-      /** Format: date-time */
-      closingTime: string;
-      /** @enum {string} */
-      type: 'OPERATING' | 'TICKETED_EVENT' | 'PRIVATE_EVENT' | 'EXTRA_HOURS' | 'INFO';
-      purchases?: components['schemas']['SchedulePriceObject'][];
-    };
-    EntityScheduleResponse: {
-      id?: string;
-      name?: string;
-      entityType?: components['schemas']['EntityType'];
-      timezone?: string;
-      schedule?: components['schemas']['ScheduleEntry'][];
-      /** @description Only included for destinations, this will list all parks within the destination */
-      parks?: components['schemas']['EntityScheduleResponse'][];
-    };
-    DestinationParkEntry: {
-      id?: string;
-      name?: string;
-    };
-    DestinationEntry: {
-      id?: string;
-      name?: string;
-      slug?: string;
-      /** @description External entity ID from the source data provider */
-      externalId?: string;
-      parks?: components['schemas']['DestinationParkEntry'][];
-    };
-    DestinationsResponse: {
-      destinations?: components['schemas']['DestinationEntry'][];
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  getDestinations: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description successful fetch */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getDestinations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['DestinationsResponse'];
+        requestBody?: never;
+        responses: {
+            /** @description successful fetch */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DestinationsResponse"];
+                };
+            };
         };
-      };
     };
-  };
-  getEntity: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Entity ID (or slug) to fetch */
-        entityID: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description successful fetch */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getEntity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Entity ID (or slug) to fetch */
+                entityID: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['EntityData'];
+        requestBody?: never;
+        responses: {
+            /** @description successful fetch */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityData"];
+                };
+            };
         };
-      };
     };
-  };
-  getEntityChildren: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Entity ID (or slug) to fetch */
-        entityID: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description successful fetch */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getEntityChildren: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Entity ID (or slug) to fetch */
+                entityID: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['EntityChildrenResponse'];
+        requestBody?: never;
+        responses: {
+            /** @description successful fetch */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityChildrenResponse"];
+                };
+            };
         };
-      };
     };
-  };
-  getEntityLiveData: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Entity ID (or slug) to fetch */
-        entityID: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description successful fetch */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getEntityLiveData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Entity ID (or slug) to fetch */
+                entityID: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['EntityLiveDataResponse'];
+        requestBody?: never;
+        responses: {
+            /** @description successful fetch */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityLiveDataResponse"];
+                };
+            };
         };
-      };
     };
-  };
-  getEntityScheduleUpcoming: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Entity ID (or slug) to fetch */
-        entityID: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description successful fetch */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getEntityScheduleUpcoming: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Entity ID (or slug) to fetch */
+                entityID: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['EntityScheduleResponse'];
+        requestBody?: never;
+        responses: {
+            /** @description successful fetch */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityScheduleResponse"];
+                };
+            };
         };
-      };
     };
-  };
-  getEntityScheduleYearMonth: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description Entity ID (or slug) to fetch */
-        entityID: string;
-        /** @description Schedule year to fetch */
-        year: number;
-        /** @description Schedule month to fetch. Must be a two digit zero-padded month. */
-        month: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description successful fetch */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    getEntityScheduleYearMonth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Entity ID (or slug) to fetch */
+                entityID: string;
+                /** @description Schedule year to fetch */
+                year: number;
+                /** @description Schedule month to fetch. Must be a two digit zero-padded month. */
+                month: number;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['EntityScheduleResponse'];
+        requestBody?: never;
+        responses: {
+            /** @description successful fetch */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityScheduleResponse"];
+                };
+            };
         };
-      };
     };
-  };
 }
