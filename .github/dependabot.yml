@@ -7,6 +7,8 @@ updates:
       day: monday
       time: '06:00'
     open-pull-requests-limit: 5
+    reviewers:
+      - 'cubehouse'
     groups:
       dev-dependencies:
         patterns:
@@ -31,5 +33,7 @@ updates:
       day: monday
       time: '06:00'
     open-pull-requests-limit: 5
+    reviewers:
+      - 'cubehouse'
     commit-message:
       prefix: 'ci'
