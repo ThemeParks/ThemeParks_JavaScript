@@ -134,7 +134,7 @@ export interface components {
         /** @enum {string} */
         BoardingGroupState: "AVAILABLE" | "PAUSED" | "CLOSED";
         PriceData: {
-            amount: number;
+            amount: number | null;
             currency: string;
             formatted?: string;
         };
