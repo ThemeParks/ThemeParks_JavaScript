@@ -21,11 +21,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run regenerate
-      - run: npm run build
+
+      # Everything below must run even when the build fails. A regeneration
+      # that no longer compiles is exactly the signal worth surfacing, and
+      # this step used to be fatal — so a breaking upstream change produced no
+      # PR, no smoke run and no issue. It went unnoticed for months.
+      - name: Build against the regenerated schema
+        id: build
+        continue-on-error: true
+        run: npm run build
+
       - name: Run live smoke tests
         id: smoke
+        if: steps.build.outcome == 'success'
         continue-on-error: true
         run: npm run test:live
+
       - name: Open PR if schema changed
         uses: peter-evans/create-pull-request@v8
         with:
@@ -34,8 +45,25 @@ jobs:
           commit-message: 'chore: regenerate schema from upstream spec'
           title: 'chore: regenerate schema from upstream spec'
           body: |
-            Automated schema regeneration from `api.themeparks.wiki` OpenAPI spec.
+            Automated schema regeneration from the `api.themeparks.wiki` OpenAPI spec.
+
+            - build: ${{ steps.build.outcome }}
+            - live smoke tests: ${{ steps.smoke.outcome || 'skipped (build failed)' }}
+
+            A build failure here means the upstream contract changed in a way
+            this client cannot absorb automatically. Do not merge until it is
+            green.
           labels: automated, spec-drift
+
+      - name: Open issue if the regenerated schema does not build
+        if: steps.build.outcome == 'failure'
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/DRIFT_BUILD_FAILURE.md
+          update_existing: true
+
       - name: Open issue if smoke tests failed
         if: steps.smoke.outcome == 'failure'
         uses: JasonEtco/create-an-issue@v2
@@ -44,3 +72,11 @@ jobs:
         with:
           filename: .github/SMOKE_FAILURE.md
           update_existing: true
+
+      # The job itself must go red when the build did, or a silent failure is
+      # just a green tick with a stale PR behind it.
+      - name: Fail the run if the regenerated schema does not build
+        if: steps.build.outcome == 'failure'
+        run: |
+          echo "::error::Regenerated schema does not build — upstream contract changed."
+          exit 1
