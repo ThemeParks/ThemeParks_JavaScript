@@ -79,6 +79,24 @@ const entityRaw = await tp.raw.getEntity(entityId); // raw
 console.log(entity.name, entity.entityType);
 ```
 
+## Paid queue prices
+
+`price.amount` is `number | null`. `null` means the queue costs money but the
+provider does not publish a price; `0` means it is genuinely free. Before this,
+both cases arrived as `0`, so an unknown price was indistinguishable from a
+free one — Tokyo Disney Resort's Premier Access rows are the current example.
+
+`price.formatted` is optional and may be absent when the amount is unknown, so
+do not rely on it alone to detect the case.
+
+```ts
+const paid = live.liveData[0].queue?.PAID_RETURN_TIME;
+if (paid) {
+  const { amount, currency } = paid.price;
+  console.log(amount === null ? `${currency}: price not published` : `${currency} ${amount / 100}`);
+}
+```
+
 ## Live wait times
 
 Queue fields are now correctly typed end-to-end. Null `waitTime` is

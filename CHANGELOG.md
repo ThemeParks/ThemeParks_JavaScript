@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `PriceData.amount` is now `number | null`, matching the API spec, which has
+  declared this field nullable for some time. The API returns `null` when a
+  paid queue exists but the provider does not publish a price; `0` is reserved
+  for a queue that is genuinely free. The two were previously conflated as `0`.
+
+  **This is a compile break for strict TypeScript consumers.** If you read
+  `price.amount` directly you will now get `TS18047: 'amount' is possibly
+'null'` or `TS2322`. Narrow it first:
+
+  ```ts
+  const amount = queue.PAID_RETURN_TIME?.price.amount;
+  const label = amount === null ? 'price not published' : formatCents(amount);
+  ```
+
+  Runtime output is unchanged — the emitted JS is byte-identical, only the
+  type declarations move. Plain-JavaScript and non-strict consumers are
+  unaffected. See MIGRATION.md.
+
 ## [7.0.0] - 2026-04-15
 
 First stable v7 release. After two alpha iterations (`alpha.0`/`alpha.1` blocked
