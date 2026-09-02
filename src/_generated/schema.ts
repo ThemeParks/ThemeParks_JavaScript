@@ -4,15 +4,15 @@
  * Do not edit by hand. Run `npm run regenerate` to update.
  */
 export interface paths {
-    "/destinations": {
+    "/v1/destinations": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get a list of supported destinations available on the live API */
-        get: operations["getDestinations"];
+        /** GET /v1/destinations */
+        get: operations["getAllDestinations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -21,18 +21,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/entity/{entityID}": {
+    "/v1/entity/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get entity document
-         * @description Get the full data document for a given entity. You can supply either a GUID or slug string.
-         */
-        get: operations["getEntity"];
+        /** GET /v1/entity/{id} */
+        get: operations["getEntityById"];
         put?: never;
         post?: never;
         delete?: never;
@@ -41,17 +38,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/entity/{entityID}/children": {
+    "/v1/entity/{id}/children": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get all children for a given entity document
-         * @description Fetch a list of all the children that belong to this entity. This is recursive, so a destination will return all parks and all rides within those parks.
-         */
+        /** GET /v1/entity/{id}/children */
         get: operations["getEntityChildren"];
         put?: never;
         post?: never;
@@ -61,17 +55,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/entity/{entityID}/live": {
+    "/v1/entity/{id}/live": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get live data for this entity and any child entities
-         * @description Fetch this entity's live data (queue times, parade times, etc.) as well as all child entities. For a destination, this will include all parks within that destination.
-         */
+        /** GET /v1/entity/{id}/live */
         get: operations["getEntityLiveData"];
         put?: never;
         post?: never;
@@ -81,18 +72,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/entity/{entityID}/schedule": {
+    "/v1/entity/{id}/schedule": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get entity schedule
-         * @description Fetch this entity's schedule for the next 30 days
-         */
-        get: operations["getEntityScheduleUpcoming"];
+        /** GET /v1/entity/{id}/schedule */
+        get: operations["getEntitySchedule"];
         put?: never;
         post?: never;
         delete?: never;
@@ -101,17 +89,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/entity/{entityID}/schedule/{year}/{month}": {
+    "/v1/entity/{id}/schedule/{year}/{month}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get entity schedule for a specific month and year
-         * @description Fetch this entity's schedule for the supplied year and month
-         */
+        /** GET /v1/entity/{id}/schedule/{year}/{month} */
         get: operations["getEntityScheduleYearMonth"];
         put?: never;
         post?: never;
@@ -125,31 +110,156 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /** @enum {string} */
-        EntityType: "DESTINATION" | "PARK" | "ATTRACTION" | "RESTAURANT" | "HOTEL" | "SHOW";
-        /** @enum {string} */
-        LiveStatusType: "OPERATING" | "DOWN" | "CLOSED" | "REFURBISHMENT";
-        /** @enum {string} */
-        ReturnTimeState: "AVAILABLE" | "TEMP_FULL" | "FINISHED";
-        /** @enum {string} */
+        /**
+         * @description State of boarding group availability
+         * @enum {string}
+         */
         BoardingGroupState: "AVAILABLE" | "PAUSED" | "CLOSED";
-        PriceData: {
-            amount: number | null;
-            currency: string;
-            formatted?: string;
+        Destination: {
+            /** @description Unique identifier of the destination */
+            id: string;
+            /** @description Name of the destination */
+            name: string;
+            /** @description URL-friendly slug for the destination */
+            slug?: string | null;
+            /** @description External entity ID from the source data provider */
+            externalId?: string | null;
+            /** @description Array of parks within this destination */
+            parks: components["schemas"]["Park"][];
         };
+        DestinationsResponse: {
+            /** @description Array of all destinations */
+            destinations: components["schemas"]["Destination"][];
+        };
+        DiningAvailability: {
+            /** @description Available party size */
+            partySize?: number | null;
+            /** @description Current wait time in minutes */
+            waitTime?: number | null;
+        };
+        EntityChild: {
+            /** @description Unique entity identifier */
+            id: string;
+            /** @description Entity name */
+            name: string;
+            entityType: components["schemas"]["EntityType"];
+            /** @description External identifier */
+            externalId?: string;
+            /** @description Parent entity identifier */
+            parentId?: string;
+            location?: components["schemas"]["EntityLocation"];
+        };
+        EntityChildrenResponse: {
+            /** @description Parent entity identifier */
+            id?: string;
+            /** @description Parent entity name */
+            name?: string;
+            entityType?: components["schemas"]["EntityType"];
+            /** @description Entity timezone */
+            timezone?: string;
+            children?: components["schemas"]["EntityChild"][];
+        };
+        EntityData: {
+            /** @description Unique entity identifier */
+            id: string;
+            /** @description Entity name */
+            name: string;
+            entityType: components["schemas"]["EntityType"];
+            /** @description Parent entity identifier */
+            parentId?: string | null;
+            /** @description Destination identifier */
+            destinationId?: string | null;
+            /** @description Entity timezone */
+            timezone: string;
+            location?: components["schemas"]["EntityLocation"];
+            tags?: components["schemas"]["TagData"][];
+        };
+        EntityLiveData: {
+            /** @description Entity identifier */
+            id: string;
+            /** @description Entity name */
+            name: string;
+            entityType: components["schemas"]["EntityType"];
+            status?: components["schemas"]["LiveStatusType"];
+            /**
+             * Format: date-time
+             * @description Last update timestamp
+             */
+            lastUpdated: string;
+            queue?: components["schemas"]["LiveQueue"];
+            showtimes?: components["schemas"]["LiveShowTime"][];
+            operatingHours?: components["schemas"]["LiveShowTime"][];
+            diningAvailability?: components["schemas"]["DiningAvailability"][];
+        };
+        EntityLiveDataResponse: {
+            /** @description Entity identifier */
+            id?: string;
+            /** @description Entity name */
+            name?: string;
+            entityType?: components["schemas"]["EntityType"];
+            /** @description Entity timezone */
+            timezone?: string;
+            liveData?: components["schemas"]["EntityLiveData"][];
+        };
+        EntityLocation: {
+            /** @description Latitude coordinate of the entity location */
+            latitude?: number | null;
+            /** @description Longitude coordinate of the entity location */
+            longitude?: number | null;
+        };
+        /** @description Represents a single schedule entry */
+        EntityScheduleEntry: {
+            /** @description The date of the schedule entry */
+            date: string;
+            /** @description Type of schedule entry e.g. OPERATING, EXTRA_HOURS, etc. */
+            type: string;
+            /** @description Optional description of the schedule entry */
+            description?: string;
+            /** @description Opening time for this schedule entry */
+            openingTime: string;
+            /** @description Closing time for this schedule entry */
+            closingTime: string;
+        } & {
+            [key: string]: unknown;
+        };
+        EntityScheduleResponse: {
+            /** @description Entity identifier */
+            id?: string;
+            /** @description Entity name */
+            name?: string;
+            /** @description Type of entity */
+            entityType?: components["schemas"]["EntityType"];
+            /** @description Entity timezone */
+            timezone?: string;
+            schedule?: components["schemas"]["EntityScheduleEntry"][];
+            /** @description Only included for destinations, lists all parks within the destination */
+            parks?: components["schemas"]["ParkSchedule"][];
+        };
+        /**
+         * @description Type of entity in the theme park system
+         * @enum {string}
+         */
+        EntityType: "DESTINATION" | "PARK" | "ATTRACTION" | "RESTAURANT" | "HOTEL" | "SHOW";
         LiveQueue: {
             STANDBY?: {
+                /** @description Current standby wait time in minutes */
                 waitTime?: number;
             };
             SINGLE_RIDER?: {
+                /** @description Current single rider wait time in minutes */
                 waitTime: number | null;
             };
             RETURN_TIME?: {
                 state: components["schemas"]["ReturnTimeState"];
-                /** Format: date-time */
+                /**
+                 * Format: date-time
+                 * @description Start time of return window
+                 */
                 returnStart: string | null;
-                /** Format: date-time */
+                /**
+                 * Format: date-time
+                 * @description End time of return window
+                 */
                 returnEnd: string | null;
             };
             PAID_RETURN_TIME?: {
@@ -162,125 +272,128 @@ export interface components {
             };
             BOARDING_GROUP?: {
                 allocationStatus: components["schemas"]["BoardingGroupState"];
+                /** @description Current boarding group start number */
                 currentGroupStart: number | null;
+                /** @description Current boarding group end number */
                 currentGroupEnd: number | null;
-                /** Format: date-time */
+                /**
+                 * Format: date-time
+                 * @description Next boarding group allocation time
+                 */
                 nextAllocationTime: string | null;
+                /** @description Estimated wait time in minutes */
                 estimatedWait: number | null;
             };
             PAID_STANDBY?: {
+                /** @description Current paid standby wait time in minutes */
                 waitTime: number | null;
             };
         };
         LiveShowTime: {
+            /** @description Type of show time entry */
             type: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Start time of the show
+             */
             startTime?: string | null;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description End time of the show
+             */
             endTime?: string | null;
         };
-        DiningAvailability: {
-            partySize?: number | null;
-            waitTime?: number | null;
-        };
-        TagData: {
-            tag: string;
-            tagName: string;
-            id?: string;
-            value?: string | number | Record<string, never>;
-        };
-        EntityData: {
+        /**
+         * @description Current operating status of an entity
+         * @enum {string}
+         */
+        LiveStatusType: "OPERATING" | "DOWN" | "CLOSED" | "REFURBISHMENT";
+        Park: {
+            /** @description Unique identifier of the park */
             id: string;
+            /** @description Name of the park */
             name: string;
-            entityType: components["schemas"]["EntityType"];
-            parentId?: string | null;
-            destinationId?: string | null;
-            timezone: string;
-            location?: {
-                latitude?: number;
-                longitude?: number;
-            } | null;
-            tags?: components["schemas"]["TagData"][];
         };
-        EntityChild: {
-            id: string;
-            name: string;
-            entityType: components["schemas"]["EntityType"];
-            externalId?: string;
-            parentId?: string;
-            location?: {
-                latitude?: number | null;
-                longitude?: number | null;
-            } | null;
-        };
-        EntityChildrenResponse: {
+        ParkSchedule: {
+            /** @description Entity identifier */
             id?: string;
+            /** @description Entity name */
             name?: string;
+            /** @description Type of entity */
             entityType?: components["schemas"]["EntityType"];
+            /** @description Entity timezone */
             timezone?: string;
-            children?: components["schemas"]["EntityChild"][];
+            schedule?: components["schemas"]["PricedScheduleEntry"][];
         };
-        EntityLiveData: {
-            id: string;
-            name: string;
-            entityType: components["schemas"]["EntityType"];
-            status?: components["schemas"]["LiveStatusType"];
-            /** Format: date-time */
-            lastUpdated: string;
-            queue?: components["schemas"]["LiveQueue"];
-            showtimes?: components["schemas"]["LiveShowTime"][];
-            operatingHours?: components["schemas"]["LiveShowTime"][];
-            diningAvailability?: components["schemas"]["DiningAvailability"][];
+        PriceData: {
+            /** @description Numerical price amount, in the currency's lowest denomination (e.g. cents). null when the item costs money but the provider does not publish an amount; 0 means genuinely free */
+            amount: number | null;
+            /** @description Currency code */
+            currency: string;
+            /** @description Formatted price string */
+            formatted?: string;
         };
-        EntityLiveDataResponse: {
-            id?: string;
-            name?: string;
-            entityType?: components["schemas"]["EntityType"];
-            timezone?: string;
-            liveData?: components["schemas"]["EntityLiveData"][];
-        };
-        SchedulePriceObject: {
-            /** @enum {string|null} */
-            type?: "ADMISSION" | "PACKAGE" | "ATTRACTION" | null;
-            id?: string;
-            name?: string;
-            price?: components["schemas"]["PriceData"];
-            available?: boolean;
-        };
-        ScheduleEntry: {
-            /** Format: YYYY-MM-DD */
+        PricedScheduleEntry: {
+            /**
+             * Format: YYYY-MM-DD
+             * @description Schedule date
+             */
             date: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Opening time
+             */
             openingTime: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Closing time
+             */
             closingTime: string;
-            /** @enum {string} */
+            /**
+             * @description Type of schedule entry
+             * @enum {string}
+             */
             type: "OPERATING" | "TICKETED_EVENT" | "PRIVATE_EVENT" | "EXTRA_HOURS" | "INFO";
+            /** @description Available purchases for this schedule entry */
             purchases?: components["schemas"]["SchedulePriceObject"][];
         };
-        EntityScheduleResponse: {
+        /**
+         * @description State of return time availability
+         * @enum {string}
+         */
+        ReturnTimeState: "AVAILABLE" | "TEMP_FULL" | "FINISHED";
+        SchedulePriceObject: {
+            /** @description Type of price object */
+            type?: components["schemas"]["SchedulePriceType"];
+            /** @description Unique identifier */
             id?: string;
+            /** @description Name of the price object */
             name?: string;
-            entityType?: components["schemas"]["EntityType"];
-            timezone?: string;
-            schedule?: components["schemas"]["ScheduleEntry"][];
-            /** @description Only included for destinations, this will list all parks within the destination */
-            parks?: components["schemas"]["EntityScheduleResponse"][];
+            price?: {
+                /** @description Price amount */
+                amount: number;
+                /** @description Currency code */
+                currency: string;
+                /** @description Formatted price string */
+                formatted?: string;
+            };
+            /** @description Whether this price option is available */
+            available?: boolean;
         };
-        DestinationParkEntry: {
+        /**
+         * @description Type of schedule price
+         * @enum {string}
+         */
+        SchedulePriceType: "ADMISSION" | "PACKAGE" | "ATTRACTION";
+        TagData: {
+            /** @description Tag identifier */
+            tag: string;
+            /** @description Human readable tag name */
+            tagName: string;
+            /** @description Unique identifier */
             id?: string;
-            name?: string;
-        };
-        DestinationEntry: {
-            id?: string;
-            name?: string;
-            slug?: string;
-            /** @description External entity ID from the source data provider */
-            externalId?: string;
-            parks?: components["schemas"]["DestinationParkEntry"][];
-        };
-        DestinationsResponse: {
-            destinations?: components["schemas"]["DestinationEntry"][];
+            /** @description Tag value - can be string, number or object */
+            value?: unknown;
         };
     };
     responses: never;
@@ -291,7 +404,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getDestinations: {
+    getAllDestinations: {
         parameters: {
             query?: never;
             header?: never;
@@ -300,7 +413,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description successful fetch */
+            /** @description Successful response */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -309,27 +422,64 @@ export interface operations {
                     "application/json": components["schemas"]["DestinationsResponse"];
                 };
             };
+            /** @description Too Many Requests - Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error type
+                         * @enum {string}
+                         */
+                        error: "Rate limit exceeded";
+                        /** @description Rate limit exceeded message */
+                        message: string;
+                        /** @description Time in seconds to wait before retrying */
+                        retryAfter?: number;
+                    };
+                };
+            };
         };
     };
-    getEntity: {
+    getEntityById: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Entity ID (or slug) to fetch */
-                entityID: string;
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description successful fetch */
+            /** @description Successful response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["EntityData"];
+                };
+            };
+            /** @description Too Many Requests - Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error type
+                         * @enum {string}
+                         */
+                        error: "Rate limit exceeded";
+                        /** @description Rate limit exceeded message */
+                        message: string;
+                        /** @description Time in seconds to wait before retrying */
+                        retryAfter?: number;
+                    };
                 };
             };
         };
@@ -339,20 +489,38 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Entity ID (or slug) to fetch */
-                entityID: string;
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description successful fetch */
+            /** @description Successful response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["EntityChildrenResponse"];
+                };
+            };
+            /** @description Too Many Requests - Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error type
+                         * @enum {string}
+                         */
+                        error: "Rate limit exceeded";
+                        /** @description Rate limit exceeded message */
+                        message: string;
+                        /** @description Time in seconds to wait before retrying */
+                        retryAfter?: number;
+                    };
                 };
             };
         };
@@ -362,14 +530,13 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Entity ID (or slug) to fetch */
-                entityID: string;
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description successful fetch */
+            /** @description Successful response */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -378,27 +545,64 @@ export interface operations {
                     "application/json": components["schemas"]["EntityLiveDataResponse"];
                 };
             };
+            /** @description Too Many Requests - Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error type
+                         * @enum {string}
+                         */
+                        error: "Rate limit exceeded";
+                        /** @description Rate limit exceeded message */
+                        message: string;
+                        /** @description Time in seconds to wait before retrying */
+                        retryAfter?: number;
+                    };
+                };
+            };
         };
     };
-    getEntityScheduleUpcoming: {
+    getEntitySchedule: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Entity ID (or slug) to fetch */
-                entityID: string;
+                id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description successful fetch */
+            /** @description Successful response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["EntityScheduleResponse"];
+                };
+            };
+            /** @description Too Many Requests - Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error type
+                         * @enum {string}
+                         */
+                        error: "Rate limit exceeded";
+                        /** @description Rate limit exceeded message */
+                        message: string;
+                        /** @description Time in seconds to wait before retrying */
+                        retryAfter?: number;
+                    };
                 };
             };
         };
@@ -408,24 +612,40 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Entity ID (or slug) to fetch */
-                entityID: string;
-                /** @description Schedule year to fetch */
-                year: number;
-                /** @description Schedule month to fetch. Must be a two digit zero-padded month. */
-                month: number;
+                id: string;
+                year: string;
+                month: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description successful fetch */
+            /** @description Successful response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["EntityScheduleResponse"];
+                };
+            };
+            /** @description Too Many Requests - Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Error type
+                         * @enum {string}
+                         */
+                        error: "Rate limit exceeded";
+                        /** @description Rate limit exceeded message */
+                        message: string;
+                        /** @description Time in seconds to wait before retrying */
+                        retryAfter?: number;
+                    };
                 };
             };
         };
