@@ -10,7 +10,7 @@ A typed, modern TypeScript/JavaScript SDK for the [ThemeParks.wiki](https://api.
 npm i themeparks
 ```
 
-Runs on Node 18+, evergreen browsers, Deno, Bun, and Cloudflare Workers. Zero runtime dependencies.
+Runs on Node 20+, evergreen browsers, Deno, Bun, and Cloudflare Workers. Zero runtime dependencies.
 
 ## Print live wait times
 
@@ -265,7 +265,7 @@ v7 is a full TypeScript rewrite. It replaces the v6 OpenAPI-Generator surface wi
 
 ## Supported runtimes
 
-- Node 18, 20, 22
+- Node 20, 22, 24
 - Evergreen browsers
 - Deno
 - Bun

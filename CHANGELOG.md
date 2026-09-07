@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Minimum supported Node is now 20.** Node 18 reached end of life on
+  2025-04-30 and is no longer tested. `engines` moves from `>=18` to `>=20`,
+  and CI now runs Node 20, 22 and 24.
+
+  Nothing in the shipped bundle needed Node 18 specifically; the constraint
+  arrives from the dev toolchain, where eslint 10 and vitest 4 both require
+  Node 20 or newer. Rather than keep claiming support for a runtime nothing
+  verifies, the claim is withdrawn. If you are still on Node 18, stay on
+  7.1.x.
+
+- Dev dependencies: eslint 9 to 10, vitest 1 to 4. No change to the published
+  type surface: `dist/index.d.ts` is byte-identical to 7.1.0's.
+
+  TypeScript stays on 5.x. `openapi-typescript@7.13.0` still declares
+  `peer typescript@"^5.x"`, so TypeScript 6 cannot be installed here until
+  that range widens upstream.
+
 ## [7.1.0] - 2026-09-01
 
 ### Fixed
