@@ -15,17 +15,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   path is the one this client uses, so `purchases` was invisible and `type`
   was a bare `string`.
 
-  Magic Kingdom alone serves 27 schedule entries carrying `purchases`. If you
-  reached them before, you did it with a cast. You no longer need to:
+  Magic Kingdom served 26 of 79 upcoming entries with `purchases` on the day
+  this shipped. If you reached them before, you did it with a cast. You no
+  longer need to:
 
   ```ts
-  const sched = await tp.entity(parkId).schedule();
+  const sched = await tp.entity(parkId).schedule.upcoming();
   for (const day of sched.schedule ?? []) {
-    if (day.type === 'TICKETED_EVENT') {
-      for (const p of day.purchases ?? []) console.log(p.name, p.price.amount);
+    for (const p of day.purchases ?? []) {
+      console.log(day.date, p.name, p.price.amount, p.price.currency);
+      // 2026-09-08 Lightning Lane for Seven Dwarfs Mine Train 1100 USD
     }
   }
   ```
+
+  Purchases are not limited to `TICKETED_EVENT` days — Lightning Lane entries
+  attach to ordinary `OPERATING` days, so do not filter on `type` to find
+  them.
 
 - **`purchases[].price.amount` is nullable, matching `PriceData`.** 7.1.0 made
   `PriceData.amount` nullable but the schedule path carried a second, inline
