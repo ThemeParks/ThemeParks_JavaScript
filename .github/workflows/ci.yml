@@ -1,8 +1,10 @@
 name: CI
 
 on:
-  # TEMPORARY (test/dispatch-proof): push and pull_request removed on this
-  # branch only, so this PR reproduces a bot PR with zero checks.
+  # TEMPORARY (test/dispatch-proof): experiment 2 — push only, still no
+  # pull_request, to see whether a push-event run satisfies protection.
+  push:
+    branches: [test/dispatch-proof]
   workflow_dispatch:
 
 jobs:
