@@ -5,13 +5,16 @@ on:
     branches: [main, v7]
   pull_request:
     branches: [main, v7]
-  # Lets another workflow start this one against a specific ref.
+  # Re-run CI against a ref by hand. Convenience only.
   #
-  # The spec-drift job opens its PR with GITHUB_TOKEN, and GitHub does not
-  # start workflow runs from GITHUB_TOKEN-raised events — so the required
-  # checks never report and the PR is blocked on a report it can never get.
-  # workflow_dispatch and repository_dispatch are the two documented
-  # exceptions to that rule, so drift can dispatch this run itself.
+  # This was added to let the spec-drift job start its own CI, on the reasoning
+  # that workflow_dispatch is a documented exception to "GITHUB_TOKEN-raised
+  # events do not start workflow runs". The run does start — but measured
+  # against a real PR, its check runs do not satisfy branch protection, even
+  # sitting on the PR head SHA with the exact required names and a check suite
+  # reporting as linked to the PR. A push-event run on the next commit cleared
+  # the same PR immediately. Drift therefore pushes as a GitHub App instead;
+  # see spec-drift.yml. Kept because dispatching CI by hand is still useful.
   workflow_dispatch:
 
 jobs:

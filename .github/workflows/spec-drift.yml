@@ -37,9 +37,27 @@ jobs:
         continue-on-error: true
         run: npm run test:live
 
+      # The PR must not be opened with GITHUB_TOKEN. GitHub does not start
+      # workflow runs from GITHUB_TOKEN-raised events, so a PR opened that way
+      # never gets its required checks and can never be merged, however good
+      # the diff is. Both drift PRs sat blocked for days on exactly that.
+      #
+      # workflow_dispatch is documented as an exception to the no-runs rule and
+      # does start a run — but measured against a real PR, those check runs do
+      # not satisfy branch protection even on the right SHA under the right
+      # names. A push-event run does. So the push has to come from an identity
+      # that is not GITHUB_TOKEN, and this app is that identity.
+      - name: Mint an installation token for the drift bot
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DRIFT_APP_ID }}
+          private-key: ${{ secrets.DRIFT_APP_PRIVATE_KEY }}
+
       - name: Open PR if schema changed
         uses: peter-evans/create-pull-request@v8
         with:
+          token: ${{ steps.app-token.outputs.token }}
           add-paths: src/_generated/schema.ts
           branch: automated/spec-drift
           commit-message: 'chore: regenerate schema from upstream spec'
