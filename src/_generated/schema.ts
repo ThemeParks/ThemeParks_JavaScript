@@ -148,6 +148,8 @@ export interface components {
             /** @description Parent entity identifier */
             parentId?: string;
             location?: components["schemas"]["EntityLocation"];
+            /** @description URL-friendly slug */
+            slug?: string | null;
         };
         EntityChildrenResponse: {
             /** @description Parent entity identifier */
@@ -159,20 +161,33 @@ export interface components {
             timezone?: string;
             children?: components["schemas"]["EntityChild"][];
         };
+        /** @description A single entity. Beyond the properties listed here, an entity may carry additional tag-derived properties named after the tag's slug, for example `minimumHeight` (integer, centimetres) or `mayGetWet` (boolean). The set is open-ended and driven by data rather than fixed by this contract, so clients should read them defensively rather than assume any particular tag is present. */
         EntityData: {
             /** @description Unique entity identifier */
             id: string;
             /** @description Entity name */
             name: string;
             entityType: components["schemas"]["EntityType"];
+            /**
+             * @description Kind of attraction. Present on ATTRACTION entities.
+             * @enum {string}
+             */
+            attractionType?: "UNKNOWN" | "RIDE" | "SHOW" | "TRANSPORT" | "PARADE" | "MEET_AND_GREET" | "OTHER";
             /** @description Parent entity identifier */
             parentId?: string | null;
             /** @description Destination identifier */
             destinationId?: string | null;
+            /** @description Identifier of the park this entity belongs to. Absent on destinations and on parks themselves. */
+            parkId?: string | null;
             /** @description Entity timezone */
             timezone: string;
             location?: components["schemas"]["EntityLocation"];
-            tags?: components["schemas"]["TagData"][];
+            /** @description Identifier used by the source data provider. */
+            externalId?: string;
+            /** @description URL-friendly slug. Served for destinations. */
+            slug?: string | null;
+        } & {
+            [key: string]: unknown;
         };
         EntityLiveData: {
             /** @description Entity identifier */
@@ -366,16 +381,6 @@ export interface components {
          * @enum {string}
          */
         SchedulePriceType: "ADMISSION" | "PACKAGE" | "ATTRACTION";
-        TagData: {
-            /** @description Tag identifier */
-            tag: string;
-            /** @description Human readable tag name */
-            tagName: string;
-            /** @description Unique identifier */
-            id?: string;
-            /** @description Tag value - can be string, number or object */
-            value?: unknown;
-        };
     };
     responses: never;
     parameters: never;
