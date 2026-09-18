@@ -18,6 +18,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   const tp = new ThemeParks({ apiKey: 'your-api-key' });
   ```
 
+- **History endpoints.** `tp.entity(id).history.changes(query)`,
+  `.daily(query)` and `.coverage()` over `GET /entity/{id}/history`,
+  `/history/daily` and `/history/coverage`, with `tp.raw.getEntityHistory`,
+  `getEntityHistoryDaily` and `getEntityHistoryCoverage` underneath. The
+  query is `{ date }` or `{ from, to }`, park-local days or RFC 3339
+  instants, and is sent through `URLSearchParams`, so an instant's `+02:00`
+  offset survives the trip. A `PARK` answers with `entities[]` for every
+  entity in it; every other type answers for itself. New exported types:
+  `EntityHistory`, `EntityHistoryDaily`, `EntityHistoryCoverage`,
+  `HistoryQuery`.
+
+  ```js
+  const day = await tp.entity(barnstormerId).history.changes({ date: '2026-09-17' });
+  if (!('entities' in day)) {
+    for (const row of day.history) console.log(row.time, row.queue?.STANDBY?.waitTime);
+  }
+  ```
+
+  The default cache keeps `coverage` for an hour and leaves `changes` and
+  `daily` uncached, since a range that holds today is not final.
+
 ## [8.0.0] - 2026-09-08
 
 ### Fixed

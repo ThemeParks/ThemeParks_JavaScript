@@ -7,6 +7,8 @@ const FIVE_MIN = 5 * 60 * 1000;
  */
 export function ttlForPath(path: string): number {
   if (/^\/entity\/[^/]+\/live$/.test(path)) return 0;
+  if (/^\/entity\/[^/]+\/history\/coverage$/.test(path)) return HOUR;
+  if (/^\/entity\/[^/]+\/history(\/daily)?(\?.*)?$/.test(path)) return 0;
   if (/^\/entity\/[^/]+\/schedule(\/\d+\/\d+)?$/.test(path)) return FIVE_MIN;
   if (/^\/entity\/[^/]+\/children$/.test(path)) return HOUR;
   if (/^\/entity\/[^/]+$/.test(path)) return HOUR;

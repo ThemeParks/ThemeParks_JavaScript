@@ -161,6 +161,68 @@ const entries = await tp.entity(mk).schedule.range(new Date('2026-05-01'), new D
 console.log(`${entries.length} schedule entries`);
 ```
 
+## History
+
+Three endpoints answer what an entity did in the past. Days are park-local; the
+range is one day (`date`) or `from`/`to` (days inclusive, or RFC 3339 instants
+with `to` exclusive). Without a range the call means today.
+
+```js
+import { ThemeParks } from 'themeparks';
+
+const tp = new ThemeParks({ apiKey: 'your-api-key' });
+const barnstormer = tp.entity('924a3b2c-6b4b-49e5-99d3-e9dc3f2e8a48');
+
+// Every recorded change of one day: the full live-data object per change, plus
+// `time` and the `changed` paths.
+const day = await barnstormer.history.changes({ date: '2026-09-17' });
+if (!('entities' in day)) {
+  console.log(`opened ${day.opening.status}, ${day.history.length} changes`);
+  for (const row of day.history) {
+    console.log(row.time, row.status, row.queue?.STANDBY?.waitTime ?? '--', row.changed.join(','));
+  }
+}
+
+// One row per day: operating and down minutes, standby min/p50/p90/max/mean.
+const week = await barnstormer.history.daily({ from: '2026-09-11', to: '2026-09-17' });
+if (!('entities' in week)) {
+  for (const d of week.days) console.log(d.date, d.operatingMinutes, d.standby?.p50);
+}
+
+// Which days, and which live-data fields, are held at all.
+const coverage = await barnstormer.history.coverage();
+console.log(coverage.firstRecordedAt, coverage.retrievableThrough, Object.keys(coverage.kinds));
+```
+
+Sample output of the first loop:
+
+```
+2026-09-17T12:30:25Z OPERATING 5 status,queue.STANDBY.waitTime,queue.RETURN_TIME.returnStart,queue.RETURN_TIME.returnEnd
+2026-09-17T12:43:48Z OPERATING 10 queue.STANDBY.waitTime
+```
+
+Three things to know before polling these:
+
+- **A park answers for the whole park.** `changes` and `daily` on a `PARK`
+  return an `entities[]` array, one entry per entity with history, instead of
+  `history[]` / `days[]`; the range of a park is limited to one day for
+  `changes`. Every other entity type, a `DESTINATION` included, answers for
+  itself. Narrow with `'entities' in res`, as above.
+- **The window and the budget depend on the key.** Anonymous callers see 7
+  days back and 60 history requests an hour; a free key sees 30 days and 600.
+  A day outside the window is a 403 `ApiError` whose
+  `body.error.earliestAllowedDate` names the first day you may ask for. Over
+  the budget is a 429 whose `Retry-After` can be most of an hour; with the
+  default `retry.on429` the client sleeps that long before trying again, so a
+  poller that would rather fail fast passes `retry: { on429: false }` and reads
+  `err.retryAfterMs`.
+- **Today is not final.** The default cache leaves `changes` and `daily`
+  uncached and keeps `coverage` for an hour. A completed day never changes, so
+  cache it yourself for as long as you like.
+
+`tp.raw.getEntityHistory(id, query)`, `getEntityHistoryDaily(id, query)` and
+`getEntityHistoryCoverage(id)` are the underlying calls.
+
 ## Low-level escape hatch
 
 Every ergonomic helper is built on top of `tp.raw`, which is a thin, typed 1:1 wrapper over the OpenAPI operations. Use it directly when you want the raw response shape:
@@ -222,13 +284,15 @@ const tp = new ThemeParks({
 
 The default client caches `GET` responses in-memory (LRU) with sensible per-endpoint TTLs:
 
-| Endpoint                              | TTL        | Rationale                         |
-| ------------------------------------- | ---------- | --------------------------------- |
-| `GET /destinations`                   | 1 hour     | Directory rarely changes.         |
-| `GET /entity/{id}`                    | 1 hour     | Entity metadata is static.        |
-| `GET /entity/{id}/children`           | 1 hour     | Park topology is stable.          |
-| `GET /entity/{id}/schedule[/yyyy/mm]` | 5 minutes  | Schedules update but not rapidly. |
-| `GET /entity/{id}/live`               | 0 (bypass) | Live data is always fetched.      |
+| Endpoint                              | TTL        | Rationale                           |
+| ------------------------------------- | ---------- | ----------------------------------- |
+| `GET /destinations`                   | 1 hour     | Directory rarely changes.           |
+| `GET /entity/{id}`                    | 1 hour     | Entity metadata is static.          |
+| `GET /entity/{id}/children`           | 1 hour     | Park topology is stable.            |
+| `GET /entity/{id}/schedule[/yyyy/mm]` | 5 minutes  | Schedules update but not rapidly.   |
+| `GET /entity/{id}/live`               | 0 (bypass) | Live data is always fetched.        |
+| `GET /entity/{id}/history/coverage`   | 1 hour     | Whole days; changes once a day.     |
+| `GET /entity/{id}/history[/daily]`    | 0 (bypass) | A range holding today is not final. |
 
 ### Disable caching
 
