@@ -53,6 +53,7 @@ Jungle Cruise                                      40 min
 | ----------- | ----------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `baseUrl`   | `string`                            | `https://api.themeparks.wiki/v1` | API base URL (point at a mock / staging if you need to).                                              |
 | `userAgent` | `string`                            | `themeparks-sdk-js/<version>`    | Sent as the `User-Agent` header. Set this to identify your app.                                       |
+| `apiKey`    | `string`                            | none                             | API key from api.themeparks.wiki, sent as `X-API-Key`. Optional; a key raises the limits.             |
 | `fetch`     | `typeof fetch`                      | `globalThis.fetch`               | Custom fetch implementation. Useful for logging, mocking, or older runtimes.                          |
 | `timeoutMs` | `number`                            | `10000`                          | Per-request timeout in milliseconds.                                                                  |
 | `retry`     | `Partial<RetryConfig>`              | `{ max: 3, on429: true }`        | Retry/backoff behavior. `max` counts retries **beyond** the initial attempt (so `3` = up to 4 total). |
@@ -63,6 +64,7 @@ Example:
 ```js
 const tp = new ThemeParks({
   userAgent: 'my-app/1.2.3 (+https://example.com)',
+  apiKey: 'your-api-key',
   timeoutMs: 15_000,
   retry: { max: 5, on429: true },
 });

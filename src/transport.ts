@@ -54,6 +54,8 @@ export interface RetryConfig {
 export interface TransportOptions {
   baseUrl: string;
   userAgent: string;
+  /** Sent as the `X-API-Key` header on every request when set. */
+  apiKey?: string;
   timeoutMs: number;
   /**
    * Retry policy. See {@link RetryConfig} — `max` counts retries beyond the
@@ -140,6 +142,9 @@ export class Transport {
           headers: {
             accept: 'application/json',
             'user-agent': this.opts.userAgent,
+            ...(this.opts.apiKey !== undefined && this.opts.apiKey !== ''
+              ? { 'x-api-key': this.opts.apiKey }
+              : {}),
           },
           signal: controller.signal,
         });

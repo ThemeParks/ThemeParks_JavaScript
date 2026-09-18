@@ -31,6 +31,38 @@ describe('Transport', () => {
     });
   });
 
+  it('sends the API key as x-api-key when set', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(jsonResponse({ ok: true }));
+    const t = new Transport({
+      baseUrl: 'https://api.example/v1',
+      userAgent: 'test/1',
+      apiKey: 'tpw_secret',
+      timeoutMs: 1000,
+      retry: { max: 0, on429: true },
+      fetch: fetchFn,
+    });
+    await t.get('/destinations');
+    const [, init] = fetchFn.mock.calls[0]!;
+    expect((init as RequestInit).headers).toMatchObject({ 'x-api-key': 'tpw_secret' });
+  });
+
+  it('sends no x-api-key header when the key is unset or empty', async () => {
+    for (const apiKey of [undefined, '']) {
+      const fetchFn = vi.fn().mockResolvedValue(jsonResponse({ ok: true }));
+      const t = new Transport({
+        baseUrl: 'https://api.example/v1',
+        userAgent: 'test/1',
+        ...(apiKey !== undefined ? { apiKey } : {}),
+        timeoutMs: 1000,
+        retry: { max: 0, on429: true },
+        fetch: fetchFn,
+      });
+      await t.get('/destinations');
+      const [, init] = fetchFn.mock.calls[0]!;
+      expect(Object.keys((init as RequestInit).headers as object)).not.toContain('x-api-key');
+    }
+  });
+
   it('throws ApiError on 4xx with body', async () => {
     const fetchFn = vi
       .fn()

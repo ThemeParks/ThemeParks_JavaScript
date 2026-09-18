@@ -31,6 +31,22 @@ describe('ThemeParks client', () => {
     );
   });
 
+  it('passes apiKey through to the transport', async () => {
+    const fetchFn = mockFetch({ destinations: [] });
+    const tp = new ThemeParks({ fetch: fetchFn, apiKey: 'tpw_secret' });
+    await tp.raw.getDestinations();
+    const init = fetchFn.mock.calls[0]![1] as RequestInit;
+    expect((init.headers as Record<string, string>)['x-api-key']).toBe('tpw_secret');
+  });
+
+  it('sends no x-api-key header without apiKey', async () => {
+    const fetchFn = mockFetch({ destinations: [] });
+    const tp = new ThemeParks({ fetch: fetchFn });
+    await tp.raw.getDestinations();
+    const init = fetchFn.mock.calls[0]![1] as RequestInit;
+    expect(init.headers).not.toHaveProperty('x-api-key');
+  });
+
   it('caches /destinations by default for 1 hour', async () => {
     const fetchFn = mockFetch({ destinations: [] });
     const tp = new ThemeParks({ fetch: fetchFn });

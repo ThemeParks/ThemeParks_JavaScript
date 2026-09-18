@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`apiKey` client option.** Sent as the `X-API-Key` header on every
+  request. Every endpoint still answers without one; a key raises the limits,
+  which matters for the history endpoints (30 days of history and 600
+  requests an hour with a free key, against 7 days and 60 without).
+
+  ```js
+  const tp = new ThemeParks({ apiKey: 'your-api-key' });
+  ```
+
 ## [8.0.0] - 2026-09-08
 
 ### Fixed
