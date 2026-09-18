@@ -1,0 +1,7 @@
+{
+  "error": {
+    "type": "HISTORY_WINDOW_EXCEEDED",
+    "message": "Requests without an API key can see history back to 2026-09-12 (7 days).",
+    "earliestAllowedDate": "2026-09-12"
+  }
+}

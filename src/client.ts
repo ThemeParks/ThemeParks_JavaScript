@@ -11,6 +11,11 @@ const DEFAULT_USER_AGENT = `themeparks-sdk-js/${PACKAGE_VERSION}`;
 export interface ThemeParksOptions {
   baseUrl?: string;
   userAgent?: string;
+  /**
+   * API key from https://api.themeparks.wiki, sent as the `X-API-Key` header.
+   * Optional: every endpoint answers without one; a key raises the limits.
+   */
+  apiKey?: string;
   fetch?: FetchLike;
   timeoutMs?: number;
   retry?: Partial<RetryConfig>;
@@ -35,6 +40,7 @@ export class ThemeParks {
     this.transport = new Transport({
       baseUrl: this.#baseUrl,
       userAgent: options.userAgent ?? DEFAULT_USER_AGENT,
+      ...(options.apiKey !== undefined ? { apiKey: options.apiKey } : {}),
       timeoutMs: options.timeoutMs ?? 10_000,
       retry: { max: options.retry?.max ?? 3, on429: options.retry?.on429 ?? true },
       fetch: fetchFn,

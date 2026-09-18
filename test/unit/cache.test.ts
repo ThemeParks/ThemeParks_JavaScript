@@ -20,6 +20,15 @@ describe('ttlForPath', () => {
   it('returns 0 (bypass) for /entity/{id}/live', () => {
     expect(ttlForPath('/entity/abc-123/live')).toBe(0);
   });
+  it('returns 1h for /entity/{id}/history/coverage', () => {
+    expect(ttlForPath('/entity/abc-123/history/coverage')).toBe(3_600_000);
+  });
+  it('returns 0 (bypass) for /entity/{id}/history with or without a query', () => {
+    expect(ttlForPath('/entity/abc-123/history')).toBe(0);
+    expect(ttlForPath('/entity/abc-123/history?date=2026-09-17')).toBe(0);
+    expect(ttlForPath('/entity/abc-123/history/daily')).toBe(0);
+    expect(ttlForPath('/entity/abc-123/history/daily?from=2026-09-12&to=2026-09-17')).toBe(0);
+  });
 });
 
 describe('InMemoryLruCache', () => {

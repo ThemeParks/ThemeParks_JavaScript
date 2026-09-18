@@ -27,4 +27,15 @@ describe('live smoke tests against api.themeparks.wiki', () => {
     const s = await tp.entity(DLP_ID).schedule.upcoming();
     expect(Array.isArray(s.schedule)).toBe(true);
   });
+
+  it('Magic Kingdom history coverage parses', async () => {
+    const c = await tp.entity(MK_ID).history.coverage();
+    expect(c.timezone).toBe('America/New_York');
+    expect(typeof c.kinds).toBe('object');
+  });
+
+  it("Magic Kingdom today's history answers for the whole park", async () => {
+    const h = await tp.entity(MK_ID).history.changes();
+    expect('entities' in h && Array.isArray(h.entities)).toBe(true);
+  });
 });
