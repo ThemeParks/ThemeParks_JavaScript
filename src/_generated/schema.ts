@@ -11,7 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/destinations */
+        /**
+         * GET /v1/destinations
+         * @description Every destination we hold, each with its parks as id and name. This is the entry point: take a destination or park id from here and ask GET /v1/entity/{id}/children for what is inside it, /live for what it is doing, or /schedule for when it is open. Soft-deleted parks are excluded. The list is small and changes when a resort opens or closes a park, which is rarely — cached `public, max-age=300, s-maxage=3600`, and there is no reason to ask for it more than once a run.
+         */
         get: operations["getAllDestinations"];
         put?: never;
         post?: never;
@@ -28,7 +31,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/entity/{id} */
+        /**
+         * GET /v1/entity/{id}
+         * @description The entity document: what this thing IS, not what it is doing. Name, entityType, timezone, location, its place in the destination/park hierarchy, and the ride's own attributes. `id` is an entity's UUID, its slug, or — for a destination only — its upstream external id. An id that resolves to nothing is 404, including one malformed enough that the query itself rejects it. Attributes recorded as tags are spread into the document as top-level keys named after the tag — `minimumHeight`, `mayGetWet` and so on — so the set of keys varies by entity and by park; read the ones you need and ignore the rest rather than expecting a fixed shape. For what the entity is doing right now, GET /v1/entity/{id}/live. Cached `public, max-age=300, s-maxage=3600`: this changes when a park changes its data, which is rarely, and polling it faster buys requests rather than freshness.
+         */
         get: operations["getEntityById"];
         put?: never;
         post?: never;
@@ -45,8 +51,71 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/entity/{id}/children */
+        /**
+         * GET /v1/entity/{id}/children
+         * @description The entities beneath this one, as a flat array — id, name, entityType, slug, external id, coordinates and parentId each. `id` is an entity's UUID, its slug, or — for a destination only — its upstream external id. An id that resolves to nothing is 404, including one malformed enough that the query itself rejects it. HOW FAR DOWN depends on what you asked about, and this is the part clients get wrong: a DESTINATION returns every entity in the destination and a PARK returns every entity in the park — the whole subtree, not one level — while every other entityType returns its direct children only. Rebuild the hierarchy from `parentId` rather than assuming one level. Soft-deleted entities are never included. Cached `public, max-age=300, s-maxage=3600`.
+         */
         get: operations["getEntityChildren"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/entity/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/entity/{id}/history
+         * @description History of an entity as one row per change, every row the complete live-data object at that instant (same keys as /live) plus `time` and `changed`. Ask for a park-local day (`date=YYYY-MM-DD`), a range of days (`from`/`to`, inclusive), or RFC 3339 instants with an offset (half-open). No parameters means today. At most 31 days per call. `opening` is the state effective at the start of the range; `coverage.firstRecordedAt` is the first day this entity has any history. Anonymous callers see 7 days, a free API key 30; deeper ranges return 403 HISTORY_WINDOW_EXCEEDED with the earliest allowed date. History requests have their own hourly budget, separate from the per-minute REST limit: 60 an hour without a key, 600 with a free key, 1200 on Pro, 3000 on Business, unmetered on Enterprise (published per tier in GET /tiers as limits.historyRequestsPerHour); over it returns 429 HISTORY_RATE_LIMITED with retryAfter. The per-minute REST limit still applies first and answers with the API-wide 429 body. A range that includes TODAY may be up to an hour old for callers without an API key, so a poller can see a response up to an hour behind the live feed; completed days are cached for longer because they cannot change. For the current state of an entity rather than its history, GET /v1/entity/{id}/live is not cached that way. FOR A PARK, this path answers the WHOLE PARK and the 200 is a different schema: `HistoryParkRawEnvelope`, carrying an `entities[]` array — one entry per entity of the park that has history, ascending by name, the park itself included when it has history of its own — each entry holding the same `coverage`, `opening` and `history` block a single entity gets. An entity with no history is absent from that array rather than present and empty. A park range is 1 park-local day, not 31: a day of a park is every recorded change for every entity in it, so a wider range is 400 RANGE_TOO_LONG and the call is never paged. Every other entityType — a DESTINATION included — returns the single-entity envelope described above, so the 200 is a union of two schemas and the entity's `entityType` is what selects between them. Either way the call costs ONE unit of the hourly history budget, whatever the park's size.
+         */
+        get: operations["getHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/entity/{id}/history/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/entity/{id}/history/coverage
+         * @description What history we hold for this entity, broken down per live-data field: the first and last park-local day each field (`status`, `queue.STANDBY`, `showtimes`, and so on) was reported, keyed by the same live-data path GET /v1/entity/{id}/live and GET /v1/entity/{id}/history and .../history/daily use, so a key matches straight across all four. A field the entity never reported is ABSENT from `kinds`. Read `last` as "newest day in the ARCHIVE", not "last day reported": the archive is written two to three days behind live data, so a field being published right now still has a `last` a few days old, and an active field is indistinguishable from a withdrawn one here. To ask whether a field is still live, call GET /v1/entity/{id}/live. For how recent a day you can actually ASK for, read `retrievableThrough`: history calls serve recent readings as well as the archive, so it is normally TODAY for an entity still reporting and therefore sits two to three days AHEAD of `lastRecordedAt` — that gap is expected, not a fault. For an entity that stopped reporting long ago it equals `lastRecordedAt`, so it never promises data that is not there. `firstRecordedAt` and `lastRecordedAt` are the entity-wide ARCHIVE bounds; an entity with nothing recorded returns the document with both null and `kinds: {}`, never a 404 — "we hold nothing for this entity" is a real, actionable answer, and a different claim from "this entity does not exist". No parameters, no paging and no tier window: the document is the same handful of day strings whatever the entity's history depth, so this call is not entitlement-gated. It still shares the hourly history budget with GET /v1/entity/{id}/history and .../history/daily, separate from the per-minute REST limit: 60 an hour without a key, 600 with a free key, 1200 on Pro, 3000 on Business, unmetered on Enterprise (published per tier in GET /tiers as limits.historyRequestsPerHour); over it returns 429 HISTORY_RATE_LIMITED with retryAfter. The per-minute REST limit still applies first and answers with the API-wide 429 body. The response is the same bytes for every caller, so it is publicly cacheable for an hour — every value in it is a whole day, so a cached copy can only differ from a fresh one in the first hour after park-local midnight, when `retrievableThrough` may still name the previous day.
+         */
+        get: operations["getHistoryCoverage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/entity/{id}/history/daily": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/entity/{id}/history/daily
+         * @description One summary row per park-local day: how long the entity was OPERATING and DOWN, when it first opened and last closed, minute-weighted standby and single-rider wait statistics, a show count where the entity publishes showtimes, and how many changes were recorded. Ask for a park-local day (`date=YYYY-MM-DD`), a range of days (`from`/`to`, inclusive), or RFC 3339 instants with an offset; `range` always comes back as park-local days, because a row summarises a whole day. No parameters means today. At most 3660 days per call, and the response is never paged. A day with no data is ABSENT from `days` — there is no row of zeroes, because "we have nothing for this day" is a different claim from "observed, closed all day" — and `standby`, `singleRider` and `showCount` are omitted rather than null when the entity published nothing of that kind. `coverage.firstRecordedAt` is the first day this entity has any history. Anonymous callers see 7 days, a free API key 30; deeper ranges return 403 HISTORY_WINDOW_EXCEEDED with the earliest allowed date. These calls share the hourly history budget with GET /v1/entity/{id}/history, separate from the per-minute REST limit: 60 an hour without a key, 600 with a free key, 1200 on Pro, 3000 on Business, unmetered on Enterprise (published per tier in GET /tiers as limits.historyRequestsPerHour); over it returns 429 HISTORY_RATE_LIMITED with retryAfter. The per-minute REST limit still applies first and answers with the API-wide 429 body. FOR A PARK, this path answers the WHOLE PARK and the 200 is a different schema: `HistoryParkDailyEnvelope`, carrying an `entities[]` array — one entry per entity of the park that has history, ascending by name, the park itself included when it has history of its own — instead of this envelope's `coverage` and `days`. An entity with no history is absent from that array rather than present and empty. A park call is also the one PAGED call in this family: it serves at most 31 park-local days and `next` is an absolute URL for the rest, with your other parameters preserved. Every other entityType — a DESTINATION included — returns the single-entity envelope described above, so the 200 is a union of two schemas and the entity's `entityType` is what selects between them. Either way the call costs ONE unit of the hourly history budget, whatever the park's size.
+         */
+        get: operations["getHistoryDaily"];
         put?: never;
         post?: never;
         delete?: never;
@@ -62,7 +131,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/entity/{id}/live */
+        /**
+         * GET /v1/entity/{id}/live
+         * @description Live data for this entity AND everything beneath it, in one call: wait times, ride status, return-time and boarding-group windows, and show times. `id` is an entity's UUID, its slug, or — for a destination only — its upstream external id. An id that resolves to nothing is 404, including one malformed enough that the query itself rejects it. An entity with nothing to report is absent from `liveData` rather than present and empty, so treat a missing entry as no data rather than as a closed ride. `?entityType=ATTRACTION,SHOW` filters the array to those types (comma-separated). Cached `public, max-age=60, s-maxage=60`: the collectors run on a cadence, and a faster poll returns the same body. For what an entity reported in the past rather than now, GET /v1/entity/{id}/history.
+         */
         get: operations["getEntityLiveData"];
         put?: never;
         post?: never;
@@ -79,7 +151,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/entity/{id}/schedule */
+        /**
+         * GET /v1/entity/{id}/schedule
+         * @description Opening hours for this entity, for the default window: today through the next 30 days, anchored to the entity's own timezone rather than the caller's or UTC. `id` is an entity's UUID, its slug, or — for a destination only — its upstream external id. An id that resolves to nothing is 404, including one malformed enough that the query itself rejects it. Days the park has not published are absent from the array rather than present as closed. For a specific month, including a past one, use GET /v1/entity/{id}/schedule/{year}/{month}. Cached `public, max-age=300, s-maxage=3600`.
+         */
         get: operations["getEntitySchedule"];
         put?: never;
         post?: never;
@@ -96,7 +171,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/entity/{id}/schedule/{year}/{month} */
+        /**
+         * GET /v1/entity/{id}/schedule/{year}/{month}
+         * @description Opening hours for one calendar month in the entity's own timezone. `month` is TWO digits, 01-12 — `/2026/9` is 400, `/2026/09` is right — and `year` is a four-digit year between 1970 and 2150; anything else is 400 before the entity is even looked up. `id` is an entity's UUID, its slug, or — for a destination only — its upstream external id. An id that resolves to nothing is 404, including one malformed enough that the query itself rejects it. Past months are served from what was recorded at the time and are not backfilled, so a month before this entity was collected comes back empty rather than 404. Days the park has not published are absent rather than present as closed. Cached `public, max-age=300, s-maxage=3600`.
+         */
         get: operations["getEntityScheduleYearMonth"];
         put?: never;
         post?: never;
@@ -148,6 +226,8 @@ export interface components {
             /** @description Parent entity identifier */
             parentId?: string;
             location?: components["schemas"]["EntityLocation"];
+            /** @description URL-friendly slug */
+            slug?: string | null;
         };
         EntityChildrenResponse: {
             /** @description Parent entity identifier */
@@ -159,20 +239,52 @@ export interface components {
             timezone?: string;
             children?: components["schemas"]["EntityChild"][];
         };
+        /** @description A single entity. Beyond the properties listed here, an entity may carry additional tag-derived properties named after the tag's slug, for example `minimumHeight` (integer, centimetres) or `mayGetWet` (boolean). The set is open-ended and driven by data rather than fixed by this contract, so clients should read them defensively rather than assume any particular tag is present. */
         EntityData: {
             /** @description Unique entity identifier */
             id: string;
             /** @description Entity name */
             name: string;
             entityType: components["schemas"]["EntityType"];
+            /**
+             * @description Kind of attraction. Present on ATTRACTION entities.
+             * @enum {string}
+             */
+            attractionType?: "UNKNOWN" | "RIDE" | "SHOW" | "TRANSPORT" | "PARADE" | "MEET_AND_GREET" | "OTHER";
             /** @description Parent entity identifier */
             parentId?: string | null;
             /** @description Destination identifier */
             destinationId?: string | null;
+            /** @description Identifier of the park this entity belongs to. Absent on destinations and on parks themselves. */
+            parkId?: string | null;
             /** @description Entity timezone */
             timezone: string;
             location?: components["schemas"]["EntityLocation"];
-            tags?: components["schemas"]["TagData"][];
+            /** @description Identifier used by the source data provider. */
+            externalId?: string;
+            /** @description URL-friendly slug. Served for destinations. */
+            slug?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** @description 400: a path parameter is the wrong shape. Checked before the entity is looked up, so a bad `year` or `month` answers 400 whether or not the id exists. */
+        EntityInvalidParameter: {
+            /**
+             * @description Always false. Branch on this rather than on the status alone.
+             * @enum {boolean}
+             */
+            success: false;
+            error: {
+                /** @enum {string} */
+                type: "Bad request";
+                /** @description Says which parameter was rejected and what it must look like, e.g. "Month must be a two-digit number (01-12)". */
+                message: string;
+                /**
+                 * @description Repeats the HTTP status.
+                 * @enum {integer}
+                 */
+                code?: 400;
+            };
         };
         EntityLiveData: {
             /** @description Entity identifier */
@@ -207,6 +319,25 @@ export interface components {
             /** @description Longitude coordinate of the entity location */
             longitude?: number | null;
         };
+        /** @description 404: nothing resolved from `id`. An id is a UUID, a slug, or — for a destination — its upstream external id; an id malformed enough that the lookup itself rejects it answers 404 as well, rather than 400 or 500. The body is the same whether the entity never existed or has been removed, so it cannot be used to tell those apart. */
+        EntityNotFound: {
+            /**
+             * @description Always false. Branch on this rather than on the status alone.
+             * @enum {boolean}
+             */
+            success: false;
+            error: {
+                /** @enum {string} */
+                type: "Not found";
+                /** @description Names the id that did not resolve, e.g. "Entity 00000000-0000-0000-0000-000000000000 not found". */
+                message: string;
+                /**
+                 * @description Repeats the HTTP status.
+                 * @enum {integer}
+                 */
+                code?: 404;
+            };
+        };
         EntityScheduleResponse: {
             /** @description Entity identifier */
             id?: string;
@@ -225,17 +356,387 @@ export interface components {
          * @enum {string}
          */
         EntityType: "DESTINATION" | "PARK" | "ATTRACTION" | "RESTAURANT" | "HOTEL" | "SHOW";
+        HistoryCoverage: {
+            /**
+             * Format: date
+             * @description First park-local day with recorded history for this entity, or null when nothing has been archived yet. Per-kind detail and gaps: GET /v1/entity/{id}/history/coverage.
+             */
+            firstRecordedAt: string | null;
+        };
+        /** @description What history is actually held for one entity, broken down per live-data field. Two different questions, answered separately: `firstRecordedAt`/`lastRecordedAt` and the per-field spans describe the ARCHIVE, while `retrievableThrough` is the newest day a history call could return for this entity — which is normally today, and normally two to three days AHEAD of `lastRecordedAt`. An entity with nothing recorded is a 200 with kinds: {} and every day null, never a 404: "we hold nothing for this entity" is a real, actionable answer and a different claim from "this entity does not exist". */
+        HistoryCoverageDocument: {
+            id: string;
+            name: string;
+            entityType: string;
+            parentId: string | null;
+            destinationId: string | null;
+            /** @description IANA timezone the park-local days are resolved in. */
+            timezone: string;
+            /**
+             * Format: date
+             * @description First park-local day with any recorded history for this entity, or null when nothing has been archived yet. May legitimately be earlier than any individual kind's first: the two are recorded independently and answer slightly different questions.
+             */
+            firstRecordedAt: string | null;
+            /**
+             * Format: date
+             * @description The newest `last` across `kinds` — the most recent park-local day we hold anything at all for this entity — or null when nothing is recorded. Like the per-field `last`, this tracks the ARCHIVE and lags live data by two to three days, so it sits in the past for an entity reporting normally.
+             */
+            lastRecordedAt: string | null;
+            /**
+             * Format: date
+             * @description The newest park-local day GET /v1/entity/{id}/history and .../history/daily could return data for this entity — what you can ASK FOR, as opposed to what has been filed. Normally TODAY for an entity still reporting, because those endpoints answer from recent readings as well as the archive, and it therefore sits AHEAD of `lastRecordedAt` by two to three days for a healthy entity. That gap is the whole point of this field: `lastRecordedAt` and every per-field `last` describe the ARCHIVE only, and reading them as capability is what makes coverage look as though it has stopped a couple of days short. It is the LATER of `lastRecordedAt` and the newest day recent readings can still answer for — so an entity that stopped reporting long ago reports its archive day here, NOT today, and the field never promises data that is not there. Recent readings do not go back indefinitely, so a day is reported here only if one of those endpoints can actually return it: an entity whose last reading is old enough falls back to its archive day rather than naming the day that reading was taken. Null only when we hold nothing for this entity in either place. A request for a range up to this day can still be narrowed by your tier's history window, which bounds how far BACK you may ask, never how recent.
+             */
+            retrievableThrough: string | null;
+            /** @description Keyed by LIVE-DATA PATH (status, queue.STANDBY, showtimes, ...), not by the internal kind name, so a key matches straight against what GET /v1/entity/{id}/live and GET /v1/entity/{id}/history return. A kind the entity never reported is ABSENT here and absent from every /history row — there is no zero-span entry for it. See `last` for why a span ending in the past does NOT mean the field stopped being reported: the archive lags live data by two to three days, so an actively published field ends in the past too. Every span here is archive-only; `retrievableThrough` is the entity-wide answer to how recent a day you can actually ask for. */
+            kinds: {
+                [key: string]: components["schemas"]["HistoryCoverageKindSpan"];
+            };
+        };
+        /** @description One live-data field's recorded span for an entity, both ends inclusive. */
+        HistoryCoverageKindSpan: {
+            /**
+             * Format: date
+             * @description First park-local day this field was reported.
+             */
+            first: string;
+            /**
+             * Format: date
+             * @description Newest park-local day this field appears in the ARCHIVE. This is not the same as the last day the field was reported, and it does NOT mean the field has stopped: the archive is written two to three days behind live data, so a field being published right now still has a `last` a few days in the past. Every active field looks the same as a withdrawn one here. Use this to know how far back the archive goes and how current it is, not to decide whether a field is still live — GET /v1/entity/{id}/live answers that directly.
+             */
+            last: string;
+        };
+        /** @description A day-by-day summary of one entity's history. GET /v1/entity/{id}/history/daily returns this shape for every entityType EXCEPT PARK; for a PARK the same path returns HistoryParkDailyEnvelope, which carries an entities[] array instead of this envelope's coverage/days block. range.from and range.to ALWAYS echo park-local calendar days (YYYY-MM-DD), even when the call supplied RFC 3339 instants, because this endpoint summarises whole park-local days and an instant echo would claim a precision the rows do not have. TODAY's row is the day so far — its counters cover only elapsed minutes and grow as the day does — and a response to a request without an API key may be up to an hour old, so a poller can see a value that far behind the live feed. If you need the current state of an entity rather than its day so far, GET /v1/entity/{id}/live is not cached that way. */
+        HistoryDailyEnvelope: {
+            id: string;
+            name: string;
+            entityType: string;
+            parentId: string | null;
+            destinationId: string | null;
+            /** @description IANA timezone the park-local days are resolved in. */
+            timezone: string;
+            range: components["schemas"]["HistoryRange"];
+            coverage: components["schemas"]["HistoryCoverage"];
+            /** @description One row per park-local day, ascending by date. A day with no data is ABSENT: there is no row of zeroes, because "we have nothing for this day" is a different claim from "observed, closed all day". */
+            days: components["schemas"]["HistoryDailyRow"][];
+            /** @description URL of the next page, or null. Always null for a single entity: a daily call is unpaged. Park calls page; see HistoryParkDailyEnvelope. */
+            next: string | null;
+        };
+        /** @description One park-local day of an entity's history reduced to the numbers a crowd calendar needs. standby, singleRider and showCount are ABSENT rather than null when there is nothing to report: an absent standby means no numeric standby wait was in force while OPERATING for a whole sampled minute that day — the statistics are sampled at minute resolution, so a wait published only inside a sub-minute window produces no block at all, even though /history records it and the day's operatingMinutes count it. The same applies to singleRider. An absent showCount means the entity published no showtimes. showCount counts distinct performance start times in the local day. */
+        HistoryDailyRow: {
+            /**
+             * Format: date
+             * @description The park-local calendar day this row summarises, YYYY-MM-DD, in the entity's timezone.
+             */
+            date: string;
+            /**
+             * Format: date-time
+             * @description UTC instant (whole seconds) the entity first became OPERATING on this park-local day, or null if it never did. A day that opened already OPERATING reports the start of the local day.
+             */
+            firstOperatingAt: string | null;
+            /**
+             * Format: date-time
+             * @description UTC instant (whole seconds) of the last transition out of OPERATING or DOWN into CLOSED or REFURBISHMENT after firstOperatingAt, or null if there was none. For a park closing after local midnight this instant falls on the following UTC day.
+             */
+            lastClosedAt: string | null;
+            /** @description Minutes of this park-local day the entity was OPERATING. Minutes with no observed state count as neither operating nor down, so the two counters need not add up to the length of the day. For TODAY the count covers only the minutes that have already elapsed, so it grows through the day and is final once the day ends: a caller polling today's row sees it rise, which is the day filling in rather than the answer changing. */
+            operatingMinutes: number;
+            /** @description Minutes of this park-local day the entity was DOWN. As with operatingMinutes, today's count covers only the elapsed part of the day. */
+            downMinutes: number;
+            standby?: components["schemas"]["HistoryDailyStats"];
+            singleRider?: components["schemas"]["HistoryDailyStats"];
+            /** @description Distinct performance start times whose park-local day is this day. Present only for entities that published showtimes on the day. */
+            showCount?: number;
+            /** @description Number of history rows recorded on this day, i.e. instants at which any kind changed. Short flaps are counted as they happened; this is not a cleaned figure. */
+            changes: number;
+        };
+        /** @description Wait statistics for one park-local day. The percentiles and the mean are weighted by the MINUTES the wait was posted rather than by the number of readings, so a wait that stood for three hours counts three hours and a brief flap does not drag the median; they are sampled at minute resolution and the percentiles are nearest-rank, never interpolated. `min` and `max` are TRUE extremes over every value posted, so a spike too short to be sampled still shows there. Only periods where the entity was OPERATING and published a numeric wait count at all. The block is absent when it never did. */
+        HistoryDailyStats: {
+            /** @description Lowest wait, in minutes, the entity published while OPERATING that day. A true extreme over every value posted, including one that stood for less than a minute — so unlike the percentiles below it is not minute-weighted. */
+            min: number;
+            /** @description Median wait, nearest-rank over the minute weights (a value actually posted, never interpolated). */
+            p50: number;
+            /** @description Minute-weighted average wait, rounded to the nearest whole minute. */
+            mean: number;
+            /** @description 90th-percentile wait, nearest-rank over the minute weights. */
+            p90: number;
+            /** @description Highest wait, in minutes, the entity published while OPERATING that day. A true extreme, as min is: a spike that lasted forty seconds counts here and is invisible to the percentiles, which is the intended difference between the two halves of this block — extremes answer "what did it ever reach", percentiles answer "what was it usually like". */
+            max: number;
+        };
+        /** @description One entity's history as full-state change rows. GET /v1/entity/{id}/history returns this shape for every entityType EXCEPT PARK; for a PARK the same path returns HistoryParkRawEnvelope, which carries an entities[] array instead of this envelope's coverage/opening/history block. */
+        HistoryEnvelope: {
+            id: string;
+            name: string;
+            entityType: string;
+            parentId: string | null;
+            destinationId: string | null;
+            /** @description IANA timezone the park-local days are resolved in. */
+            timezone: string;
+            range: components["schemas"]["HistoryRange"];
+            coverage: components["schemas"]["HistoryCoverage"];
+            opening: components["schemas"]["HistoryOpening"];
+            /** @description Ascending by time. */
+            history: components["schemas"]["HistoryRow"][];
+            /** @description URL of the next page, or null. Always null for a single entity (a call covers up to 31 days). Park calls page; see HistoryParkRawEnvelope. */
+            next: string | null;
+        };
+        /** @description 502: the range needs archived history and that backend is temporarily unavailable. The request is retryable. */
+        HistoryErrorBackendUnavailable: {
+            error: {
+                /** @enum {string} */
+                type: "HISTORY_BACKEND_UNAVAILABLE";
+                message: string;
+            };
+        };
+        /** @description 400: a date parameter is not a calendar day or an RFC 3339 instant with an explicit offset, or date was combined with from/to, or from and to mix the two forms, or to was given without from. */
+        HistoryErrorInvalidDate: {
+            error: {
+                /** @enum {string} */
+                type: "INVALID_DATE";
+                /** @description e.g. "from must be a calendar day (YYYY-MM-DD) or an RFC 3339 instant with an offset (e.g. 2026-09-13T14:00:00Z)." */
+                message: string;
+            };
+        };
+        /** @description 400: both ends parsed, but the range runs backwards (days: to before from; instants: to not after from). */
+        HistoryErrorInvalidRange: {
+            error: {
+                /** @enum {string} */
+                type: "INVALID_RANGE";
+                /** @description e.g. "to must not be before from." */
+                message: string;
+            };
+        };
+        /** @description 404: no entity with that id. */
+        HistoryErrorNotFound: {
+            error: {
+                /** @enum {string} */
+                type: "NOT_FOUND";
+                message: string;
+            };
+        };
+        /** @description 400: the range is longer than the path allows. The cap is NOT the same on every path, and this one error type is returned by all of them: GET /v1/entity/{id}/history allows 31 park-local days for a single entity and 1 for a PARK; GET /v1/entity/{id}/history/daily allows 3660 (ten years) for a single entity, and for a PARK serves 31 days a page and gives you `next` for the rest. The message names the cap that applied. Split the ask into consecutive calls. */
+        HistoryErrorRangeTooLong: {
+            error: {
+                /** @enum {string} */
+                type: "RANGE_TOO_LONG";
+                /** @description Names the cap that was exceeded and the span that was asked for, e.g. "A history call covers at most 31 park-local days (2026-01-01 to 2026-03-01 is 60). Ask for a shorter range." The number is the cap for the path that answered, not a constant: read it from the message rather than hard-coding 31. */
+                message: string;
+            };
+        };
+        /** @description 429: the caller's hourly history request budget is spent. The budget is separate from the per-minute REST limit and is published per tier in GET /tiers as limits.historyRequestsPerHour (anonymous.historyRequestsPerHour for keyless calls). */
+        HistoryErrorRateLimited: {
+            error: {
+                /** @enum {string} */
+                type: "HISTORY_RATE_LIMITED";
+                /** @description e.g. "This key can make 600 history requests an hour." */
+                message: string;
+                /** @description Seconds until the hourly history budget admits another request. Also sent as the Retry-After header. */
+                retryAfter: number;
+            };
+        };
+        HistoryErrorWindowExceeded: {
+            error: {
+                /** @enum {string} */
+                type: "HISTORY_WINDOW_EXCEEDED";
+                /** @description A fact and a date, naming no plan and selling nothing. e.g. "This key can see history back to 2026-09-08 (7 days).", or "Requests without an API key can see history back to 2026-09-08 (7 days)." when you sent no key. */
+                message: string;
+                /**
+                 * Format: date
+                 * @description First park-local day this credential may query.
+                 */
+                earliestAllowedDate: string;
+            };
+        };
+        /** @description The full live-data state effective at the start of the range, in the same shape as a row. A key is present only when the entity has that kind. When the value is unknown at that instant (typically an older range, answered from the archive rather than from recent readings) the kind carries its EMPTY live value rather than a null container — an unknown standby is {"waitTime": null}, an unknown showtimes list is [] — and status, which has no empty value, is null. */
+        HistoryOpening: {
+            /**
+             * Format: date-time
+             * @description Start of the range (UTC, whole seconds). The state below is effective from this instant.
+             */
+            time: string;
+            /**
+             * Format: date-time
+             * @description The UTC instant (whole seconds) at which this state was actually OBSERVED, as opposed to `time`, which is the start of the range you asked for. The two are different questions and only this one tells you whether to trust the state.
+             *
+             *     A state carried forward from before the range has an `observedAt` BEFORE `time` — sometimes long before, because the lookup is deliberately unbounded and returns the last reading of each kind at any age. So a day we hold nothing for still reports the newest state we ever saw, which is usually right and occasionally very wrong: a ride whose feed simply stopped mid-operation carries its last wait time forward indefinitely.
+             *
+             *     Compare it against `range.from` to decide. Equal to or after the range start means the state was seen inside the range. Before it means carried forward, and how far back you tolerate is yours to choose — a reading an hour before the day began is ordinary, one from three weeks earlier is not evidence about this day. Absent means nothing survives to carry: we can say nothing at all about the state at the start of this range.
+             *
+             *     It is the NEWEST instant any kind in this opening was seen. Kinds can be observed at different moments, so an older kind may be staler than this field suggests; treat it as the most generous reading of the opening's age, not a guarantee about every key. Days that genuinely have data are better read from the rows, which carry their own `time`.
+             */
+            observedAt?: string;
+            /** @description Live status at the start of the range; null when unknown. */
+            status?: string | null;
+            queue?: components["schemas"]["LiveQueue"];
+            showtimes?: components["schemas"]["LiveShowTime"][] | null;
+        };
+        /** @description How far back each entity's record of one field goes, as counts. Calendar years, measured from the day the document was built (`summary.measuredOn`). Counts, not a percentage or an average: a single figure for a park would hide that most of one park's standby entities have two to four years while its oldest reach back to the start of the archive. */
+        HistoryParkCoverageDepth: {
+            /** @description Entities whose record of this field goes back four calendar years or more. */
+            fourYearsPlus: number;
+            /** @description Entities with at least two and under four calendar years. */
+            twoToFourYears: number;
+            /** @description Entities with at least one and under two calendar years. */
+            oneToTwoYears: number;
+            /** @description Entities with under a calendar year, typically something that opened recently rather than a gap. */
+            underOneYear: number;
+        };
+        /** @description What history is held across a whole PARK. GET /v1/entity/{id}/history/coverage returns this shape when the entity is a PARK; every other entityType, a DESTINATION included, returns HistoryCoverageDocument for that entity alone. A park records nothing itself, so without this rollup the honest-looking answer for a park would be "nothing". It reports depth and breadth only: it does not detect missing days and does not judge whether a recorded value was correct. */
+        HistoryParkCoverageDocument: {
+            id: string;
+            name: string;
+            entityType: string;
+            parentId: string | null;
+            destinationId: string | null;
+            /** @description IANA timezone the park-local days are resolved in. The park's children inherit it. */
+            timezone: string;
+            summary: components["schemas"]["HistoryParkCoverageSummary"];
+            /** @description Keyed by live-data field path, in live-data order. */
+            fields: {
+                [key: string]: components["schemas"]["HistoryParkCoverageField"];
+            };
+            /** @description Every entity of the park history is held for. */
+            entities: components["schemas"]["HistoryParkCoverageEntity"][];
+        };
+        /** @description One entity of the park that history is held for. An entity nothing is held for is ABSENT rather than listed as empty: it is usually a parade, a show or a land, which never had a queue to record, and listing it would read as a gap. */
+        HistoryParkCoverageEntity: {
+            id: string;
+            name: string;
+            entityType: string;
+            /**
+             * Format: date
+             * @description The earliest park-local day any field of this entity was recorded.
+             */
+            from: string;
+            /**
+             * Format: date
+             * @description The newest park-local day any field of this entity was recorded.
+             */
+            newest: string;
+            /** @description The live-data field paths held for this entity, named exactly as the single-entity coverage document names them, so one client type reads both. */
+            fields: string[];
+            /** @description False when the park no longer lists this entity. Its history is still held and still retrievable, and every count in this document includes it; this says where the entity is now, not what the archive has. */
+            stillListed: boolean;
+        };
+        /** @description What one live-data field looks like across the whole park. `entities` counts what is HELD and is never a fraction: entities that have never reported this field are simply absent from the count, because a denominator drawn from entityType would publish parades, shows and lands as missing wait times. */
+        HistoryParkCoverageField: {
+            /** @description How many of the park's entities this field is held for. */
+            entities: number;
+            /**
+             * Format: date
+             * @description The earliest park-local day any entity in the park reported this field.
+             */
+            from: string;
+            /**
+             * Format: date
+             * @description The newest park-local day any entity in the park reported it. A day in the past is not staleness: when a park stops publishing a field the ending is recorded, so the span genuinely stops there.
+             */
+            newest: string;
+            depth: components["schemas"]["HistoryParkCoverageDepth"];
+        };
+        /** @description The park in four numbers. Every one describes what is held; none is a fraction of a total, and nothing here asserts that anything is missing. */
+        HistoryParkCoverageSummary: {
+            /** @description Entities of this park any live-data history is held for - attractions, restaurants, shows and anything else that has ever reported. Larger than the number with wait times: `fields` breaks it down. Counts entities the park no longer lists as well, since their history is still held; those carry `stillListed: false` in `entities`. */
+            entitiesWithData: number;
+            /**
+             * Format: date
+             * @description The earliest park-local day anything in this park was recorded, or null when nothing has been.
+             */
+            archiveFrom: string;
+            /**
+             * Format: date
+             * @description The newest park-local day anything in this park was recorded, or null.
+             */
+            recordedTo: string;
+            /**
+             * Format: date
+             * @description The newest park-local day a caller can actually retrieve. Runs ahead of `recordedTo` by a day or two: the most recent days are served from live data before they are sealed into the archive. Null when nothing is recorded.
+             */
+            retrievableThrough: string;
+            /**
+             * Format: date
+             * @description The park-local day these figures were computed. They move as the archive grows, so a reader comparing two copies of this document needs to know which day each was built.
+             */
+            measuredOn: string;
+        };
+        /** @description A day-by-day summary of a whole PARK: every entity of the park that has history, in one call. GET /v1/entity/{id}/history/daily returns THIS shape when the entity is a PARK (entityType: "PARK") and HistoryDailyEnvelope for every other entityType, so a client should branch on the presence of entities[] or on the entity's type. range.from and range.to are always park-local calendar days, and range.to is THIS PAGE's last day rather than the whole range you asked for: a call serves at most 31 park-local days and next carries the rest. */
+        HistoryParkDailyEnvelope: {
+            id: string;
+            name: string;
+            entityType: string;
+            parentId: string | null;
+            destinationId: string | null;
+            /** @description IANA timezone the park-local days are resolved in. The park is the authority on where its day boundaries fall, so every entity below is summarised in THIS zone. */
+            timezone: string;
+            range: components["schemas"]["HistoryRange"];
+            /** @description One entry per entity of the park that has history, ascending by name. An entity with no history is ABSENT — never an entry of nulls or an empty days[] — because "we hold nothing for this entity" is a different claim from "we hold nothing for these days". The park itself is included when it has history of its own. */
+            entities: components["schemas"]["HistoryParkEntityDaily"][];
+            /** @description Absolute URL of the next page, or null on the last one. A park daily call serves at most 31 park-local days and pages by DAY: the next URL repeats your other parameters with from advanced past this page's last day. Entity order never affects paging. */
+            next: string | null;
+        };
+        /** @description One entity of a park in a park DAILY response: its identity, the first day it has any history, and its day rows. The park itself appears as an entry too when it has history of its own (match it by id against the envelope's id). An entity with no history at all is ABSENT from entities[]. */
+        HistoryParkEntityDaily: {
+            id: string;
+            name: string;
+            entityType: string;
+            coverage: components["schemas"]["HistoryCoverage"];
+            /** @description One row per park-local day, ascending by date, exactly as GET /v1/entity/{id}/history/daily returns for this entity on its own. A day with no data is ABSENT, and an entity with history but nothing in the requested days has an empty array rather than vanishing from entities[] — so the entity list keeps its shape from one page to the next. */
+            days: components["schemas"]["HistoryDailyRow"][];
+        };
+        /** @description One entity of a park in a park RAW response: the same coverage, opening and history block GET /v1/entity/{id}/history returns for that entity on its own, so one client type reads both. The park itself appears as an entry too when it has history of its own (match it by id against the envelope's id). */
+        HistoryParkEntityRaw: {
+            id: string;
+            name: string;
+            entityType: string;
+            coverage: components["schemas"]["HistoryCoverage"];
+            opening: components["schemas"]["HistoryOpening"];
+            /** @description Ascending by time. Empty when this entity recorded no change in the requested range, which is a different claim from having no history at all — an entity with no history is absent from entities[]. */
+            history: components["schemas"]["HistoryRow"][];
+        };
+        /** @description Full-state change rows for a whole PARK: every entity of the park that has history, in one call, for exactly 1 park-local day. GET /v1/entity/{id}/history returns THIS shape when the entity is a PARK (entityType: "PARK") and HistoryEnvelope for every other entityType, so a client should branch on the presence of entities[] or on the entity's type. A range spanning more than one day is 400 RANGE_TOO_LONG: a day of a park is every recorded change for every entity in it, and the one-day limit is what bounds that. Ask day by day. */
+        HistoryParkRawEnvelope: {
+            id: string;
+            name: string;
+            entityType: string;
+            parentId: string | null;
+            destinationId: string | null;
+            /** @description IANA timezone the park-local day is resolved in. The park is the authority on where its day boundaries fall, so every entity below is resolved in THIS zone. */
+            timezone: string;
+            range: components["schemas"]["HistoryRange"];
+            /** @description One entry per entity of the park that has history, ascending by name. An entity with no history is ABSENT — never an entry of nulls — because "we hold nothing for this entity" is a different claim from "this entity recorded no change today". The park itself is included when it has history of its own. */
+            entities: components["schemas"]["HistoryParkEntityRaw"][];
+            /** @description Always null: a park history call covers one park-local day, so there is never a next page. */
+            next: string | null;
+        };
+        HistoryRange: {
+            /** @description The requested start. A park-local day comes back verbatim (YYYY-MM-DD); an instant comes back NORMALISED to UTC whole seconds (2026-09-13T14:00:00Z), so an offset or sub-second precision you sent is not echoed back. On a day-granular endpoint such as /history/daily this is ALWAYS a park-local day, even when you asked with an instant: that endpoint's rows are whole days and cannot be sliced finer, so echoing your instant back would claim a precision the data does not have. */
+            from: string;
+            /** @description The requested end, in the same form as from, and normalised the same way. Omitted instants default to now; omitted days default to today, park-local. The same day-granular rule as from applies on /history/daily. */
+            to: string;
+        };
+        /** @description One row per instant at which any kind changed. Every present kind is carried forward, so a row is the complete live-data object at that instant (same keys, nesting and enum values as GET /v1/entity/{id}/live). */
+        HistoryRow: {
+            /**
+             * Format: date-time
+             * @description UTC instant (whole seconds) from which this state is effective, until the next row's time.
+             */
+            time: string;
+            /** @description Leaf paths that differ from the previous row (or from opening for the first row), e.g. queue.STANDBY.waitTime, status, showtimes. */
+            changed: string[];
+            status?: string | null;
+            queue?: components["schemas"]["LiveQueue"];
+            showtimes?: components["schemas"]["LiveShowTime"][] | null;
+        };
         LiveQueue: {
             STANDBY?: {
                 /** @description Current standby wait time in minutes */
-                waitTime?: number;
+                waitTime?: number | null;
             };
             SINGLE_RIDER?: {
                 /** @description Current single rider wait time in minutes */
                 waitTime: number | null;
             };
             RETURN_TIME?: {
-                state: components["schemas"]["ReturnTimeState"];
+                state: components["schemas"]["ReturnTimeState"] | null;
                 /**
                  * Format: date-time
                  * @description Start time of return window
@@ -248,15 +749,15 @@ export interface components {
                 returnEnd: string | null;
             };
             PAID_RETURN_TIME?: {
-                state: components["schemas"]["ReturnTimeState"];
+                state: components["schemas"]["ReturnTimeState"] | null;
                 /** Format: date-time */
                 returnStart: string | null;
                 /** Format: date-time */
                 returnEnd: string | null;
-                price: components["schemas"]["PriceData"];
+                price: components["schemas"]["PriceData"] | null;
             };
             BOARDING_GROUP?: {
-                allocationStatus: components["schemas"]["BoardingGroupState"];
+                allocationStatus: components["schemas"]["BoardingGroupState"] | null;
                 /** @description Current boarding group start number */
                 currentGroupStart: number | null;
                 /** @description Current boarding group end number */
@@ -366,16 +867,6 @@ export interface components {
          * @enum {string}
          */
         SchedulePriceType: "ADMISSION" | "PACKAGE" | "ATTRACTION";
-        TagData: {
-            /** @description Tag identifier */
-            tag: string;
-            /** @description Human readable tag name */
-            tagName: string;
-            /** @description Unique identifier */
-            id?: string;
-            /** @description Tag value - can be string, number or object */
-            value?: unknown;
-        };
     };
     responses: never;
     parameters: never;
@@ -444,6 +935,15 @@ export interface operations {
                     "application/json": components["schemas"]["EntityData"];
                 };
             };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNotFound"];
+                };
+            };
             /** @description Too Many Requests - Rate limit exceeded */
             429: {
                 headers: {
@@ -485,6 +985,15 @@ export interface operations {
                     "application/json": components["schemas"]["EntityChildrenResponse"];
                 };
             };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNotFound"];
+                };
+            };
             /** @description Too Many Requests - Rate limit exceeded */
             429: {
                 headers: {
@@ -502,6 +1011,179 @@ export interface operations {
                         /** @description Time in seconds to wait before retrying */
                         retryAfter?: number;
                     };
+                };
+            };
+        };
+    };
+    getHistory: {
+        parameters: {
+            query?: {
+                date?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryEnvelope"] | components["schemas"]["HistoryParkRawEnvelope"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorInvalidDate"] | components["schemas"]["HistoryErrorInvalidRange"] | components["schemas"]["HistoryErrorRangeTooLong"];
+                };
+            };
+            /** @description Access forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorWindowExceeded"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorNotFound"];
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorRateLimited"];
+                };
+            };
+            /** @description Upstream unavailable */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorBackendUnavailable"];
+                };
+            };
+        };
+    };
+    getHistoryCoverage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryCoverageDocument"] | components["schemas"]["HistoryParkCoverageDocument"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorNotFound"];
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorRateLimited"];
+                };
+            };
+        };
+    };
+    getHistoryDaily: {
+        parameters: {
+            query?: {
+                date?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryDailyEnvelope"] | components["schemas"]["HistoryParkDailyEnvelope"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorInvalidDate"] | components["schemas"]["HistoryErrorInvalidRange"] | components["schemas"]["HistoryErrorRangeTooLong"];
+                };
+            };
+            /** @description Access forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorWindowExceeded"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorNotFound"];
+                };
+            };
+            /** @description Too many requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryErrorRateLimited"];
                 };
             };
         };
@@ -524,6 +1206,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EntityLiveDataResponse"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNotFound"];
                 };
             };
             /** @description Too Many Requests - Rate limit exceeded */
@@ -567,6 +1258,15 @@ export interface operations {
                     "application/json": components["schemas"]["EntityScheduleResponse"];
                 };
             };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNotFound"];
+                };
+            };
             /** @description Too Many Requests - Rate limit exceeded */
             429: {
                 headers: {
@@ -608,6 +1308,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EntityScheduleResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityInvalidParameter"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNotFound"];
                 };
             };
             /** @description Too Many Requests - Rate limit exceeded */
