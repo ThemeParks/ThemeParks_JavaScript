@@ -1,0 +1,21 @@
+{
+  "id": "75ea578a-adc8-4116-a54d-dccb60765ef9",
+  "name": "Magic Kingdom Park",
+  "entityType": "PARK",
+  "parentId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "destinationId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "timezone": "America/New_York",
+  "firstRecordedAt": "2024-05-14",
+  "lastRecordedAt": "2024-05-14",
+  "retrievableThrough": "2024-05-14",
+  "kinds": {
+    "status": {
+      "first": "2024-05-14",
+      "last": "2024-05-14"
+    },
+    "queue.STANDBY": {
+      "first": "2024-05-14",
+      "last": "2024-05-14"
+    }
+  }
+}

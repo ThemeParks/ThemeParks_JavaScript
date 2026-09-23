@@ -1,0 +1,131 @@
+{
+  "id": "924a3b2c-6b4b-49e5-99d3-e9dc3f2e8a48",
+  "name": "The Barnstormer",
+  "entityType": "ATTRACTION",
+  "parentId": "75ea578a-adc8-4116-a54d-dccb60765ef9",
+  "destinationId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "timezone": "America/New_York",
+  "range": {
+    "from": "2026-09-17",
+    "to": "2026-09-17"
+  },
+  "coverage": {
+    "firstRecordedAt": "2021-07-03"
+  },
+  "opening": {
+    "time": "2026-09-17T04:00:00Z",
+    "status": "CLOSED",
+    "queue": {
+      "STANDBY": {
+        "waitTime": null
+      },
+      "RETURN_TIME": {
+        "state": "FINISHED",
+        "returnStart": null,
+        "returnEnd": null
+      }
+    }
+  },
+  "history": [
+    {
+      "time": "2026-09-17T04:29:28Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "CLOSED",
+      "queue": {
+        "STANDBY": {
+          "waitTime": null
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-17T10:55:00-04:00",
+          "returnEnd": "2026-09-17T11:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-17T12:30:25Z",
+      "changed": [
+        "status",
+        "queue.STANDBY.waitTime",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-17T11:05:00-04:00",
+          "returnEnd": "2026-09-17T12:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-17T12:34:53Z",
+      "changed": ["queue.RETURN_TIME.returnStart", "queue.RETURN_TIME.returnEnd"],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-17T11:00:00-04:00",
+          "returnEnd": "2026-09-17T12:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-17T12:39:58Z",
+      "changed": ["queue.RETURN_TIME.returnStart", "queue.RETURN_TIME.returnEnd"],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-17T09:55:00-04:00",
+          "returnEnd": "2026-09-17T10:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-17T12:45:04Z",
+      "changed": ["queue.RETURN_TIME.returnStart", "queue.RETURN_TIME.returnEnd"],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-17T10:15:00-04:00",
+          "returnEnd": "2026-09-17T11:15:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-17T12:50:23Z",
+      "changed": ["queue.RETURN_TIME.returnStart", "queue.RETURN_TIME.returnEnd"],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-17T09:40:00-04:00",
+          "returnEnd": "2026-09-17T10:40:00-04:00"
+        }
+      }
+    }
+  ],
+  "next": null
+}

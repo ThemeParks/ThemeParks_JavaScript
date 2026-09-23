@@ -1,0 +1,155 @@
+{
+  "id": "75ea578a-adc8-4116-a54d-dccb60765ef9",
+  "name": "Magic Kingdom Park",
+  "entityType": "PARK",
+  "parentId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "destinationId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "timezone": "America/New_York",
+  "range": {
+    "from": "2026-09-17",
+    "to": "2026-09-17"
+  },
+  "entities": [
+    {
+      "id": "d9d12438-d999-4482-894b-8955fdb20ccf",
+      "name": "Astro Orbiter",
+      "entityType": "ATTRACTION",
+      "coverage": {
+        "firstRecordedAt": "2021-07-03"
+      },
+      "opening": {
+        "time": "2026-09-17T04:00:00Z",
+        "status": "CLOSED",
+        "queue": {
+          "STANDBY": {
+            "waitTime": null
+          }
+        }
+      },
+      "history": [
+        {
+          "time": "2026-09-17T12:30:25Z",
+          "changed": ["status", "queue.STANDBY.waitTime"],
+          "status": "OPERATING",
+          "queue": {
+            "STANDBY": {
+              "waitTime": 5
+            }
+          }
+        },
+        {
+          "time": "2026-09-17T12:58:22Z",
+          "changed": ["queue.STANDBY.waitTime"],
+          "status": "OPERATING",
+          "queue": {
+            "STANDBY": {
+              "waitTime": 10
+            }
+          }
+        },
+        {
+          "time": "2026-09-17T12:59:33Z",
+          "changed": ["queue.STANDBY.waitTime"],
+          "status": "OPERATING",
+          "queue": {
+            "STANDBY": {
+              "waitTime": 5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "e847a8bd-7d21-432b-a7a1-f483517a22b5",
+      "name": "Be Our Guest Restaurant",
+      "entityType": "RESTAURANT",
+      "coverage": {
+        "firstRecordedAt": "2021-07-03"
+      },
+      "opening": {
+        "time": "2026-09-17T04:00:00Z",
+        "status": "OPERATING"
+      },
+      "history": []
+    },
+    {
+      "id": "de3309ca-97d5-4211-bffe-739fed47e92f",
+      "name": "Big Thunder Mountain Railroad",
+      "entityType": "ATTRACTION",
+      "coverage": {
+        "firstRecordedAt": "2021-07-03"
+      },
+      "opening": {
+        "time": "2026-09-17T04:00:00Z",
+        "status": "CLOSED",
+        "queue": {
+          "STANDBY": {
+            "waitTime": null
+          },
+          "RETURN_TIME": {
+            "state": "FINISHED",
+            "returnStart": null,
+            "returnEnd": null
+          }
+        }
+      },
+      "history": [
+        {
+          "time": "2026-09-17T04:29:29Z",
+          "changed": [
+            "queue.RETURN_TIME.state",
+            "queue.RETURN_TIME.returnStart",
+            "queue.RETURN_TIME.returnEnd"
+          ],
+          "status": "CLOSED",
+          "queue": {
+            "STANDBY": {
+              "waitTime": null
+            },
+            "RETURN_TIME": {
+              "state": "AVAILABLE",
+              "returnStart": "2026-09-17T15:35:00-04:00",
+              "returnEnd": "2026-09-17T16:35:00-04:00"
+            }
+          }
+        },
+        {
+          "time": "2026-09-17T13:01:29Z",
+          "changed": [
+            "status",
+            "queue.STANDBY.waitTime",
+            "queue.RETURN_TIME.returnStart",
+            "queue.RETURN_TIME.returnEnd"
+          ],
+          "status": "OPERATING",
+          "queue": {
+            "STANDBY": {
+              "waitTime": 5
+            },
+            "RETURN_TIME": {
+              "state": "AVAILABLE",
+              "returnStart": "2026-09-17T11:10:00-04:00",
+              "returnEnd": "2026-09-17T12:10:00-04:00"
+            }
+          }
+        },
+        {
+          "time": "2026-09-17T13:05:54Z",
+          "changed": ["queue.RETURN_TIME.returnStart", "queue.RETURN_TIME.returnEnd"],
+          "status": "OPERATING",
+          "queue": {
+            "STANDBY": {
+              "waitTime": 5
+            },
+            "RETURN_TIME": {
+              "state": "AVAILABLE",
+              "returnStart": "2026-09-17T11:20:00-04:00",
+              "returnEnd": "2026-09-17T12:20:00-04:00"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "next": null
+}

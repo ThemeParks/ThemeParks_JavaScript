@@ -7,8 +7,12 @@ export {
   type Destinations,
   type Entity,
   type EntityChildren,
+  type EntityHistory,
+  type EntityHistoryCoverage,
+  type EntityHistoryDaily,
   type EntityLive,
   type EntitySchedule,
+  type HistoryQuery,
 } from './raw';
 export { EntityHandle } from './ergonomic/entity';
 export { DestinationsApi } from './ergonomic/destinations';

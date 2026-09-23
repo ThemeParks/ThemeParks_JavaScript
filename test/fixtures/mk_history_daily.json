@@ -1,0 +1,95 @@
+{
+  "id": "75ea578a-adc8-4116-a54d-dccb60765ef9",
+  "name": "Magic Kingdom Park",
+  "entityType": "PARK",
+  "parentId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "destinationId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "timezone": "America/New_York",
+  "range": {
+    "from": "2026-09-12",
+    "to": "2026-09-17"
+  },
+  "entities": [
+    {
+      "id": "d9d12438-d999-4482-894b-8955fdb20ccf",
+      "name": "Astro Orbiter",
+      "entityType": "ATTRACTION",
+      "coverage": {
+        "firstRecordedAt": "2021-07-03"
+      },
+      "days": [
+        {
+          "date": "2026-09-12",
+          "firstOperatingAt": "2026-09-12T04:00:00Z",
+          "lastClosedAt": "2026-09-13T03:00:22Z",
+          "operatingMinutes": 931,
+          "downMinutes": 0,
+          "standby": {
+            "max": 25,
+            "min": 5,
+            "p50": 15,
+            "p90": 20,
+            "mean": 13
+          },
+          "changes": 53
+        },
+        {
+          "date": "2026-09-13",
+          "firstOperatingAt": "2026-09-13T11:31:35Z",
+          "lastClosedAt": "2026-09-13T22:00:36Z",
+          "operatingMinutes": 867,
+          "downMinutes": 91,
+          "standby": {
+            "max": 20,
+            "min": 5,
+            "p50": 5,
+            "p90": 10,
+            "mean": 6
+          },
+          "changes": 21
+        }
+      ]
+    },
+    {
+      "id": "de3309ca-97d5-4211-bffe-739fed47e92f",
+      "name": "Big Thunder Mountain Railroad",
+      "entityType": "ATTRACTION",
+      "coverage": {
+        "firstRecordedAt": "2021-07-03"
+      },
+      "days": [
+        {
+          "date": "2026-09-12",
+          "firstOperatingAt": "2026-09-12T04:00:00Z",
+          "lastClosedAt": "2026-09-13T03:00:22Z",
+          "operatingMinutes": 723,
+          "downMinutes": 177,
+          "standby": {
+            "max": 70,
+            "min": 5,
+            "p50": 40,
+            "p90": 60,
+            "mean": 39
+          },
+          "changes": 101
+        },
+        {
+          "date": "2026-09-13",
+          "firstOperatingAt": "2026-09-13T12:01:34Z",
+          "lastClosedAt": "2026-09-13T22:00:36Z",
+          "operatingMinutes": 787,
+          "downMinutes": 141,
+          "standby": {
+            "max": 50,
+            "min": 5,
+            "p50": 25,
+            "p90": 35,
+            "mean": 23
+          },
+          "changes": 92
+        }
+      ]
+    }
+  ],
+  "next": null
+}
