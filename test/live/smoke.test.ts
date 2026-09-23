@@ -28,10 +28,21 @@ describe('live smoke tests against api.themeparks.wiki', () => {
     expect(Array.isArray(s.schedule)).toBe(true);
   });
 
-  it('Magic Kingdom history coverage parses', async () => {
+  it('Magic Kingdom history coverage parses as a PARK document', async () => {
     const c = await tp.entity(MK_ID).history.coverage();
     expect(c.timezone).toBe('America/New_York');
-    expect(typeof c.kinds).toBe('object');
+    // MK is a PARK, so this is the park shape. Asserting `kinds` here read
+    // undefined against production and only ever ran in the drift workflow,
+    // so CI never saw it.
+    if (!('summary' in c)) throw new Error('expected a park coverage document');
+    expect(typeof c.summary.archiveFrom).toBe('string');
+    expect(Object.keys(c.fields).length).toBeGreaterThan(0);
+  });
+
+  it('span() reads a park and a ride to the same three dates', async () => {
+    const park = await tp.entity(MK_ID).history.span();
+    expect(typeof park.archiveFrom).toBe('string');
+    expect(typeof park.retrievableThrough).toBe('string');
   });
 
   it("Magic Kingdom today's history answers for the whole park", async () => {

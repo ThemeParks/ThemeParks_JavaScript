@@ -15,7 +15,17 @@ export type EntitySchedule = components['schemas']['EntityScheduleResponse'];
 export type EntityHistory =
   | components['schemas']['HistoryEnvelope']
   | components['schemas']['HistoryParkRawEnvelope'];
-export type EntityHistoryCoverage = components['schemas']['HistoryCoverageDocument'];
+/**
+ * Response of `/entity/{id}/history/coverage`. A PARK answers with
+ * `HistoryParkCoverageDocument`, exactly as `/history` and `/history/daily`
+ * do. The two shapes do not overlap where it counts: a park carries `summary`
+ * and `fields`, an entity carries `firstRecordedAt`, `lastRecordedAt` and
+ * `kinds`. Narrow on `'summary' in res`, or use `entity(id).history.span()`,
+ * which reads both to one shape.
+ */
+export type EntityHistoryCoverage =
+  | components['schemas']['HistoryCoverageDocument']
+  | components['schemas']['HistoryParkCoverageDocument'];
 /** Response of `/entity/{id}/history/daily`; a PARK answers with `entities[]`, see {@link EntityHistory}. */
 export type EntityHistoryDaily =
   | components['schemas']['HistoryDailyEnvelope']
@@ -83,5 +93,14 @@ export class RawClient {
     return this.transport.get<EntityHistoryDaily>(
       `/entity/${encodeURIComponent(entityId)}/history/daily${queryString(query)}`,
     );
+  }
+
+  /**
+   * GET an absolute URL the API itself handed us, such as a paged response's
+   * `next`. The server has already applied every parameter; re-deriving the
+   * URL from its path is how a paging loop starts asking for the wrong range.
+   */
+  getUrl<T = unknown>(url: string): Promise<T> {
+    return this.transport.getUrl<T>(url);
   }
 }

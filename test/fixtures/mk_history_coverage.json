@@ -5,17 +5,108 @@
   "parentId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
   "destinationId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
   "timezone": "America/New_York",
-  "firstRecordedAt": "2024-05-14",
-  "lastRecordedAt": "2024-05-14",
-  "retrievableThrough": "2024-05-14",
-  "kinds": {
+  "summary": {
+    "entitiesWithData": 109,
+    "archiveFrom": "2021-07-03",
+    "recordedTo": "2026-09-21",
+    "retrievableThrough": "2026-09-23",
+    "measuredOn": "2026-09-23"
+  },
+  "fields": {
     "status": {
-      "first": "2024-05-14",
-      "last": "2024-05-14"
+      "entities": 109,
+      "from": "2021-07-03",
+      "newest": "2026-09-21",
+      "depth": {
+        "fourYearsPlus": 85,
+        "twoToFourYears": 10,
+        "oneToTwoYears": 8,
+        "underOneYear": 6
+      }
+    },
+    "showtimes": {
+      "entities": 58,
+      "from": "2021-07-04",
+      "newest": "2026-09-21",
+      "depth": {
+        "fourYearsPlus": 34,
+        "twoToFourYears": 9,
+        "oneToTwoYears": 9,
+        "underOneYear": 6
+      }
     },
     "queue.STANDBY": {
-      "first": "2024-05-14",
-      "last": "2024-05-14"
+      "entities": 56,
+      "from": "2021-07-03",
+      "newest": "2026-09-21",
+      "depth": {
+        "fourYearsPlus": 41,
+        "twoToFourYears": 9,
+        "oneToTwoYears": 2,
+        "underOneYear": 4
+      }
+    },
+    "queue.RETURN_TIME": {
+      "entities": 26,
+      "from": "2021-10-19",
+      "newest": "2026-09-21",
+      "depth": {
+        "fourYearsPlus": 23,
+        "twoToFourYears": 3,
+        "oneToTwoYears": 0,
+        "underOneYear": 0
+      }
+    },
+    "queue.PAID_RETURN_TIME": {
+      "entities": 3,
+      "from": "2021-10-19",
+      "newest": "2026-09-21",
+      "depth": {
+        "fourYearsPlus": 2,
+        "twoToFourYears": 1,
+        "oneToTwoYears": 0,
+        "underOneYear": 0
+      }
+    },
+    "queue.BOARDING_GROUP": {
+      "entities": 2,
+      "from": "2023-03-18",
+      "newest": "2025-11-14",
+      "depth": {
+        "fourYearsPlus": 0,
+        "twoToFourYears": 2,
+        "oneToTwoYears": 0,
+        "underOneYear": 0
+      }
     }
-  }
+  },
+  "entities": [
+    {
+      "id": "290942fd-89c9-4680-98df-b86b49752f6a",
+      "name": "Cinderella Castle: A Beacon of Magic",
+      "entityType": "SHOW",
+      "from": "2021-10-03",
+      "newest": "2023-03-31",
+      "fields": ["showtimes", "status"],
+      "stillListed": false
+    },
+    {
+      "id": "92aad875-9134-4a2f-bad0-8d8c7cc59cf1",
+      "name": "Mickey & Minnie\u2019s Very Merry Memories",
+      "entityType": "SHOW",
+      "from": "2021-12-23",
+      "newest": "2021-12-31",
+      "fields": ["showtimes", "status"],
+      "stillListed": false
+    },
+    {
+      "id": "a5241f3b-4ab5-4902-b5ba-435132ef553d",
+      "name": "Splash Mountain",
+      "entityType": "ATTRACTION",
+      "from": "2021-07-03",
+      "newest": "2023-01-22",
+      "fields": ["queue.RETURN_TIME", "queue.STANDBY", "status"],
+      "stillListed": false
+    }
+  ]
 }

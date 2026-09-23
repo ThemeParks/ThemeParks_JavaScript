@@ -49,15 +49,15 @@ Jungle Cruise                                      40 min
 
 `new ThemeParks(options)` takes the following keyword options:
 
-| Option      | Type                                | Default                          | Purpose                                                                                               |
-| ----------- | ----------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `baseUrl`   | `string`                            | `https://api.themeparks.wiki/v1` | API base URL (point at a mock / staging if you need to).                                              |
-| `userAgent` | `string`                            | `themeparks-sdk-js/<version>`    | Sent as the `User-Agent` header. Set this to identify your app.                                       |
-| `apiKey`    | `string`                            | none                             | API key from api.themeparks.wiki, sent as `X-API-Key`. Optional; a key raises the limits.             |
-| `fetch`     | `typeof fetch`                      | `globalThis.fetch`               | Custom fetch implementation. Useful for logging, mocking, or older runtimes.                          |
-| `timeoutMs` | `number`                            | `10000`                          | Per-request timeout in milliseconds.                                                                  |
-| `retry`     | `Partial<RetryConfig>`              | `{ max: 3, on429: true }`        | Retry/backoff behavior. `max` counts retries **beyond** the initial attempt (so `3` = up to 4 total). |
-| `cache`     | `Cache \| false \| { maxEntries? }` | in-memory LRU                    | See [Caching](#caching) below. `false` disables caching entirely.                                     |
+| Option      | Type                                | Default                                            | Purpose                                                                                                                                                                                                                                        |
+| ----------- | ----------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `baseUrl`   | `string`                            | `https://api.themeparks.wiki/v1`                   | API base URL (point at a mock / staging if you need to).                                                                                                                                                                                       |
+| `userAgent` | `string`                            | `themeparks-sdk-js/<version>`                      | Sent as the `User-Agent` header. Set this to identify your app.                                                                                                                                                                                |
+| `apiKey`    | `string`                            | none                                               | API key from api.themeparks.wiki, sent as `X-API-Key`. Optional; a key raises the limits.                                                                                                                                                      |
+| `fetch`     | `typeof fetch`                      | `globalThis.fetch`                                 | Custom fetch implementation. Useful for logging, mocking, or older runtimes.                                                                                                                                                                   |
+| `timeoutMs` | `number`                            | `10000`                                            | Per-request timeout in milliseconds.                                                                                                                                                                                                           |
+| `retry`     | `Partial<RetryConfig>`              | `{ max: 3, on429: true, maxRetryAfterMs: 120000 }` | Retry/backoff behavior. `max` counts retries **beyond** the initial attempt (so `3` = up to 4 total). `maxRetryAfterMs` is the longest `Retry-After` the client will sleep through; past it you get `RateLimitError` instead of a silent wait. |
+| `cache`     | `Cache \| false \| { maxEntries? }` | in-memory LRU                                      | See [Caching](#caching) below. `false` disables caching entirely.                                                                                                                                                                              |
 
 Example:
 
@@ -189,9 +189,13 @@ if (!('entities' in week)) {
   for (const d of week.days) console.log(d.date, d.operatingMinutes, d.standby?.p50);
 }
 
-// Which days, and which live-data fields, are held at all.
+// Which days, and which live-data fields, are held at all. A PARK answers the
+// park document here too (summary + fields + entities), so narrow, or use
+// span() below, which reads both to one shape.
 const coverage = await barnstormer.history.coverage();
-console.log(coverage.firstRecordedAt, coverage.retrievableThrough, Object.keys(coverage.kinds));
+if (!('summary' in coverage)) {
+  console.log(coverage.firstRecordedAt, coverage.retrievableThrough, Object.keys(coverage.kinds));
+}
 ```
 
 Sample output of the first loop:
@@ -212,16 +216,82 @@ Three things to know before polling these:
   days back and 60 history requests an hour; a free key sees 30 days and 600.
   A day outside the window is a 403 `ApiError` whose
   `body.error.earliestAllowedDate` names the first day you may ask for. Over
-  the budget is a 429 whose `Retry-After` can be most of an hour; with the
-  default `retry.on429` the client sleeps that long before trying again, so a
-  poller that would rather fail fast passes `retry: { on429: false }` and reads
-  `err.retryAfterMs`.
+  the budget is a 429 whose `Retry-After` can be most of an hour. The client
+  will not sleep that long: past `retry.maxRetryAfterMs` (120000) it stops
+  retrying and throws `RateLimitError` with `retryAfterMs` set, so a poller
+  fails fast by default rather than looking hung. A REST 429, which asks for
+  seconds, is still ridden out.
 - **Today is not final.** The default cache leaves `changes` and `daily`
   uncached and keeps `coverage` for an hour. A completed day never changes, so
   cache it yourself for as long as you like.
 
 `tp.raw.getEntityHistory(id, query)`, `getEntityHistoryDaily(id, query)` and
 `getEntityHistoryCoverage(id)` are the underlying calls.
+
+### Backfilling: span, paging, and the budget
+
+The three calls above are one request each. A backfill is not one request, and
+the three things it needs are here rather than in your code.
+
+```js
+import { BudgetExhaustedError, ThemeParks } from 'themeparks';
+
+const DISNEYLAND = '7340550b-c14d-4def-80bb-acdb51d49a66';
+const tp = new ThemeParks({ apiKey: process.env.THEMEPARKS_API_KEY });
+const history = tp.entity(DISNEYLAND).history;
+
+// What exists, and what your key may read. The same three fields whether the
+// id is a park or a single ride.
+const span = await history.span();
+// -> { archiveFrom: '2021-07-03', recordedTo: '2026-09-22', retrievableThrough: '2026-09-23' }
+
+// Pages until the server stops offering a `next`, yielding as it goes.
+for await (const { entityId, row } of history.days({
+  from: span.archiveFrom,
+  to: span.retrievableThrough,
+})) {
+  console.log(entityId, row.date, row.operatingMinutes, row.standby?.p50);
+}
+```
+
+**Ask the park, not the rides.** Both history endpoints answer every entity in
+a park in one request. Pulling the same data ride by ride is around a hundred
+times more calls against the same budget. Pass a park id and `days()` takes the
+cheap path; every row is tagged with the entity it came from, which is the only
+thing you give up.
+
+**Bound the range with `retrievableThrough`, not `recordedTo`.** The first is
+what your key may read, the second is what the archive holds. They differ on
+every plan below the top one, and asking past the entitlement is how a long run
+ends in 403s.
+
+**`days()` yields, it does not collect.** Nothing accumulates, so the only thing
+that grows is whatever you write the rows to.
+
+**The budget is hourly.** When it runs out the server asks for a wait the client
+will not sit through, and `days()` throws `BudgetExhaustedError` carrying
+`retryAfterMs`, so you can write down where you got to:
+
+```js
+let lastDay = null;
+try {
+  for await (const { entityId, row } of history.days({ from, to })) {
+    write(entityId, row);
+    lastDay = row.date;
+  }
+} catch (error) {
+  if (!(error instanceof BudgetExhaustedError)) throw error;
+  checkpoint(lastDay);
+  console.error(`resume in ${Math.round(error.retryAfterMs / 1000)}s`);
+}
+```
+
+`history.changeRows(query)` is the same treatment for `changes`: one flattened
+stream of `{ entityId, row }` whether you asked a park or a ride.
+
+A complete backfill with resume and CSV output is in
+[`examples/backfill.mjs`](examples/backfill.mjs). It pulled Disneyland Resort's
+whole daily archive, 98,452 rows, in one run.
 
 ## Low-level escape hatch
 

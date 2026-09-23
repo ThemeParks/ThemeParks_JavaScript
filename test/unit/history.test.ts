@@ -144,12 +144,37 @@ describe('history responses', () => {
     });
   });
 
-  it('coverage names the recorded days per field', async () => {
+  // Magic Kingdom is a PARK, and /history/coverage answers a park with the
+  // park document: summary + fields + entities, no `kinds`. The fixture this
+  // test used to read was hand-written in the entity shape and named after a
+  // park, so it agreed with the code for the same reason the code was wrong.
+  // Both fixtures below are captured from production.
+  it('coverage of a PARK summarises the park and names the fields it holds', async () => {
     const fixture = await loadFixture('mk_history_coverage.json');
     const raw = new RawClient(transportReturning(fixture));
     const res = await raw.getEntityHistoryCoverage('75ea578a-adc8-4116-a54d-dccb60765ef9');
     expect(res.timezone).toBe('America/New_York');
-    expect(res.kinds['status']).toEqual({ first: '2024-05-14', last: '2024-05-14' });
+    if (!('summary' in res)) throw new Error('expected a park coverage document');
+    expect(res.summary.archiveFrom <= res.summary.recordedTo).toBe(true);
+    // retrievableThrough is what YOUR key may read, not what the archive
+    // holds. Bounding a backfill by the wrong one ends it in 403s.
+    expect(typeof res.summary.retrievableThrough).toBe('string');
+    expect(Object.keys(res.fields)).toContain('queue.STANDBY');
+    // entities[] is truncated in the fixture; the shape is what matters.
+    expect(res.entities.length).toBeGreaterThan(0);
+  });
+
+  it('coverage of a single entity names the recorded days per field', async () => {
+    const fixture = await loadFixture('mk_attraction_history_coverage.json');
+    const raw = new RawClient(transportReturning(fixture));
+    const res = await raw.getEntityHistoryCoverage('some-attraction');
+    expect(res.timezone).toBe('America/New_York');
+    if ('summary' in res) throw new Error('expected an entity coverage document');
+    expect(Object.keys(res.kinds)).toContain('queue.STANDBY');
+    expect(res.kinds['queue.STANDBY']).toMatchObject({
+      first: expect.any(String),
+      last: expect.any(String),
+    });
   });
 
   it('a day outside the window is an ApiError carrying the earliest allowed date', async () => {

@@ -49,6 +49,18 @@ export interface RetryConfig {
   max: number;
   /** If true, HTTP 429 responses are retried (honouring `Retry-After`). */
   on429: boolean;
+  /**
+   * Longest `Retry-After` this client will sleep through, in milliseconds.
+   * Defaults to {@link DEFAULT_MAX_RETRY_AFTER_MS}.
+   *
+   * A REST 429 asks for seconds and is worth waiting out. A HISTORY 429 is a
+   * different animal: that budget is hourly, so a spent one can ask for most
+   * of an hour, and honouring it up to `max` times means a process that sits
+   * silent for hours and looks hung. Past this cap we do not sleep at all, and
+   * throw `RateLimitError` carrying `retryAfterMs` so the caller can
+   * checkpoint and come back.
+   */
+  maxRetryAfterMs?: number;
 }
 
 export interface TransportOptions {
@@ -65,6 +77,9 @@ export interface TransportOptions {
   fetch: FetchLike;
   sleep?: (ms: number) => Promise<void>;
 }
+
+/** Two minutes: longer than any REST 429 asks for, far short of an hourly budget. */
+export const DEFAULT_MAX_RETRY_AFTER_MS = 120_000;
 
 const defaultSleep = (ms: number): Promise<void> => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -122,11 +137,22 @@ export class Transport {
   constructor(private readonly opts: TransportOptions) {}
 
   async get<T = unknown>(path: string): Promise<T> {
-    return this.request<T>('GET', path);
+    return this.request<T>('GET', this.opts.baseUrl.replace(/\/$/, '') + path);
   }
 
-  private async request<T>(method: string, path: string): Promise<T> {
-    const url = this.opts.baseUrl.replace(/\/$/, '') + path;
+  /**
+   * GET an absolute URL the API itself handed us.
+   *
+   * Paged history responses carry `next` as an absolute URL with every
+   * parameter already applied. Re-deriving that from the path would mean
+   * re-deriving the parameters too, which is how a paging loop quietly starts
+   * asking for the wrong range.
+   */
+  async getUrl<T = unknown>(url: string): Promise<T> {
+    return this.request<T>('GET', url);
+  }
+
+  private async request<T>(method: string, url: string): Promise<T> {
     const sleep = this.opts.sleep ?? defaultSleep;
     let attempt = 0;
 
@@ -171,10 +197,16 @@ export class Transport {
       const body = await this.safeParseBody(response);
       const bodyExcerpt = formatBodyExcerpt(body);
 
-      if (response.status === 429 && this.opts.retry.on429 && attempt < this.opts.retry.max) {
-        const retryAfterMs =
-          parseRetryAfter(response.headers.get('retry-after')) ?? backoff(attempt);
-        await sleep(retryAfterMs);
+      const retryAfterMs = parseRetryAfter(response.headers.get('retry-after'));
+      const cap = this.opts.retry.maxRetryAfterMs ?? DEFAULT_MAX_RETRY_AFTER_MS;
+      const waitTooLong = retryAfterMs !== null && retryAfterMs > cap;
+      if (
+        response.status === 429 &&
+        this.opts.retry.on429 &&
+        attempt < this.opts.retry.max &&
+        !waitTooLong
+      ) {
+        await sleep(retryAfterMs ?? backoff(attempt));
         attempt++;
         continue;
       }
@@ -183,7 +215,7 @@ export class Transport {
           status: 429,
           body,
           url,
-          retryAfterMs: parseRetryAfter(response.headers.get('retry-after')),
+          retryAfterMs,
           ...(bodyExcerpt !== undefined ? { bodyExcerpt } : {}),
         });
       }
