@@ -10,7 +10,7 @@ import {
 } from './transport';
 
 const DEFAULT_BASE_URL = 'https://api.themeparks.wiki/v1';
-const PACKAGE_VERSION = '8.0.0';
+const PACKAGE_VERSION = '8.1.0';
 const DEFAULT_USER_AGENT = `themeparks-sdk-js/${PACKAGE_VERSION}`;
 
 export interface ThemeParksOptions {

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [8.1.0] - 2026-09-23
 
 ### Added
 
@@ -67,7 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   production, and the live smoke test asserts the park shape it actually gets.
 
 - **The user agent announced the wrong version.** `PACKAGE_VERSION` was still
-  `7.0.0-alpha.0` in a package at `8.0.0`.
+  `7.0.0-alpha.0` in a package at `8.0.0`, so every request announced a version
+  a major old and nothing failed. A gate test now asserts the `User-Agent` the
+  server actually receives carries the version `package.json` declares, so
+  forgetting the bump is a red test rather than a quiet lie in a header.
 
 - **`apiKey` client option.** Sent as the `X-API-Key` header on every
   request. Every endpoint still answers without one; a key raises the limits,
