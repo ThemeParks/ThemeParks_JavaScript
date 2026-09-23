@@ -5,9 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [8.1.0] - 2026-09-23
 
 ### Added
+
+- **`entity(id).history.span()`, `.days()` and `.changeRows()`** — the loop
+  above the three history calls.
+
+  ```js
+  const history = tp.entity(DISNEYLAND).history;
+  const span = await history.span();
+  for await (const { entityId, row } of history.days({
+    from: span.archiveFrom,
+    to: span.retrievableThrough,
+  })) {
+    // ...
+  }
+  ```
+
+  - `span()` returns `archiveFrom`, `recordedTo` and `retrievableThrough` in
+    one shape. The underlying coverage documents do not: a park nests them
+    under `summary`, an entity carries them at the top level under different
+    names, so without this every caller writes that branch first.
+    `retrievableThrough` is the end date to bound a backfill by, because it is
+    what the key may read rather than what the archive holds.
+  - `days()` pages until the server stops offering a `next`, following that URL
+    verbatim, and yields `{ entityId, row }` as rows arrive rather than
+    collecting them. A park's daily call is the one paged call in the family,
+    so without this a park backfill silently stopped at the first 31 days.
+  - Both flatten a park envelope and an entity envelope to the same stream, so
+    a caller writes one loop and does not branch on `'entities' in res`.
+  - `BudgetExhaustedError` (a `RateLimitError`) is thrown when the history
+    budget is spent and the server asks for longer than `maxWaitMs` (120000 by
+    default). It carries `retryAfterMs`, so a backfill can checkpoint and
+    resume rather than hold a process open for most of an hour.
+
+- **`examples/backfill.mjs`** — a complete backfill with resume and NDJSON or
+  CSV output. It pulled Disneyland Resort's whole daily archive, 98,452 rows,
+  in one run.
+
+### Fixed
+
+- **A 429 could park the client for hours.** The transport honoured any
+  `Retry-After` up to `retry.max` times. That is right for a REST 429, which
+  asks for seconds, and wrong for a history 429: that budget is hourly, so a
+  spent one can ask for most of an hour, and three of those is roughly two and
+  a half hours of a silent process. `RetryConfig` gains `maxRetryAfterMs`
+  (120000 by default): past it the client does not sleep at all and throws
+  `RateLimitError` with `retryAfterMs` set.
+
+- **`EntityHistoryCoverage` was missing the park shape.**
+  `/entity/{id}/history/coverage` answers a PARK with
+  `HistoryParkCoverageDocument`, the same way `/history` and `/history/daily`
+  do, and the type named only `HistoryCoverageDocument`. The two do not
+  overlap where it counts: a park carries `summary` and `fields`, an entity
+  carries `firstRecordedAt`, `lastRecordedAt` and `kinds`. A TypeScript user
+  read `.kinds` off a park's coverage, got `undefined` at runtime, and the
+  compiler said nothing. The fixture that covered this was hand-written in the
+  entity shape and named after a park, so it agreed with the code for the same
+  reason the code was wrong; both coverage fixtures are now captured from
+  production, and the live smoke test asserts the park shape it actually gets.
+
+- **The user agent announced the wrong version.** `PACKAGE_VERSION` was still
+  `7.0.0-alpha.0` in a package at `8.0.0`, so every request announced a version
+  a major old and nothing failed. A gate test now asserts the `User-Agent` the
+  server actually receives carries the version `package.json` declares, so
+  forgetting the bump is a red test rather than a quiet lie in a header.
 
 - **`apiKey` client option.** Sent as the `X-API-Key` header on every
   request. Every endpoint still answers without one; a key raises the limits,

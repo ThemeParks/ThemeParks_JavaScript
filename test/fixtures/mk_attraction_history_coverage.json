@@ -1,0 +1,25 @@
+{
+  "id": "924a3b2c-6b4b-49e5-99d3-e9dc3f2e8a48",
+  "name": "The Barnstormer",
+  "entityType": "ATTRACTION",
+  "parentId": "75ea578a-adc8-4116-a54d-dccb60765ef9",
+  "destinationId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "timezone": "America/New_York",
+  "firstRecordedAt": "2021-07-03",
+  "lastRecordedAt": "2026-09-21",
+  "retrievableThrough": "2026-09-23",
+  "kinds": {
+    "status": {
+      "first": "2021-07-03",
+      "last": "2026-09-21"
+    },
+    "queue.STANDBY": {
+      "first": "2021-07-03",
+      "last": "2026-09-21"
+    },
+    "queue.RETURN_TIME": {
+      "first": "2021-10-19",
+      "last": "2026-09-21"
+    }
+  }
+}

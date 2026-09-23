@@ -11,7 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/destinations */
+        /**
+         * GET /v1/destinations
+         * @description Every destination we hold, each with its parks as id and name. This is the entry point: take a destination or park id from here and ask GET /v1/entity/{id}/children for what is inside it, /live for what it is doing, or /schedule for when it is open. Soft-deleted parks are excluded. The list is small and changes when a resort opens or closes a park, which is rarely — cached `public, max-age=300, s-maxage=3600`, and there is no reason to ask for it more than once a run.
+         */
         get: operations["getAllDestinations"];
         put?: never;
         post?: never;
@@ -28,7 +31,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/entity/{id} */
+        /**
+         * GET /v1/entity/{id}
+         * @description The entity document: what this thing IS, not what it is doing. Name, entityType, timezone, location, its place in the destination/park hierarchy, and the ride's own attributes. `id` is an entity's UUID, its slug, or — for a destination only — its upstream external id. An id that resolves to nothing is 404, including one malformed enough that the query itself rejects it. Attributes recorded as tags are spread into the document as top-level keys named after the tag — `minimumHeight`, `mayGetWet` and so on — so the set of keys varies by entity and by park; read the ones you need and ignore the rest rather than expecting a fixed shape. For what the entity is doing right now, GET /v1/entity/{id}/live. Cached `public, max-age=300, s-maxage=3600`: this changes when a park changes its data, which is rarely, and polling it faster buys requests rather than freshness.
+         */
         get: operations["getEntityById"];
         put?: never;
         post?: never;
@@ -45,7 +51,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/entity/{id}/children */
+        /**
+         * GET /v1/entity/{id}/children
+         * @description The entities beneath this one, as a flat array — id, name, entityType, slug, external id, coordinates and parentId each. `id` is an entity's UUID, its slug, or — for a destination only — its upstream external id. An id that resolves to nothing is 404, including one malformed enough that the query itself rejects it. HOW FAR DOWN depends on what you asked about, and this is the part clients get wrong: a DESTINATION returns every entity in the destination and a PARK returns every entity in the park — the whole subtree, not one level — while every other entityType returns its direct children only. Rebuild the hierarchy from `parentId` rather than assuming one level. Soft-deleted entities are never included. Cached `public, max-age=300, s-maxage=3600`.
+         */
         get: operations["getEntityChildren"];
         put?: never;
         post?: never;
@@ -122,7 +131,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/entity/{id}/live */
+        /**
+         * GET /v1/entity/{id}/live
+         * @description Live data for this entity AND everything beneath it, in one call: wait times, ride status, return-time and boarding-group windows, and show times. `id` is an entity's UUID, its slug, or — for a destination only — its upstream external id. An id that resolves to nothing is 404, including one malformed enough that the query itself rejects it. An entity with nothing to report is absent from `liveData` rather than present and empty, so treat a missing entry as no data rather than as a closed ride. `?entityType=ATTRACTION,SHOW` filters the array to those types (comma-separated). Cached `public, max-age=60, s-maxage=60`: the collectors run on a cadence, and a faster poll returns the same body. For what an entity reported in the past rather than now, GET /v1/entity/{id}/history.
+         */
         get: operations["getEntityLiveData"];
         put?: never;
         post?: never;
@@ -139,7 +151,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/entity/{id}/schedule */
+        /**
+         * GET /v1/entity/{id}/schedule
+         * @description Opening hours for this entity, for the default window: today through the next 30 days, anchored to the entity's own timezone rather than the caller's or UTC. `id` is an entity's UUID, its slug, or — for a destination only — its upstream external id. An id that resolves to nothing is 404, including one malformed enough that the query itself rejects it. Days the park has not published are absent from the array rather than present as closed. For a specific month, including a past one, use GET /v1/entity/{id}/schedule/{year}/{month}. Cached `public, max-age=300, s-maxage=3600`.
+         */
         get: operations["getEntitySchedule"];
         put?: never;
         post?: never;
@@ -156,7 +171,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** GET /v1/entity/{id}/schedule/{year}/{month} */
+        /**
+         * GET /v1/entity/{id}/schedule/{year}/{month}
+         * @description Opening hours for one calendar month in the entity's own timezone. `month` is TWO digits, 01-12 — `/2026/9` is 400, `/2026/09` is right — and `year` is a four-digit year between 1970 and 2150; anything else is 400 before the entity is even looked up. `id` is an entity's UUID, its slug, or — for a destination only — its upstream external id. An id that resolves to nothing is 404, including one malformed enough that the query itself rejects it. Past months are served from what was recorded at the time and are not backfilled, so a month before this entity was collected comes back empty rather than 404. Days the park has not published are absent rather than present as closed. Cached `public, max-age=300, s-maxage=3600`.
+         */
         get: operations["getEntityScheduleYearMonth"];
         put?: never;
         post?: never;
@@ -249,6 +267,25 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** @description 400: a path parameter is the wrong shape. Checked before the entity is looked up, so a bad `year` or `month` answers 400 whether or not the id exists. */
+        EntityInvalidParameter: {
+            /**
+             * @description Always false. Branch on this rather than on the status alone.
+             * @enum {boolean}
+             */
+            success: false;
+            error: {
+                /** @enum {string} */
+                type: "Bad request";
+                /** @description Says which parameter was rejected and what it must look like, e.g. "Month must be a two-digit number (01-12)". */
+                message: string;
+                /**
+                 * @description Repeats the HTTP status.
+                 * @enum {integer}
+                 */
+                code?: 400;
+            };
+        };
         EntityLiveData: {
             /** @description Entity identifier */
             id: string;
@@ -281,6 +318,25 @@ export interface components {
             latitude?: number | null;
             /** @description Longitude coordinate of the entity location */
             longitude?: number | null;
+        };
+        /** @description 404: nothing resolved from `id`. An id is a UUID, a slug, or — for a destination — its upstream external id; an id malformed enough that the lookup itself rejects it answers 404 as well, rather than 400 or 500. The body is the same whether the entity never existed or has been removed, so it cannot be used to tell those apart. */
+        EntityNotFound: {
+            /**
+             * @description Always false. Branch on this rather than on the status alone.
+             * @enum {boolean}
+             */
+            success: false;
+            error: {
+                /** @enum {string} */
+                type: "Not found";
+                /** @description Names the id that did not resolve, e.g. "Entity 00000000-0000-0000-0000-000000000000 not found". */
+                message: string;
+                /**
+                 * @description Repeats the HTTP status.
+                 * @enum {integer}
+                 */
+                code?: 404;
+            };
         };
         EntityScheduleResponse: {
             /** @description Entity identifier */
@@ -457,12 +513,12 @@ export interface components {
                 message: string;
             };
         };
-        /** @description 400: the range spans more than 31 park-local days. Split it into consecutive calls. */
+        /** @description 400: the range is longer than the path allows. The cap is NOT the same on every path, and this one error type is returned by all of them: GET /v1/entity/{id}/history allows 31 park-local days for a single entity and 1 for a PARK; GET /v1/entity/{id}/history/daily allows 3660 (ten years) for a single entity, and for a PARK serves 31 days a page and gives you `next` for the rest. The message names the cap that applied. Split the ask into consecutive calls. */
         HistoryErrorRangeTooLong: {
             error: {
                 /** @enum {string} */
                 type: "RANGE_TOO_LONG";
-                /** @description e.g. "A history call covers at most 31 park-local days (2026-01-01 to 2026-03-01 is 60). Ask for a shorter range." */
+                /** @description Names the cap that was exceeded and the span that was asked for, e.g. "A history call covers at most 31 park-local days (2026-01-01 to 2026-03-01 is 60). Ask for a shorter range." The number is the cap for the path that answered, not a constant: read it from the message rather than hard-coding 31. */
                 message: string;
             };
         };
@@ -497,10 +553,110 @@ export interface components {
              * @description Start of the range (UTC, whole seconds). The state below is effective from this instant.
              */
             time: string;
+            /**
+             * Format: date-time
+             * @description The UTC instant (whole seconds) at which this state was actually OBSERVED, as opposed to `time`, which is the start of the range you asked for. The two are different questions and only this one tells you whether to trust the state.
+             *
+             *     A state carried forward from before the range has an `observedAt` BEFORE `time` — sometimes long before, because the lookup is deliberately unbounded and returns the last reading of each kind at any age. So a day we hold nothing for still reports the newest state we ever saw, which is usually right and occasionally very wrong: a ride whose feed simply stopped mid-operation carries its last wait time forward indefinitely.
+             *
+             *     Compare it against `range.from` to decide. Equal to or after the range start means the state was seen inside the range. Before it means carried forward, and how far back you tolerate is yours to choose — a reading an hour before the day began is ordinary, one from three weeks earlier is not evidence about this day. Absent means nothing survives to carry: we can say nothing at all about the state at the start of this range.
+             *
+             *     It is the NEWEST instant any kind in this opening was seen. Kinds can be observed at different moments, so an older kind may be staler than this field suggests; treat it as the most generous reading of the opening's age, not a guarantee about every key. Days that genuinely have data are better read from the rows, which carry their own `time`.
+             */
+            observedAt?: string;
             /** @description Live status at the start of the range; null when unknown. */
             status?: string | null;
             queue?: components["schemas"]["LiveQueue"];
             showtimes?: components["schemas"]["LiveShowTime"][] | null;
+        };
+        /** @description How far back each entity's record of one field goes, as counts. Calendar years, measured from the day the document was built (`summary.measuredOn`). Counts, not a percentage or an average: a single figure for a park would hide that most of one park's standby entities have two to four years while its oldest reach back to the start of the archive. */
+        HistoryParkCoverageDepth: {
+            /** @description Entities whose record of this field goes back four calendar years or more. */
+            fourYearsPlus: number;
+            /** @description Entities with at least two and under four calendar years. */
+            twoToFourYears: number;
+            /** @description Entities with at least one and under two calendar years. */
+            oneToTwoYears: number;
+            /** @description Entities with under a calendar year, typically something that opened recently rather than a gap. */
+            underOneYear: number;
+        };
+        /** @description What history is held across a whole PARK. GET /v1/entity/{id}/history/coverage returns this shape when the entity is a PARK; every other entityType, a DESTINATION included, returns HistoryCoverageDocument for that entity alone. A park records nothing itself, so without this rollup the honest-looking answer for a park would be "nothing". It reports depth and breadth only: it does not detect missing days and does not judge whether a recorded value was correct. */
+        HistoryParkCoverageDocument: {
+            id: string;
+            name: string;
+            entityType: string;
+            parentId: string | null;
+            destinationId: string | null;
+            /** @description IANA timezone the park-local days are resolved in. The park's children inherit it. */
+            timezone: string;
+            summary: components["schemas"]["HistoryParkCoverageSummary"];
+            /** @description Keyed by live-data field path, in live-data order. */
+            fields: {
+                [key: string]: components["schemas"]["HistoryParkCoverageField"];
+            };
+            /** @description Every entity of the park history is held for. */
+            entities: components["schemas"]["HistoryParkCoverageEntity"][];
+        };
+        /** @description One entity of the park that history is held for. An entity nothing is held for is ABSENT rather than listed as empty: it is usually a parade, a show or a land, which never had a queue to record, and listing it would read as a gap. */
+        HistoryParkCoverageEntity: {
+            id: string;
+            name: string;
+            entityType: string;
+            /**
+             * Format: date
+             * @description The earliest park-local day any field of this entity was recorded.
+             */
+            from: string;
+            /**
+             * Format: date
+             * @description The newest park-local day any field of this entity was recorded.
+             */
+            newest: string;
+            /** @description The live-data field paths held for this entity, named exactly as the single-entity coverage document names them, so one client type reads both. */
+            fields: string[];
+            /** @description False when the park no longer lists this entity. Its history is still held and still retrievable, and every count in this document includes it; this says where the entity is now, not what the archive has. */
+            stillListed: boolean;
+        };
+        /** @description What one live-data field looks like across the whole park. `entities` counts what is HELD and is never a fraction: entities that have never reported this field are simply absent from the count, because a denominator drawn from entityType would publish parades, shows and lands as missing wait times. */
+        HistoryParkCoverageField: {
+            /** @description How many of the park's entities this field is held for. */
+            entities: number;
+            /**
+             * Format: date
+             * @description The earliest park-local day any entity in the park reported this field.
+             */
+            from: string;
+            /**
+             * Format: date
+             * @description The newest park-local day any entity in the park reported it. A day in the past is not staleness: when a park stops publishing a field the ending is recorded, so the span genuinely stops there.
+             */
+            newest: string;
+            depth: components["schemas"]["HistoryParkCoverageDepth"];
+        };
+        /** @description The park in four numbers. Every one describes what is held; none is a fraction of a total, and nothing here asserts that anything is missing. */
+        HistoryParkCoverageSummary: {
+            /** @description Entities of this park any live-data history is held for - attractions, restaurants, shows and anything else that has ever reported. Larger than the number with wait times: `fields` breaks it down. Counts entities the park no longer lists as well, since their history is still held; those carry `stillListed: false` in `entities`. */
+            entitiesWithData: number;
+            /**
+             * Format: date
+             * @description The earliest park-local day anything in this park was recorded, or null when nothing has been.
+             */
+            archiveFrom: string;
+            /**
+             * Format: date
+             * @description The newest park-local day anything in this park was recorded, or null.
+             */
+            recordedTo: string;
+            /**
+             * Format: date
+             * @description The newest park-local day a caller can actually retrieve. Runs ahead of `recordedTo` by a day or two: the most recent days are served from live data before they are sealed into the archive. Null when nothing is recorded.
+             */
+            retrievableThrough: string;
+            /**
+             * Format: date
+             * @description The park-local day these figures were computed. They move as the archive grows, so a reader comparing two copies of this document needs to know which day each was built.
+             */
+            measuredOn: string;
         };
         /** @description A day-by-day summary of a whole PARK: every entity of the park that has history, in one call. GET /v1/entity/{id}/history/daily returns THIS shape when the entity is a PARK (entityType: "PARK") and HistoryDailyEnvelope for every other entityType, so a client should branch on the presence of entities[] or on the entity's type. range.from and range.to are always park-local calendar days, and range.to is THIS PAGE's last day rather than the whole range you asked for: a call serves at most 31 park-local days and next carries the rest. */
         HistoryParkDailyEnvelope: {
@@ -580,7 +736,7 @@ export interface components {
                 waitTime: number | null;
             };
             RETURN_TIME?: {
-                state: components["schemas"]["ReturnTimeState"];
+                state: components["schemas"]["ReturnTimeState"] | null;
                 /**
                  * Format: date-time
                  * @description Start time of return window
@@ -593,15 +749,15 @@ export interface components {
                 returnEnd: string | null;
             };
             PAID_RETURN_TIME?: {
-                state: components["schemas"]["ReturnTimeState"];
+                state: components["schemas"]["ReturnTimeState"] | null;
                 /** Format: date-time */
                 returnStart: string | null;
                 /** Format: date-time */
                 returnEnd: string | null;
-                price: components["schemas"]["PriceData"];
+                price: components["schemas"]["PriceData"] | null;
             };
             BOARDING_GROUP?: {
-                allocationStatus: components["schemas"]["BoardingGroupState"];
+                allocationStatus: components["schemas"]["BoardingGroupState"] | null;
                 /** @description Current boarding group start number */
                 currentGroupStart: number | null;
                 /** @description Current boarding group end number */
@@ -779,6 +935,15 @@ export interface operations {
                     "application/json": components["schemas"]["EntityData"];
                 };
             };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNotFound"];
+                };
+            };
             /** @description Too Many Requests - Rate limit exceeded */
             429: {
                 headers: {
@@ -818,6 +983,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EntityChildrenResponse"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNotFound"];
                 };
             };
             /** @description Too Many Requests - Rate limit exceeded */
@@ -929,7 +1103,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HistoryCoverageDocument"];
+                    "application/json": components["schemas"]["HistoryCoverageDocument"] | components["schemas"]["HistoryParkCoverageDocument"];
                 };
             };
             /** @description Resource not found */
@@ -1034,6 +1208,15 @@ export interface operations {
                     "application/json": components["schemas"]["EntityLiveDataResponse"];
                 };
             };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNotFound"];
+                };
+            };
             /** @description Too Many Requests - Rate limit exceeded */
             429: {
                 headers: {
@@ -1073,6 +1256,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EntityScheduleResponse"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNotFound"];
                 };
             };
             /** @description Too Many Requests - Rate limit exceeded */
@@ -1116,6 +1308,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EntityScheduleResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityInvalidParameter"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntityNotFound"];
                 };
             };
             /** @description Too Many Requests - Rate limit exceeded */

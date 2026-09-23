@@ -1,15 +1,6 @@
 import type { components } from '../_generated/schema';
-import type {
-  Entity,
-  EntityChildren,
-  EntityHistory,
-  EntityHistoryCoverage,
-  EntityHistoryDaily,
-  EntityLive,
-  EntitySchedule,
-  HistoryQuery,
-  RawClient,
-} from '../raw';
+import type { Entity, EntityChildren, EntityLive, EntitySchedule, RawClient } from '../raw';
+import { HistoryApi } from './history';
 
 export type EntityChild = components['schemas']['EntityChild'];
 
@@ -19,15 +10,6 @@ export interface ScheduleApi {
   upcoming(): Promise<EntitySchedule>;
   month(year: number, month: number): Promise<EntitySchedule>;
   range(start: Date, end: Date): Promise<ScheduleEntry[]>;
-}
-
-export interface HistoryApi {
-  /** Every recorded change in the range, one row per change: `GET /entity/{id}/history`. */
-  changes(query?: HistoryQuery): Promise<EntityHistory>;
-  /** One row per park-local day with operating minutes and wait-time statistics: `GET /entity/{id}/history/daily`. */
-  daily(query?: HistoryQuery): Promise<EntityHistoryDaily>;
-  /** Which days and which live-data fields are held: `GET /entity/{id}/history/coverage`. */
-  coverage(): Promise<EntityHistoryCoverage>;
 }
 
 export class EntityHandle {
@@ -43,11 +25,7 @@ export class EntityHandle {
       month: (year, month) => this.raw.getEntityScheduleMonth(this.id, year, month),
       range: (start, end) => this.scheduleRange(start, end),
     };
-    this.history = {
-      changes: (query) => this.raw.getEntityHistory(this.id, query),
-      daily: (query) => this.raw.getEntityHistoryDaily(this.id, query),
-      coverage: () => this.raw.getEntityHistoryCoverage(this.id),
-    };
+    this.history = new HistoryApi(raw, id);
   }
 
   get(): Promise<Entity> {
