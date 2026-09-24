@@ -1,0 +1,233 @@
+/**
+ * Reading the two budgets, and staying inside them.
+ *
+ * The SDK read exactly one header, `Retry-After`, and only after a 429 had
+ * already happened: it could say you had run out, never that you were about
+ * to. These cover the three things that changed. The figures are read,
+ * absence is not confused with zero, and the wait a 429 imposes is taken ONCE
+ * for the whole client rather than once per in-flight request.
+ */
+
+import { describe, it, expect, vi } from 'vitest';
+import { ThemeParks } from '../../src/client';
+import {
+  Gate,
+  isExhausted,
+  readRateLimits,
+  secondsUntilReset,
+  UNKNOWN_RATE_LIMIT,
+  UNKNOWN_RATE_LIMITS,
+} from '../../src/ratelimit';
+import type { FetchLike } from '../../src/transport';
+
+const REST = {
+  'RateLimit-Limit': '300',
+  'RateLimit-Policy': '300;w=60',
+  'RateLimit-Remaining': '299',
+  'RateLimit-Reset': '60',
+};
+const HISTORY = {
+  'RateLimit-History-Limit': '600',
+  'RateLimit-History-Policy': '600;w=3600',
+  'RateLimit-History-Remaining': '599',
+  'RateLimit-History-Reset': '3412',
+};
+
+function bag(headers: Record<string, string>) {
+  return new Headers(headers);
+}
+
+function client(headers: Record<string, string>, options: Record<string, unknown> = {}) {
+  const fetchFn = vi.fn(() =>
+    Promise.resolve(
+      new Response(JSON.stringify({ destinations: [] }), {
+        headers: { 'content-type': 'application/json', ...headers },
+      }),
+    ),
+  );
+  const tp = new ThemeParks({ fetch: fetchFn as unknown as FetchLike, ...options });
+  return { tp, fetchFn };
+}
+
+describe('reading the headers', () => {
+  it('reads the REST meter', () => {
+    const { rest } = readRateLimits(bag(REST));
+    expect([rest.limit, rest.remaining, rest.reset]).toEqual([300, 299, 60]);
+    expect(rest.policy).toBe('300;w=60');
+  });
+
+  it('reads the history meter', () => {
+    const { history } = readRateLimits(bag(HISTORY));
+    expect([history.limit, history.remaining, history.reset]).toEqual([600, 599, 3412]);
+  });
+
+  it('keeps the two meters apart', () => {
+    // `ratelimit-history-limit` also begins with `ratelimit-`, so a prefix
+    // scan reads the hourly figure as the per-minute one and the client paces
+    // itself against the wrong window.
+    const out = readRateLimits(bag({ ...REST, ...HISTORY }));
+    expect(out.rest.limit).toBe(300);
+    expect(out.history.limit).toBe(600);
+    expect(out.rest.reset).toBe(60);
+    expect(out.history.reset).toBe(3412);
+  });
+
+  it('does not invent a REST meter from history headers alone', () => {
+    expect(readRateLimits(bag(HISTORY)).rest.limit).toBeNull();
+  });
+
+  it('leaves what we knew alone when a response mentions neither', () => {
+    // Most responses mention one meter, or -- if publicly cacheable --
+    // neither. Overwriting with blanks would let the last cacheable response
+    // erase everything the client had learned.
+    const known = readRateLimits(bag({ ...REST, ...HISTORY }));
+    const after = readRateLimits(bag({ 'content-type': 'application/json' }), known);
+    expect(after.rest.remaining).toBe(299);
+    expect(after.history.remaining).toBe(599);
+  });
+
+  it('treats a malformed value as unknown rather than zero', () => {
+    // A failed parse must not become 0, or the client holds forever waiting
+    // on a window it invented.
+    const { rest } = readRateLimits(bag({ ...REST, 'RateLimit-Remaining': 'lots' }));
+    expect(rest.remaining).toBeNull();
+    expect(isExhausted(rest)).toBe(false);
+  });
+});
+
+describe('absence is not zero', () => {
+  it('an unknown remaining is not exhausted', () => {
+    // Anonymous responses carry no figures, because they are publicly
+    // cacheable and the numbers are per-caller. Reading that as "nothing
+    // left" would stall every anonymous client permanently.
+    expect(isExhausted(UNKNOWN_RATE_LIMIT)).toBe(false);
+  });
+
+  it('a zero remaining is exhausted', () => {
+    expect(isExhausted({ ...UNKNOWN_RATE_LIMIT, remaining: 0 })).toBe(true);
+  });
+
+  it('counts the reset down from when it was read', () => {
+    const meter = { ...UNKNOWN_RATE_LIMIT, reset: 60, observedAt: Date.now() - 50_000 };
+    expect(secondsUntilReset(meter)).toBeGreaterThan(9);
+    expect(secondsUntilReset(meter)).toBeLessThan(11);
+  });
+
+  it('never reports a negative countdown', () => {
+    const meter = { ...UNKNOWN_RATE_LIMIT, reset: 5, observedAt: Date.now() - 100_000 };
+    expect(secondsUntilReset(meter)).toBe(0);
+  });
+
+  it('has no countdown without a reset', () => {
+    expect(secondsUntilReset(UNKNOWN_RATE_LIMITS.rest)).toBeNull();
+  });
+});
+
+describe('the gate', () => {
+  it('costs nothing while open', () => {
+    expect(new Gate().waitMs()).toBe(0);
+  });
+
+  it('holds every caller once closed', () => {
+    const gate = new Gate();
+    gate.closeFor(5000);
+    expect(gate.waitMs()).toBeGreaterThan(4000);
+    expect(gate.waitMs()).toBeGreaterThan(4000);
+  });
+
+  it('jitters waiters so they do not wake together', () => {
+    // Waking in unison is the other half of the thundering herd: the wait is
+    // shared, then everyone retries at the same instant and re-trips it.
+    const gate = new Gate();
+    gate.closeFor(5000);
+    const waits = new Set(Array.from({ length: 20 }, () => gate.waitMs()));
+    expect(waits.size).toBeGreaterThan(1);
+  });
+
+  it('is never brought forward by a shorter wait', () => {
+    // A 2s Retry-After arriving while a 60s one is in force would otherwise
+    // release the herd early.
+    const gate = new Gate();
+    gate.closeFor(60_000);
+    gate.closeFor(2000);
+    expect(gate.waitMs()).toBeGreaterThan(55_000);
+  });
+});
+
+describe('through the client', () => {
+  it('records both meters from a real call', async () => {
+    const { tp } = client({ ...REST, ...HISTORY });
+    await tp.destinations.list();
+    expect(tp.rateLimit.rest.remaining).toBe(299);
+    expect(tp.rateLimit.history.remaining).toBe(599);
+  });
+
+  it('knows nothing before the first call', () => {
+    const { tp } = client(REST);
+    expect(tp.rateLimit.rest.limit).toBeNull();
+    expect(isExhausted(tp.rateLimit.rest)).toBe(false);
+  });
+
+  it('survives the cache wrapper, which is the default path', async () => {
+    // Caching is ON by default and wraps the transport. In the Python sibling
+    // every test used cache:false and the first real call against production
+    // threw, because the wrapper had no rateLimit to forward.
+    const { tp, fetchFn } = client(REST); // cache default: on
+    await tp.destinations.list();
+    await tp.destinations.list();
+    expect(fetchFn).toHaveBeenCalledOnce(); // second was a cache hit
+    // A hit sends no request and so learns nothing, which is right: it spent
+    // no budget either, so the previous figures still stand.
+    expect(tp.rateLimit.rest.remaining).toBe(299);
+  });
+
+  it('waits out a window the server said is spent', async () => {
+    const slept: number[] = [];
+    const { tp, fetchFn } = client(
+      { ...REST, 'RateLimit-Remaining': '0', 'RateLimit-Reset': '7' },
+      { cache: false },
+    );
+    (
+      tp as unknown as { transport: { opts: { sleep: (ms: number) => Promise<void> } } }
+    ).transport.opts.sleep = (ms: number) => {
+      slept.push(ms);
+      return Promise.resolve();
+    };
+    await tp.destinations.list(); // learns remaining 0
+    await tp.destinations.list(); // must hold first
+    expect(slept.length).toBeGreaterThan(0);
+    expect(slept[0]).toBeLessThanOrEqual(7000);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+  });
+
+  it('never holds on an unknown remaining', async () => {
+    const slept: number[] = [];
+    const { tp } = client({ 'content-type': 'application/json' }, { cache: false });
+    (
+      tp as unknown as { transport: { opts: { sleep: (ms: number) => Promise<void> } } }
+    ).transport.opts.sleep = (ms: number) => {
+      slept.push(ms);
+      return Promise.resolve();
+    };
+    await tp.destinations.list();
+    await tp.destinations.list();
+    expect(slept).toEqual([]);
+  });
+
+  it('can be told not to respect remaining', async () => {
+    const slept: number[] = [];
+    const { tp } = client(
+      { ...REST, 'RateLimit-Remaining': '0', 'RateLimit-Reset': '7' },
+      { cache: false, retry: { respectRemaining: false } },
+    );
+    (
+      tp as unknown as { transport: { opts: { sleep: (ms: number) => Promise<void> } } }
+    ).transport.opts.sleep = (ms: number) => {
+      slept.push(ms);
+      return Promise.resolve();
+    };
+    await tp.destinations.list();
+    await tp.destinations.list();
+    expect(slept).toEqual([]);
+  });
+});

@@ -49,15 +49,15 @@ Jungle Cruise                                      40 min
 
 `new ThemeParks(options)` takes the following keyword options:
 
-| Option      | Type                                | Default                                            | Purpose                                                                                                                                                                                                                                        |
-| ----------- | ----------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `baseUrl`   | `string`                            | `https://api.themeparks.wiki/v1`                   | API base URL (point at a mock / staging if you need to).                                                                                                                                                                                       |
-| `userAgent` | `string`                            | `themeparks-sdk-js/<version>`                      | Sent as the `User-Agent` header. Set this to identify your app.                                                                                                                                                                                |
-| `apiKey`    | `string`                            | none                                               | API key from api.themeparks.wiki, sent as `X-API-Key`. Optional; a key raises the limits.                                                                                                                                                      |
-| `fetch`     | `typeof fetch`                      | `globalThis.fetch`                                 | Custom fetch implementation. Useful for logging, mocking, or older runtimes.                                                                                                                                                                   |
-| `timeoutMs` | `number`                            | `10000`                                            | Per-request timeout in milliseconds.                                                                                                                                                                                                           |
-| `retry`     | `Partial<RetryConfig>`              | `{ max: 3, on429: true, maxRetryAfterMs: 120000 }` | Retry/backoff behavior. `max` counts retries **beyond** the initial attempt (so `3` = up to 4 total). `maxRetryAfterMs` is the longest `Retry-After` the client will sleep through; past it you get `RateLimitError` instead of a silent wait. |
-| `cache`     | `Cache \| false \| { maxEntries? }` | in-memory LRU                                      | See [Caching](#caching) below. `false` disables caching entirely.                                                                                                                                                                              |
+| Option      | Type                                | Default                                                                    | Purpose                                                                                                                                                                                                                                        |
+| ----------- | ----------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `baseUrl`   | `string`                            | `https://api.themeparks.wiki/v1`                                           | API base URL (point at a mock / staging if you need to).                                                                                                                                                                                       |
+| `userAgent` | `string`                            | `themeparks-sdk-js/<version>`                                              | Sent as the `User-Agent` header. Set this to identify your app.                                                                                                                                                                                |
+| `apiKey`    | `string`                            | none                                                                       | API key from api.themeparks.wiki, sent as `X-API-Key`. Optional; a key raises the limits.                                                                                                                                                      |
+| `fetch`     | `typeof fetch`                      | `globalThis.fetch`                                                         | Custom fetch implementation. Useful for logging, mocking, or older runtimes.                                                                                                                                                                   |
+| `timeoutMs` | `number`                            | `10000`                                                                    | Per-request timeout in milliseconds.                                                                                                                                                                                                           |
+| `retry`     | `Partial<RetryConfig>`              | `{ max: 3, on429: true, maxRetryAfterMs: 120000, respectRemaining: true }` | Retry/backoff behavior. `max` counts retries **beyond** the initial attempt (so `3` = up to 4 total). `maxRetryAfterMs` is the longest `Retry-After` the client will sleep through; past it you get `RateLimitError` instead of a silent wait. |
+| `cache`     | `Cache \| false \| { maxEntries? }` | in-memory LRU                                                              | See [Caching](#caching) below. `false` disables caching entirely.                                                                                                                                                                              |
 
 Example:
 
@@ -160,6 +160,39 @@ const mk = '75ea578a-adc8-4116-a54d-dccb60765ef9';
 const entries = await tp.entity(mk).schedule.range(new Date('2026-05-01'), new Date('2026-05-31'));
 console.log(`${entries.length} schedule entries`);
 ```
+
+## Rate limits
+
+The API meters requests per minute, and history requests again per hour. Both
+are read off every response that carries them:
+
+```js
+import { ThemeParks, isExhausted, secondsUntilReset } from 'themeparks';
+
+const tp = new ThemeParks({ apiKey: KEY });
+await tp.entity(parkId).live();
+
+tp.rateLimit.rest.remaining; // 299
+secondsUntilReset(tp.rateLimit.rest); // 40
+tp.rateLimit.history.remaining; // on a history call
+```
+
+**`null` means the server did not say, never "nothing left".** An unmetered
+plan advertises no figures, and neither does a publicly cacheable response,
+because the numbers are per-caller and a shared cache would hand one caller's
+budget to another. In practice anonymous calls carry nothing; calls with a key
+do. Use `isExhausted`, which is true only when the server actually said zero.
+
+The client acts on what it reads. When a response says the window is spent, the
+next request waits for the advertised reset rather than sending one that is
+certain to be refused, and to cost a unit of budget being refused. Opt out with
+`retry: { respectRemaining: false }`.
+
+**A 429 is held once for the whole client.** The wait belongs to the caller,
+not to whichever request met it, so it goes on a shared gate with a little
+jitter. Without that, ten concurrent requests each sleep their own copy of
+`Retry-After` and then all retry at the same instant, re-tripping the limit
+together.
 
 ## History
 

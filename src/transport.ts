@@ -1,4 +1,12 @@
 import { ApiError, NetworkError, RateLimitError, TimeoutError } from './errors';
+import {
+  Gate,
+  isExhausted,
+  readRateLimits,
+  secondsUntilReset,
+  UNKNOWN_RATE_LIMITS,
+  type RateLimits,
+} from './ratelimit';
 
 /**
  * Minimal fetch-like function signature covering only what the SDK uses.
@@ -49,6 +57,17 @@ export interface RetryConfig {
   max: number;
   /** If true, HTTP 429 responses are retried (honouring `Retry-After`). */
   on429: boolean;
+  /**
+   * Wait out a window the server has already said is spent.
+   *
+   * When a response reports `remaining: 0`, the next request is a guaranteed
+   * 429 that also costs a unit of the caller's budget to be refused. Waiting
+   * for the reset it advertised is strictly better than sending it. Setting
+   * this false turns the client back into a purely reactive one.
+   *
+   * Defaults to true.
+   */
+  respectRemaining?: boolean;
   /**
    * Longest `Retry-After` this client will sleep through, in milliseconds.
    * Defaults to {@link DEFAULT_MAX_RETRY_AFTER_MS}.
@@ -134,7 +153,38 @@ function formatBodyExcerpt(body: unknown): string | undefined {
 }
 
 export class Transport {
+  /** What the server last said about the two budgets. */
+  rateLimit: RateLimits = UNKNOWN_RATE_LIMITS;
+  readonly #gate = new Gate();
+
   constructor(private readonly opts: TransportOptions) {}
+
+  /**
+   * Wait before sending, if we already know this request would fail.
+   *
+   * Two reasons, and they are different. The GATE is a 429 the server has
+   * already issued to this caller: the wait belongs to them, not to whichever
+   * request met it, so it is shared and taken once. The REMAINING check is a
+   * window the server told us is spent, where sending is a certain 429 that
+   * also spends budget being refused.
+   *
+   * A remaining we were never told is not a spent one. Anonymous responses
+   * carry no figures at all, so an unknown must never hold.
+   */
+  async #hold(sleep: (ms: number) => Promise<void>): Promise<void> {
+    const gated = this.#gate.waitMs();
+    if (gated > 0) await sleep(gated);
+    if (this.opts.retry.respectRemaining === false) return;
+    const cap = this.opts.retry.maxRetryAfterMs ?? DEFAULT_MAX_RETRY_AFTER_MS;
+    for (const meter of [this.rateLimit.rest, this.rateLimit.history]) {
+      if (!isExhausted(meter)) continue;
+      const left = secondsUntilReset(meter);
+      // Past the cap we do not sit on it: the caller gets the 429 and its
+      // Retry-After and can decide. Same rule the retry path follows.
+      if (left === null || left <= 0 || left * 1000 > cap) continue;
+      await sleep(left * 1000);
+    }
+  }
 
   async get<T = unknown>(path: string): Promise<T> {
     return this.request<T>('GET', this.opts.baseUrl.replace(/\/$/, '') + path);
@@ -157,6 +207,7 @@ export class Transport {
     let attempt = 0;
 
     while (true) {
+      await this.#hold(sleep);
       const controller = new AbortController();
       const timer = setTimeout(() => {
         controller.abort();
@@ -189,6 +240,7 @@ export class Transport {
         throw new NetworkError(`network error calling ${url}`, { cause });
       }
       clearTimeout(timer);
+      this.rateLimit = readRateLimits(response.headers, this.rateLimit);
 
       if (response.ok) {
         return (await response.json()) as T;
@@ -200,13 +252,24 @@ export class Transport {
       const retryAfterMs = parseRetryAfter(response.headers.get('retry-after'));
       const cap = this.opts.retry.maxRetryAfterMs ?? DEFAULT_MAX_RETRY_AFTER_MS;
       const waitTooLong = retryAfterMs !== null && retryAfterMs > cap;
+      if (response.status === 429 && retryAfterMs !== null && !waitTooLong) {
+        // The wait belongs to the CALLER, not to whichever request met it, so
+        // it goes on the shared gate and #hold serves it once. Sleeping here
+        // as well would pay it twice, and ten concurrent requests would each
+        // pay their own and then retry in unison.
+        //
+        // Past the cap the gate is left OPEN on purpose: we throw instead, and
+        // blocking the caller's next call for most of an hour is the opposite
+        // of letting them checkpoint and resume.
+        this.#gate.closeFor(retryAfterMs);
+      }
       if (
         response.status === 429 &&
         this.opts.retry.on429 &&
         attempt < this.opts.retry.max &&
         !waitTooLong
       ) {
-        await sleep(retryAfterMs ?? backoff(attempt));
+        if (retryAfterMs === null) await sleep(backoff(attempt));
         attempt++;
         continue;
       }

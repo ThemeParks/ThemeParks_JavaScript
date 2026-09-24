@@ -184,7 +184,15 @@ describe('the hourly history budget', () => {
 
     expect(error).toBeInstanceOf(RateLimitError);
     expect(error).not.toBeInstanceOf(BudgetExhaustedError);
-    expect(slept).toEqual([2000, 2000, 2000]);
+    // Jittered: the 429 wait is now taken once on a gate shared by the whole
+    // client, and without a little spread every waiter would wake at the same
+    // instant and re-trip the limit together. One wait per retry, never
+    // doubled by the retry path paying it as well.
+    expect(slept).toHaveLength(3);
+    for (const ms of slept) {
+      expect(ms).toBeGreaterThanOrEqual(2000);
+      expect(ms).toBeLessThan(2300);
+    }
     expect(fetchFn).toHaveBeenCalledTimes(4);
   });
 
