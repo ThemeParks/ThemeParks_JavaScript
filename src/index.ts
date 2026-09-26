@@ -39,14 +39,5 @@ export {
   type LiveDataEntry,
   type LiveQueue,
 } from './ergonomic/live';
-export {
-  Gate,
-  isExhausted,
-  readRateLimits,
-  secondsUntilReset,
-  UNKNOWN_RATE_LIMIT,
-  UNKNOWN_RATE_LIMITS,
-  type RateLimit,
-  type RateLimits,
-} from './ratelimit';
+export { isExhausted, secondsUntilReset, type RateLimit, type RateLimits } from './ratelimit';
 export { parseApiDateTime } from './dates';

@@ -12,11 +12,18 @@
  * a 429 had already happened, so it could tell you that you had run out and
  * never that you were about to.
  *
- * ABSENCE IS NOT ZERO. A response a shared cache may store carries no
- * per-caller figures at all, because they belong to whoever populated the
- * entry. That is every anonymous response. `null` here means "the server did
- * not say", which is a different thing from "nothing left", and nothing in
- * this module may confuse the two.
+ * ABSENCE IS NOT ZERO. `null` here means "the server did not say", which is a
+ * different thing from "nothing left". Reading an unknown as zero would stall
+ * a client permanently.
+ *
+ * A CACHED RESPONSE'S FIGURES ARE NOT YOURS. The server withholds the HISTORY
+ * figures from anything a shared cache may store, but the per-minute REST ones
+ * ride those responses, so an anonymous call can come back from a CDN carrying
+ * another caller's numbers frozen at whatever they were when the entry was
+ * populated. Measured against production: three consecutive calls returning
+ * `age: 9` and an unmoving `remaining: 285`. A cached `remaining: 0` would make
+ * the client sleep out a window belonging to someone else, so a response with a
+ * non-zero `Age` is treated as saying nothing at all.
  */
 
 /** One meter's state, as of the last response that mentioned it. */
@@ -29,7 +36,12 @@ export interface RateLimit {
   readonly reset: number | null;
   /** The raw policy string, e.g. `"300;w=60"`. */
   readonly policy: string | null;
-  /** `Date.now()` when this was read, so `reset` can be aged. */
+  /**
+   * A monotonic reading (milliseconds) from when this was read, so `reset`
+   * can be aged. NOT an epoch timestamp: it is not meaningful as a date, and
+   * `new Date(observedAt)` is nonsense. The Python sibling's `observed_at` is
+   * the same idea in seconds.
+   */
   readonly observedAt: number | null;
 }
 
@@ -68,16 +80,51 @@ export function isExhausted(meter: RateLimit): boolean {
  * `reset` is relative and frozen at `observedAt`; using it later without
  * ageing it is how a client waits far longer than it needs to.
  */
-export function secondsUntilReset(meter: RateLimit, now = Date.now()): number | null {
+export function secondsUntilReset(meter: RateLimit, now = now_()): number | null {
   if (meter.reset === null || meter.observedAt === null) return null;
   const elapsed = (now - meter.observedAt) / 1000;
   return Math.max(0, meter.reset - elapsed);
 }
 
+/**
+ * A clock that only moves forward.
+ *
+ * `Date.now()` is wall-clock: it steps backwards on an NTP correction, a
+ * manual clock change or a container resync. The Gate stores a deadline and
+ * subtracts the clock from it, so a backward step turns a five-second wait
+ * into however far the clock moved -- measured at 60 minutes for a one-hour
+ * step, silently, before a request the caller thinks is in flight. The cap is
+ * applied when the gate is ARMED, never when it is served, so nothing bounds
+ * it.
+ *
+ * `performance.now()` is monotonic, which is what the Python sibling gets from
+ * `time.monotonic()`. It excludes time the host spent suspended, so a resumed
+ * laptop waits out a remainder it already slept through: conservative and
+ * bounded, which is the right side to err on.
+ */
+function now_(): number {
+  return typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now();
+}
+
+/**
+ * These fields are integers per the draft spec, so anything else is a header
+ * we do not understand and the honest answer is "unknown".
+ *
+ * `Number()` was too generous and differed from the Python sibling on the
+ * same input: it read "0.4" as 0, which makes `isExhausted` true and sleeps
+ * out a window the caller has not spent, and it accepted "0x10" as 16 and
+ * "1e3" as 1000. The server only ever sends a non-negative integer, so none
+ * of that fires today; a pair of libraries whose selling point is parity
+ * should not disagree on it regardless.
+ */
 function intOrNull(raw: string | null): number | null {
-  if (raw === null || raw.trim() === '') return null;
-  const value = Number(raw.trim());
-  return Number.isFinite(value) ? Math.trunc(value) : null;
+  if (raw === null) return null;
+  const trimmed = raw.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const value = Number(trimmed);
+  return Number.isSafeInteger(value) ? value : null;
 }
 
 interface HeaderBag {
@@ -101,7 +148,8 @@ function readOne(headers: HeaderBag, prefix: string, now: number): RateLimit {
 /**
  * Merge whatever this response said into what we already knew.
  *
- * A response mentioning neither meter leaves both alone. Most responses
+ * A response mentioning neither meter leaves both alone, and so does a
+ * response served from a cache. Most responses
  * mention only one -- the history headers appear on history routes, and a
  * cacheable response carries neither -- so overwriting with blanks would mean
  * the last cacheable response erased everything the client had learned.
@@ -110,7 +158,13 @@ export function readRateLimits(
   headers: HeaderBag,
   previous: RateLimits = UNKNOWN_RATE_LIMITS,
 ): RateLimits {
-  const now = Date.now();
+  // A cache HIT carries the figures of whoever populated the entry, frozen at
+  // that moment. They are not ours and the countdown is already wrong, so the
+  // honest reading is that this response said nothing.
+  const age = intOrNull(headers.get('age'));
+  if (age !== null && age > 0) return previous;
+
+  const now = now_();
   const rest = readOne(headers, 'ratelimit', now);
   const history = readOne(headers, 'ratelimit-history', now);
   return {
@@ -140,12 +194,12 @@ export class Gate {
   closeFor(ms: number): void {
     // Never bring the gate forward: a shorter Retry-After arriving while a
     // longer one is in force would release the herd early.
-    this.#until = Math.max(this.#until, Date.now() + Math.max(0, ms));
+    this.#until = Math.max(this.#until, now_() + Math.max(0, ms));
   }
 
   /** How long this caller should hold off, jitter included. 0 if open. */
   waitMs(): number {
-    const remaining = this.#until - Date.now();
+    const remaining = this.#until - now_();
     if (remaining <= 0) return 0;
     return remaining + Math.random() * this.jitterMs;
   }

@@ -177,11 +177,21 @@ secondsUntilReset(tp.rateLimit.rest); // 40
 tp.rateLimit.history.remaining; // on a history call
 ```
 
-**`null` means the server did not say, never "nothing left".** An unmetered
-plan advertises no figures, and neither does a publicly cacheable response,
-because the numbers are per-caller and a shared cache would hand one caller's
-budget to another. In practice anonymous calls carry nothing; calls with a key
-do. Use `isExhausted`, which is true only when the server actually said zero.
+**`null` means the server did not say, never "nothing left".** Use
+`isExhausted`, which is true only when the server actually said zero.
+
+Which figures you get depends on the response:
+
+- The **per-minute** figures ride most responses, anonymous ones included.
+- The **hourly history** figures are withheld from anything a shared cache may
+  store, because they are per-caller and a cache would hand one caller's budget
+  to another. In practice you get them on calls made with a key.
+- An **unmetered plan** advertises nothing at all.
+
+A response served from a cache is ignored entirely. Its figures belong to
+whoever populated the entry and its countdown is already wrong: a cached
+`remaining: 0` would otherwise make the client sleep out someone else's
+window.
 
 The client acts on what it reads. When a response says the window is spent, the
 next request waits for the advertised reset rather than sending one that is

@@ -10,6 +10,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { ThemeParks } from '../../src/client';
+import { RateLimitError } from '../../src/errors';
 import {
   Gate,
   isExhausted,
@@ -95,6 +96,37 @@ describe('reading the headers', () => {
   });
 });
 
+describe('a cached response says nothing', () => {
+  // Its figures belong to whoever populated the entry. The server withholds
+  // the HISTORY figures from anything a shared cache may store, but the
+  // per-minute ones ride those responses. Measured against production: three
+  // consecutive calls returning `age: 9` and an unmoving `remaining: 285`. A
+  // cached `remaining: 0` would make the client sleep out someone else's
+  // window.
+  it('ignores a cache hit', () => {
+    const known = readRateLimits(bag(REST));
+    const after = readRateLimits(bag({ ...REST, 'RateLimit-Remaining': '0', Age: '1713' }), known);
+    expect(after.rest.remaining).toBe(299);
+  });
+
+  it('records a fresh response', () => {
+    // A cache MISS carries no Age at all, which is the path that matters:
+    // confirmed against production, a MISS returns the figures.
+    expect(readRateLimits(bag(REST)).rest.remaining).toBe(299);
+  });
+
+  it('treats Age: 0 as fresh', () => {
+    expect(readRateLimits(bag({ ...REST, Age: '0' })).rest.remaining).toBe(299);
+  });
+
+  it('does not erase what we knew', () => {
+    const known = readRateLimits(bag({ ...REST, ...HISTORY }));
+    const after = readRateLimits(bag({ Age: '60' }), known);
+    expect(after.rest.remaining).toBe(299);
+    expect(after.history.remaining).toBe(599);
+  });
+});
+
 describe('absence is not zero', () => {
   it('an unknown remaining is not exhausted', () => {
     // Anonymous responses carry no figures, because they are publicly
@@ -107,15 +139,28 @@ describe('absence is not zero', () => {
     expect(isExhausted({ ...UNKNOWN_RATE_LIMIT, remaining: 0 })).toBe(true);
   });
 
+  // Both of these pass an explicit `now` rather than reading a clock. The
+  // function takes one precisely so these can be exact; asserting a range
+  // around real wall-clock time makes a gate test flaky under CPU load, and
+  // one of these did flake when the two suites ran concurrently.
   it('counts the reset down from when it was read', () => {
-    const meter = { ...UNKNOWN_RATE_LIMIT, reset: 60, observedAt: Date.now() - 50_000 };
-    expect(secondsUntilReset(meter)).toBeGreaterThan(9);
-    expect(secondsUntilReset(meter)).toBeLessThan(11);
+    const meter = { ...UNKNOWN_RATE_LIMIT, reset: 60, observedAt: 1_000_000 };
+    expect(secondsUntilReset(meter, 1_050_000)).toBe(10);
   });
 
   it('never reports a negative countdown', () => {
-    const meter = { ...UNKNOWN_RATE_LIMIT, reset: 5, observedAt: Date.now() - 100_000 };
-    expect(secondsUntilReset(meter)).toBe(0);
+    const meter = { ...UNKNOWN_RATE_LIMIT, reset: 5, observedAt: 1_000_000 };
+    expect(secondsUntilReset(meter, 1_100_000)).toBe(0);
+  });
+
+  it('observedAt is monotonic, not an epoch timestamp', () => {
+    // Date.now() in the Gate made a backward clock step turn a 5s wait into
+    // an hour, silently, with nothing bounding it: the cap is applied when
+    // the gate is armed, never when it is served.
+    const { rest } = readRateLimits(bag(REST));
+    expect(rest.observedAt).not.toBeNull();
+    // An epoch reading would be ~1.8e12; a monotonic one is process uptime.
+    expect(rest.observedAt!).toBeLessThan(1e11);
   });
 
   it('has no countdown without a reset', () => {
@@ -151,6 +196,48 @@ describe('the gate', () => {
     gate.closeFor(60_000);
     gate.closeFor(2000);
     expect(gate.waitMs()).toBeGreaterThan(55_000);
+  });
+});
+
+describe('the opt-outs actually opt out', () => {
+  // An advertised switch that switches nothing is worse than no switch.
+  // `on429: false` threw the error the caller asked for and then closed the
+  // shared gate anyway, so their NEXT call blocked for the full Retry-After.
+  // The setting says "do not wait on a 429"; the gate is a wait on a 429.
+  function limited(retry: Record<string, unknown>) {
+    const slept: number[] = [];
+    const fetchFn = vi.fn(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({}), {
+          status: 429,
+          headers: { 'content-type': 'application/json', 'retry-after': '45' },
+        }),
+      ),
+    );
+    const tp = new ThemeParks({ fetch: fetchFn as unknown as FetchLike, cache: false, retry });
+    (
+      tp as unknown as { transport: { opts: { sleep: (ms: number) => Promise<void> } } }
+    ).transport.opts.sleep = (ms: number) => {
+      slept.push(ms);
+      return Promise.resolve();
+    };
+    return { tp, slept };
+  }
+
+  it('on429 false never sleeps, even on a later call', async () => {
+    const { tp, slept } = limited({ on429: false });
+    for (let i = 0; i < 3; i++) {
+      await expect(tp.destinations.list()).rejects.toBeInstanceOf(RateLimitError);
+    }
+    expect(slept).toEqual([]);
+  });
+
+  it('on429 true still holds the gate', async () => {
+    // The opt-out must not have disabled the feature for everyone else.
+    const { tp, slept } = limited({ max: 0 });
+    await expect(tp.destinations.list()).rejects.toBeInstanceOf(RateLimitError);
+    await expect(tp.destinations.list()).rejects.toBeInstanceOf(RateLimitError);
+    expect(slept.length).toBeGreaterThan(0);
   });
 });
 

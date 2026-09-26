@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [8.2.0] - 2026-09-24
+## [8.2.0] - 2026-09-26
 
 ### Added
 
@@ -20,9 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
 
   Every field can be null, and null means the server did not say rather than
-  "nothing left". An unmetered plan advertises nothing, and neither does a
-  publicly cacheable response, because the figures are per-caller. Use
-  `isExhausted`, true only when the server said zero. `reset` is a relative
+  "nothing left". Use `isExhausted`, true only when the server said zero. The
+  per-minute figures ride most responses; the hourly history ones are withheld
+  from anything a shared cache may store, because they are per-caller; an
+  unmetered plan advertises nothing. A response served from a cache is ignored
+  entirely, because its figures belong to whoever populated the entry. `reset` is a relative
   countdown frozen when it was read, so `secondsUntilReset` ages it rather
   than returning a stale number.
 
@@ -30,10 +32,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   since that request is a certain 429 that also spends budget being refused.
   `retry: { respectRemaining: false }` opts out.
 
-  The API only started publishing the hourly history budget on 2026-09-24;
-  before that there was nothing on the wire to read.
+  The hourly history budget is new on the wire; before it there was nothing to
+  read.
+
+### Changed
+
+- **Calls may now block before sending.** When the server has said your window
+  is spent, or has issued a 429 that is still in force, the client waits rather
+  than sending a request certain to be refused. A call that used to return in
+  200ms can now take up to `retry.maxRetryAfterMs` (120000) first. Turn the two
+  halves off with `retry: { respectRemaining: false }` and
+  `retry: { on429: false }`.
 
 ### Fixed
+
+- **A paged history call crashed on the default configuration.** `#private`
+  fields on the transport failed their brand check through the caching Proxy,
+  so `history.days()` threw `TypeError: Receiver must be an instance of class
+Transport` on page two for anyone who had not passed `cache: false`. Every
+  test passed `cache: false`, so none of them saw it.
+
+- **`on429: false` did not opt out.** It threw the error the caller asked for
+  and then held their NEXT call for the full `Retry-After` anyway, because the
+  shared gate was closed regardless of the setting.
+
+- **The gate timed off the wall clock.** A backward NTP step turned a
+  five-second wait into however far the clock moved, unbounded, because the cap
+  is applied when the gate is armed and not when it is served. It uses a
+  monotonic clock now, as the Python sibling always did.
 
 - **A 429 was waited out once per in-flight request.** The wait belongs to the
   caller, not to whichever request met it, so ten concurrent requests each
