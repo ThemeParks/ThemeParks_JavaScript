@@ -40,8 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Calls may now block before sending.** When the server has said your window
   is spent, or has issued a 429 that is still in force, the client waits rather
   than sending a request certain to be refused. A call that used to return in
-  200ms can now take up to `retry.maxRetryAfterMs` (120000) first. Turn the two
-  halves off with `retry: { respectRemaining: false }` and
+  200ms can now take up to `retry.maxRetryAfterMs` (120000) first. That is a
+  TOTAL across the call, not per wait: the shared 429 gate and the
+  spent-window wait stack, and before the budget existed a 429 carrying both a
+  `Retry-After` and a spent window blocked for 180 seconds under a 120 second
+  cap. Turn the two halves off with `retry: { respectRemaining: false }` and
   `retry: { on429: false }`.
 
 ### Fixed

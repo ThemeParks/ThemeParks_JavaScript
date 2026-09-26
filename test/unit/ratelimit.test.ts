@@ -183,10 +183,26 @@ describe('the gate', () => {
   it('jitters waiters so they do not wake together', () => {
     // Waking in unison is the other half of the thundering herd: the wait is
     // shared, then everyone retries at the same instant and re-trips it.
-    const gate = new Gate();
-    gate.closeFor(5000);
-    const waits = new Set(Array.from({ length: 20 }, () => gate.waitMs()));
-    expect(waits.size).toBeGreaterThan(1);
+    //
+    // Measured against a FROZEN clock. With a live one this asserted only
+    // that time passes between calls -- it stayed green with the jitter term
+    // deleted, which is a test that cannot fail.
+    let clock = 1_000_000;
+    vi.spyOn(performance, 'now').mockImplementation(() => clock);
+    try {
+      const gate = new Gate();
+      gate.closeFor(5000);
+      const waits = new Set(Array.from({ length: 20 }, () => gate.waitMs()));
+      expect(waits.size).toBeGreaterThan(1);
+      // And the spread is bounded, so it cannot be mistaken for the wait.
+      for (const w of waits) {
+        expect(w).toBeGreaterThanOrEqual(5000);
+        expect(w).toBeLessThan(5300);
+      }
+    } finally {
+      vi.mocked(performance.now).mockRestore();
+      void clock;
+    }
   });
 
   it('is never brought forward by a shorter wait', () => {
@@ -282,7 +298,11 @@ describe('through the client', () => {
     };
     await tp.destinations.list(); // learns remaining 0
     await tp.destinations.list(); // must hold first
+    // Both bounds. Upper-only let `sleep(left)` through in place of
+    // `sleep(left * 1000)` -- 7 milliseconds instead of 7 seconds, a
+    // thousandfold too short, passing green.
     expect(slept.length).toBeGreaterThan(0);
+    expect(slept[0]).toBeGreaterThan(6000);
     expect(slept[0]).toBeLessThanOrEqual(7000);
     expect(fetchFn).toHaveBeenCalledTimes(2);
   });
@@ -316,5 +336,129 @@ describe('through the client', () => {
     await tp.destinations.list();
     await tp.destinations.list();
     expect(slept).toEqual([]);
+  });
+});
+
+describe('the cap bounds the whole call', () => {
+  // Two self-initiated holds exist -- the shared gate and the spent-window
+  // wait -- and they stack. A 429 carrying BOTH a Retry-After and
+  // RateLimit-Remaining: 0 slept 5s at the gate then 55s for the window,
+  // three times over: 180 seconds inside one call whose cap was 120. Each leg
+  // was under the cap, so the per-leg check never fired.
+  //
+  // Nothing caught it because no test sent a 429 carrying rate-limit headers,
+  // and a fake sleep that does not advance the clock cannot show a cumulative
+  // total at all. This advances one, which is what the real world does.
+  const REAL_429 = {
+    'retry-after': '5',
+    'RateLimit-Limit': '300',
+    'RateLimit-Remaining': '0',
+    'RateLimit-Reset': '60',
+  };
+
+  async function run(capMs: number) {
+    const slept: number[] = [];
+    let clock = 1_000_000;
+    const original = performance.now.bind(performance);
+    vi.spyOn(performance, 'now').mockImplementation(() => clock);
+    try {
+      const fetchFn = vi.fn(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({}), {
+            status: 429,
+            headers: { 'content-type': 'application/json', ...REAL_429 },
+          }),
+        ),
+      );
+      const tp = new ThemeParks({
+        fetch: fetchFn as unknown as FetchLike,
+        cache: false,
+        retry: { maxRetryAfterMs: capMs },
+      });
+      (
+        tp as unknown as { transport: { opts: { sleep: (ms: number) => Promise<void> } } }
+      ).transport.opts.sleep = (ms: number) => {
+        slept.push(ms);
+        clock += ms;
+        return Promise.resolve();
+      };
+      await expect(tp.destinations.list()).rejects.toBeInstanceOf(RateLimitError);
+      return slept;
+    } finally {
+      vi.mocked(performance.now).mockRestore();
+      void original;
+    }
+  }
+
+  it('never exceeds the cap in total', async () => {
+    const slept = await run(120_000);
+    const total = slept.reduce((a, b) => a + b, 0);
+    expect(total).toBeLessThanOrEqual(120_000 + 10);
+  });
+
+  it('binds harder with a smaller cap', async () => {
+    const slept = await run(30_000);
+    const total = slept.reduce((a, b) => a + b, 0);
+    expect(total).toBeLessThanOrEqual(30_000 + 10);
+  });
+
+  it('still waits when there is budget', async () => {
+    // The cap must bound the feature, not disable it.
+    const slept = await run(120_000);
+    const total = slept.reduce((a, b) => a + b, 0);
+    expect(total).toBeGreaterThan(5000);
+  });
+
+  it('emits no meaningless micro-sleeps', async () => {
+    const slept = await run(120_000);
+    for (const ms of slept) expect(ms).toBeGreaterThan(1);
+  });
+});
+
+describe('the waits are actually awaited', () => {
+  // The suite could prove a sleep was REQUESTED and never that it was waited
+  // on: dropping the `await` in front of it passed every test, because a fake
+  // sleep that resolves synchronously advances the world either way. A
+  // dropped await would make the whole feature a no-op that still looks busy.
+  //
+  // So this sleep resolves on a later macrotask and counts itself as pending.
+  // A request that starts while a sleep is pending means the hold was not
+  // awaited.
+  it('no request is sent while a hold is still pending', async () => {
+    let pending = 0;
+    const violations: string[] = [];
+
+    const fetchFn = vi.fn(() => {
+      if (pending > 0) violations.push('fetch started with a sleep in flight');
+      return Promise.resolve(
+        new Response(JSON.stringify({}), {
+          status: 429,
+          headers: {
+            'content-type': 'application/json',
+            'retry-after': '5',
+            'RateLimit-Limit': '300',
+            'RateLimit-Remaining': '0',
+            'RateLimit-Reset': '60',
+          },
+        }),
+      );
+    });
+
+    const tp = new ThemeParks({ fetch: fetchFn as unknown as FetchLike, cache: false });
+    (
+      tp as unknown as { transport: { opts: { sleep: (ms: number) => Promise<void> } } }
+    ).transport.opts.sleep = () => {
+      pending++;
+      return new Promise<void>((resolve) => {
+        setTimeout(() => {
+          pending--;
+          resolve();
+        }, 0);
+      });
+    };
+
+    await expect(tp.destinations.list()).rejects.toBeInstanceOf(RateLimitError);
+    expect(violations).toEqual([]);
+    expect(fetchFn.mock.calls.length).toBeGreaterThan(1);
   });
 });

@@ -100,6 +100,9 @@ export interface TransportOptions {
 /** Two minutes: longer than any REST 429 asks for, far short of an hourly budget. */
 export const DEFAULT_MAX_RETRY_AFTER_MS = 120_000;
 
+/** Below this, a computed wait is floating-point residue rather than a wait. */
+const MIN_SLEEP_MS = 1;
+
 const defaultSleep = (ms: number): Promise<void> => new Promise<void>((r) => setTimeout(r, ms));
 
 function parseRetryAfter(header: string | null): number | null {
@@ -182,10 +185,21 @@ export class Transport {
    * A remaining we were never told is not a spent one. Anonymous responses
    * carry no figures at all, so an unknown must never hold.
    */
-  private async hold(sleep: (ms: number) => Promise<void>): Promise<void> {
-    const gated = this.gate.waitMs();
-    if (gated > 0) await sleep(gated);
-    if (this.opts.retry.respectRemaining === false) return;
+  private async hold(sleep: (ms: number) => Promise<void>, budget: number): Promise<number> {
+    // Returns how long it slept, so the caller can keep a running total. The
+    // TOTAL is what maxRetryAfterMs bounds, not each leg: the gate wait and
+    // the spent-window wait are both self-initiated holds and they stack.
+    // Measured before this budget existed: a 429 carrying Retry-After 5 and
+    // RateLimit-Reset 60 slept 5 then 55, three times over -- 180 seconds
+    // inside one call whose cap was 120. Each leg was under the cap, so the
+    // per-leg check never fired and the promise was reachable around.
+    let spent = 0;
+    const gated = Math.min(this.gate.waitMs(), budget);
+    if (gated > MIN_SLEEP_MS) {
+      await sleep(gated);
+      spent += gated;
+    }
+    if (this.opts.retry.respectRemaining === false) return spent;
     const cap = this.opts.retry.maxRetryAfterMs ?? DEFAULT_MAX_RETRY_AFTER_MS;
     for (const meter of [this.rateLimit.rest, this.rateLimit.history]) {
       if (!isExhausted(meter)) continue;
@@ -193,8 +207,12 @@ export class Transport {
       // Past the cap we do not sit on it: the caller gets the 429 and its
       // Retry-After and can decide. Same rule the retry path follows.
       if (left === null || left <= 0 || left * 1000 > cap) continue;
-      await sleep(left * 1000);
+      const wait = Math.min(left * 1000, budget - spent);
+      if (wait <= MIN_SLEEP_MS) break;
+      await sleep(wait);
+      spent += wait;
     }
+    return spent;
   }
 
   async get<T = unknown>(path: string): Promise<T> {
@@ -217,8 +235,10 @@ export class Transport {
     const sleep = this.opts.sleep ?? defaultSleep;
     let attempt = 0;
 
+    // One budget for the whole call, because that is what the cap promises.
+    let budget = this.opts.retry.maxRetryAfterMs ?? DEFAULT_MAX_RETRY_AFTER_MS;
     while (true) {
-      await this.hold(sleep);
+      budget -= await this.hold(sleep, budget);
       const controller = new AbortController();
       const timer = setTimeout(() => {
         controller.abort();
