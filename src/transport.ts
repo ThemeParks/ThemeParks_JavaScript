@@ -103,15 +103,38 @@ export const DEFAULT_MAX_RETRY_AFTER_MS = 120_000;
 /** Below this, a computed wait is floating-point residue rather than a wait. */
 const MIN_SLEEP_MS = 1;
 
+/** Spread applied to a synchronised release, so waiters do not wake as one. */
+const SPREAD_MS = 250;
+
 const defaultSleep = (ms: number): Promise<void> => new Promise<void>((r) => setTimeout(r, ms));
 
+/**
+ * Milliseconds to wait, or null when the header gives us nothing usable.
+ *
+ * NULL AND ZERO ARE DIFFERENT ANSWERS, and conflating them turned the client
+ * into a hammer. Only `null` reaches the exponential backoff, so a header that
+ * parsed to 0 -- `Retry-After: 0`, which RFC 9110 permits, or a negative, or
+ * an already-past date -- meant no wait at all. Measured in the Python
+ * sibling, which had the same shape: four requests in 3ms against a server
+ * that had just said 429, and 204 a second across ten threads.
+ *
+ * `Number()` was also far too generous for a `delta-seconds = 1*DIGIT` field:
+ * it read '   ' as 0 and spun, and '0x10' as 16 and slept 48 seconds.
+ */
 function parseRetryAfter(header: string | null): number | null {
-  if (header === null || header === '') return null;
-  const asInt = Number(header);
-  if (Number.isFinite(asInt)) return Math.max(0, asInt * 1000);
-  const asDate = Date.parse(header);
-  if (Number.isFinite(asDate)) return Math.max(0, asDate - Date.now());
-  return null;
+  if (header === null) return null;
+  const trimmed = header.trim();
+  if (trimmed === '') return null;
+
+  let ms: number;
+  if (/^\d+(\.\d+)?$/.test(trimmed)) {
+    ms = Number(trimmed) * 1000;
+  } else {
+    const asDate = Date.parse(trimmed);
+    if (!Number.isFinite(asDate)) return null;
+    ms = asDate - Date.now();
+  }
+  return ms > 0 ? ms : null;
 }
 
 function backoff(attempt: number): number {
@@ -194,10 +217,21 @@ export class Transport {
     // inside one call whose cap was 120. Each leg was under the cap, so the
     // per-leg check never fired and the promise was reachable around.
     let spent = 0;
-    const gated = Math.min(this.gate.waitMs(), budget);
-    if (gated > MIN_SLEEP_MS) {
+    // Re-read the gate after each wait. It slept once and returned, so a
+    // waiter that woke while someone else's 429 had pushed the gate further
+    // out sent anyway: measured waking at 584ms with the gate shut for
+    // another two seconds. Bounded by the same budget, so it cannot spin.
+    for (;;) {
+      const before = this.gate.deadline;
+      const gated = Math.min(this.gate.waitMs(), budget - spent);
+      if (gated <= MIN_SLEEP_MS) break;
       await sleep(gated);
       spent += gated;
+      // Only wait again if someone genuinely pushed the gate further out
+      // while we slept. Re-reading unconditionally loops against any clock
+      // that does not advance, which is every test harness and, briefly, a
+      // suspended host.
+      if (this.gate.deadline <= before) break;
     }
     if (this.opts.retry.respectRemaining === false) return spent;
     const cap = this.opts.retry.maxRetryAfterMs ?? DEFAULT_MAX_RETRY_AFTER_MS;
@@ -207,7 +241,11 @@ export class Transport {
       // Past the cap we do not sit on it: the caller gets the 429 and its
       // Retry-After and can decide. Same rule the retry path follows.
       if (left === null || left <= 0 || left * 1000 > cap) continue;
-      const wait = Math.min(left * 1000, budget - spent);
+      // Jittered like the gate. Without it every waiter derived `left` from
+      // the same observedAt and woke at the same absolute instant: measured
+      // spread 0ms across ten waiters, the tightest burst in the client, on
+      // the very branch that exists to avoid a 429.
+      const wait = Math.min(left * 1000 + Math.random() * SPREAD_MS, budget - spent);
       if (wait <= MIN_SLEEP_MS) break;
       await sleep(wait);
       spent += wait;

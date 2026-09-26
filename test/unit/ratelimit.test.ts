@@ -303,7 +303,9 @@ describe('through the client', () => {
     // thousandfold too short, passing green.
     expect(slept.length).toBeGreaterThan(0);
     expect(slept[0]).toBeGreaterThan(6000);
-    expect(slept[0]).toBeLessThanOrEqual(7000);
+    // Upper bound allows the spread now applied to this path: without it all
+    // waiters woke inside the same millisecond.
+    expect(slept[0]).toBeLessThanOrEqual(7000 + 250);
     expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 
@@ -460,5 +462,56 @@ describe('the waits are actually awaited', () => {
     await expect(tp.destinations.list()).rejects.toBeInstanceOf(RateLimitError);
     expect(violations).toEqual([]);
     expect(fetchFn.mock.calls.length).toBeGreaterThan(1);
+  });
+});
+
+describe('waiters do not wake as one', () => {
+  // The gate exists for concurrency and nothing measured concurrency. Both
+  // release paths are covered, because the spent-window one had NO spread:
+  // ten waiters derived the same deadline from the same observedAt and left
+  // inside the same millisecond -- the tightest burst in the client, on the
+  // branch that exists to avoid a 429.
+  it('spreads the spent-window release', async () => {
+    // Against a FROZEN clock. With a live one `left` varies by itself as time
+    // passes, so the set is distinct with or without spread and the test
+    // measures nothing.
+    let clock = 1_000_000;
+    vi.spyOn(performance, 'now').mockImplementation(() => clock);
+    try {
+      const seen = new Set<number>();
+      for (let i = 0; i < 20; i++) {
+        const slept: number[] = [];
+        const fetchFn = vi.fn(() =>
+          Promise.resolve(
+            new Response(JSON.stringify({ destinations: [] }), {
+              headers: {
+                'content-type': 'application/json',
+                ...REST,
+                'RateLimit-Remaining': '0',
+                'RateLimit-Reset': '7',
+              },
+            }),
+          ),
+        );
+        const tp = new ThemeParks({ fetch: fetchFn as unknown as FetchLike, cache: false });
+        (
+          tp as unknown as { transport: { opts: { sleep: (ms: number) => Promise<void> } } }
+        ).transport.opts.sleep = (ms: number) => {
+          slept.push(ms);
+          return Promise.resolve();
+        };
+        await tp.destinations.list();
+        await tp.destinations.list();
+        if (slept.length > 0) seen.add(Math.round(slept[0]!));
+      }
+      expect(seen.size).toBeGreaterThan(1);
+      for (const ms of seen) {
+        expect(ms).toBeGreaterThanOrEqual(7000);
+        expect(ms).toBeLessThan(7300);
+      }
+    } finally {
+      vi.mocked(performance.now).mockRestore();
+      void clock;
+    }
   });
 });

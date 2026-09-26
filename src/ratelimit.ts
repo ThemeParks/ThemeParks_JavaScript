@@ -190,6 +190,11 @@ export class Gate {
 
   constructor(private readonly jitterMs = 250) {}
 
+  /** When the gate opens, on the monotonic clock. 0 if it is open. */
+  get deadline(): number {
+    return this.#until;
+  }
+
   /** Hold every request on this client for at least `ms`. */
   closeFor(ms: number): void {
     // Never bring the gate forward: a shorter Retry-After arriving while a
@@ -200,7 +205,8 @@ export class Gate {
   /** How long this caller should hold off, jitter included. 0 if open. */
   waitMs(): number {
     const remaining = this.#until - now_();
-    if (remaining <= 0) return 0;
-    return remaining + Math.random() * this.jitterMs;
+    if (!Number.isFinite(remaining) || remaining <= 0) return 0;
+    const jitter = Number.isFinite(this.jitterMs) ? this.jitterMs : 0;
+    return remaining + Math.random() * jitter;
   }
 }
