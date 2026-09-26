@@ -40,6 +40,31 @@ async function collect<T>(iterable: AsyncIterable<T>): Promise<T[]> {
   return out;
 }
 
+describe('days() paging on the DEFAULT configuration', () => {
+  // Every other test in this file passes `cache: false`, so the caching
+  // Proxy in client.ts is never in the call path for getUrl -- and that is
+  // exactly where paging goes. A `#private` field on Transport made the
+  // Proxy's forwarded `this` fail its brand check, so page two threw
+  // "Receiver must be an instance of class Transport" for every real caller
+  // while 130 tests stayed green. Tests that all take the same non-default
+  // path cover a shape the users do not have.
+  it('follows next with the cache ON', async () => {
+    const page = await loadFixture('mk_history_daily.json');
+    let call = 0;
+    const fetchFn = vi.fn(() => {
+      call++;
+      return Promise.resolve(
+        json({ ...page, next: call === 1 ? 'https://api.themeparks.wiki/v1/p2' : null }),
+      );
+    });
+    // No `cache: false`: this is the configuration every real caller gets.
+    const tp = new ThemeParks({ fetch: fetchFn as unknown as FetchLike });
+    const rows = await collect(tp.entity('park-1').history.days());
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(rows.length).toBeGreaterThan(0);
+  });
+});
+
 describe('days() paging', () => {
   it('follows the server next URL verbatim and stops at null', async () => {
     const page = await loadFixture('mk_history_daily.json');
@@ -184,7 +209,15 @@ describe('the hourly history budget', () => {
 
     expect(error).toBeInstanceOf(RateLimitError);
     expect(error).not.toBeInstanceOf(BudgetExhaustedError);
-    expect(slept).toEqual([2000, 2000, 2000]);
+    // Jittered: the 429 wait is now taken once on a gate shared by the whole
+    // client, and without a little spread every waiter would wake at the same
+    // instant and re-trip the limit together. One wait per retry, never
+    // doubled by the retry path paying it as well.
+    expect(slept).toHaveLength(3);
+    for (const ms of slept) {
+      expect(ms).toBeGreaterThanOrEqual(2000);
+      expect(ms).toBeLessThan(2300);
+    }
     expect(fetchFn).toHaveBeenCalledTimes(4);
   });
 

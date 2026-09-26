@@ -1,4 +1,12 @@
 import { ApiError, NetworkError, RateLimitError, TimeoutError } from './errors';
+import {
+  Gate,
+  isExhausted,
+  readRateLimits,
+  secondsUntilReset,
+  UNKNOWN_RATE_LIMITS,
+  type RateLimits,
+} from './ratelimit';
 
 /**
  * Minimal fetch-like function signature covering only what the SDK uses.
@@ -50,6 +58,17 @@ export interface RetryConfig {
   /** If true, HTTP 429 responses are retried (honouring `Retry-After`). */
   on429: boolean;
   /**
+   * Wait out a window the server has already said is spent.
+   *
+   * When a response reports `remaining: 0`, the next request is a guaranteed
+   * 429 that also costs a unit of the caller's budget to be refused. Waiting
+   * for the reset it advertised is strictly better than sending it. Setting
+   * this false turns the client back into a purely reactive one.
+   *
+   * Defaults to true.
+   */
+  respectRemaining?: boolean;
+  /**
    * Longest `Retry-After` this client will sleep through, in milliseconds.
    * Defaults to {@link DEFAULT_MAX_RETRY_AFTER_MS}.
    *
@@ -81,15 +100,41 @@ export interface TransportOptions {
 /** Two minutes: longer than any REST 429 asks for, far short of an hourly budget. */
 export const DEFAULT_MAX_RETRY_AFTER_MS = 120_000;
 
+/** Below this, a computed wait is floating-point residue rather than a wait. */
+const MIN_SLEEP_MS = 1;
+
+/** Spread applied to a synchronised release, so waiters do not wake as one. */
+const SPREAD_MS = 250;
+
 const defaultSleep = (ms: number): Promise<void> => new Promise<void>((r) => setTimeout(r, ms));
 
+/**
+ * Milliseconds to wait, or null when the header gives us nothing usable.
+ *
+ * NULL AND ZERO ARE DIFFERENT ANSWERS, and conflating them turned the client
+ * into a hammer. Only `null` reaches the exponential backoff, so a header that
+ * parsed to 0 -- `Retry-After: 0`, which RFC 9110 permits, or a negative, or
+ * an already-past date -- meant no wait at all. Measured in the Python
+ * sibling, which had the same shape: four requests in 3ms against a server
+ * that had just said 429, and 204 a second across ten threads.
+ *
+ * `Number()` was also far too generous for a `delta-seconds = 1*DIGIT` field:
+ * it read '   ' as 0 and spun, and '0x10' as 16 and slept 48 seconds.
+ */
 function parseRetryAfter(header: string | null): number | null {
-  if (header === null || header === '') return null;
-  const asInt = Number(header);
-  if (Number.isFinite(asInt)) return Math.max(0, asInt * 1000);
-  const asDate = Date.parse(header);
-  if (Number.isFinite(asDate)) return Math.max(0, asDate - Date.now());
-  return null;
+  if (header === null) return null;
+  const trimmed = header.trim();
+  if (trimmed === '') return null;
+
+  let ms: number;
+  if (/^\d+(\.\d+)?$/.test(trimmed)) {
+    ms = Number(trimmed) * 1000;
+  } else {
+    const asDate = Date.parse(trimmed);
+    if (!Number.isFinite(asDate)) return null;
+    ms = asDate - Date.now();
+  }
+  return ms > 0 ? ms : null;
 }
 
 function backoff(attempt: number): number {
@@ -134,7 +179,79 @@ function formatBodyExcerpt(body: unknown): string | undefined {
 }
 
 export class Transport {
+  /** What the server last said about the two budgets. */
+  rateLimit: RateLimits = UNKNOWN_RATE_LIMITS;
+  /**
+   * TypeScript `private`, deliberately NOT an ECMAScript `#` field.
+   *
+   * client.ts wraps this transport in a Proxy to add caching, and a Proxy
+   * forwards methods with `this` bound to the PROXY. A `#` member's brand
+   * check then fails with "Receiver must be an instance of class Transport",
+   * which crashed every paged history call on the default configuration --
+   * `history.days()` threw on page two for anyone who had not passed
+   * `cache: false`. Every test passed `cache: false`, so 130 of them missed
+   * it. A TS `private` compiles to a plain property and forwards fine.
+   */
+  private readonly gate = new Gate();
+
   constructor(private readonly opts: TransportOptions) {}
+
+  /**
+   * Wait before sending, if we already know this request would fail.
+   *
+   * Two reasons, and they are different. The GATE is a 429 the server has
+   * already issued to this caller: the wait belongs to them, not to whichever
+   * request met it, so it is shared and taken once. The REMAINING check is a
+   * window the server told us is spent, where sending is a certain 429 that
+   * also spends budget being refused.
+   *
+   * A remaining we were never told is not a spent one. Anonymous responses
+   * carry no figures at all, so an unknown must never hold.
+   */
+  private async hold(sleep: (ms: number) => Promise<void>, budget: number): Promise<number> {
+    // Returns how long it slept, so the caller can keep a running total. The
+    // TOTAL is what maxRetryAfterMs bounds, not each leg: the gate wait and
+    // the spent-window wait are both self-initiated holds and they stack.
+    // Measured before this budget existed: a 429 carrying Retry-After 5 and
+    // RateLimit-Reset 60 slept 5 then 55, three times over -- 180 seconds
+    // inside one call whose cap was 120. Each leg was under the cap, so the
+    // per-leg check never fired and the promise was reachable around.
+    let spent = 0;
+    // Re-read the gate after each wait. It slept once and returned, so a
+    // waiter that woke while someone else's 429 had pushed the gate further
+    // out sent anyway: measured waking at 584ms with the gate shut for
+    // another two seconds. Bounded by the same budget, so it cannot spin.
+    for (;;) {
+      const before = this.gate.deadline;
+      const gated = Math.min(this.gate.waitMs(), budget - spent);
+      if (gated <= MIN_SLEEP_MS) break;
+      await sleep(gated);
+      spent += gated;
+      // Only wait again if someone genuinely pushed the gate further out
+      // while we slept. Re-reading unconditionally loops against any clock
+      // that does not advance, which is every test harness and, briefly, a
+      // suspended host.
+      if (this.gate.deadline <= before) break;
+    }
+    if (this.opts.retry.respectRemaining === false) return spent;
+    const cap = this.opts.retry.maxRetryAfterMs ?? DEFAULT_MAX_RETRY_AFTER_MS;
+    for (const meter of [this.rateLimit.rest, this.rateLimit.history]) {
+      if (!isExhausted(meter)) continue;
+      const left = secondsUntilReset(meter);
+      // Past the cap we do not sit on it: the caller gets the 429 and its
+      // Retry-After and can decide. Same rule the retry path follows.
+      if (left === null || left <= 0 || left * 1000 > cap) continue;
+      // Jittered like the gate. Without it every waiter derived `left` from
+      // the same observedAt and woke at the same absolute instant: measured
+      // spread 0ms across ten waiters, the tightest burst in the client, on
+      // the very branch that exists to avoid a 429.
+      const wait = Math.min(left * 1000 + Math.random() * SPREAD_MS, budget - spent);
+      if (wait <= MIN_SLEEP_MS) break;
+      await sleep(wait);
+      spent += wait;
+    }
+    return spent;
+  }
 
   async get<T = unknown>(path: string): Promise<T> {
     return this.request<T>('GET', this.opts.baseUrl.replace(/\/$/, '') + path);
@@ -156,7 +273,10 @@ export class Transport {
     const sleep = this.opts.sleep ?? defaultSleep;
     let attempt = 0;
 
+    // One budget for the whole call, because that is what the cap promises.
+    let budget = this.opts.retry.maxRetryAfterMs ?? DEFAULT_MAX_RETRY_AFTER_MS;
     while (true) {
+      budget -= await this.hold(sleep, budget);
       const controller = new AbortController();
       const timer = setTimeout(() => {
         controller.abort();
@@ -189,6 +309,7 @@ export class Transport {
         throw new NetworkError(`network error calling ${url}`, { cause });
       }
       clearTimeout(timer);
+      this.rateLimit = readRateLimits(response.headers, this.rateLimit);
 
       if (response.ok) {
         return (await response.json()) as T;
@@ -203,10 +324,30 @@ export class Transport {
       if (
         response.status === 429 &&
         this.opts.retry.on429 &&
+        retryAfterMs !== null &&
+        !waitTooLong
+      ) {
+        // The wait belongs to the CALLER, not to whichever request met it, so
+        // it goes on the shared gate and hold() serves it once. Sleeping here
+        // as well would pay it twice, and ten concurrent requests would each
+        // pay their own and then retry in unison.
+        //
+        // on429: false means "do not wait on a 429", so it must gate the gate
+        // too. Without this the caller got the error they asked for and then
+        // their NEXT call silently blocked: an opt-out that does not opt out.
+        //
+        // Past the cap the gate is left OPEN on purpose: we throw instead, and
+        // blocking the caller's next call for most of an hour is the opposite
+        // of letting them checkpoint and resume.
+        this.gate.closeFor(retryAfterMs);
+      }
+      if (
+        response.status === 429 &&
+        this.opts.retry.on429 &&
         attempt < this.opts.retry.max &&
         !waitTooLong
       ) {
-        await sleep(retryAfterMs ?? backoff(attempt));
+        if (retryAfterMs === null) await sleep(backoff(attempt));
         attempt++;
         continue;
       }
