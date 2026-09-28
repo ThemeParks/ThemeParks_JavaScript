@@ -1,0 +1,159 @@
+{
+  "_comment": [
+    "THE MUTANTS, COMMITTED, because the alternative is grading my own homework.",
+    "",
+    "An author-written mutant list contains the mutations the author's tests",
+    "already catch. On 2026-09-28 one scored 18/18 on this package while an",
+    "independent sweep found ten survivors. A list a reviewer can read is the part",
+    "that makes the score mean anything -- what is checked, and what is not.",
+    "",
+    "Add a mutant whenever a defect reaches main: the mutation is the proof the",
+    "new test would have caught it. The Python SDK carries the same file, and the",
+    "two should stay comparable -- this is one command with two implementations.",
+    "",
+    "Each entry replaces `find` with `replace` in `file`, once, then runs the",
+    "suite. A SURVIVOR is a change to production code that breaks nothing."
+  ],
+  "mutants": [
+    {
+      "name": "finish() swallows the write error",
+      "file": "src/backfill.ts",
+      "find": "      const failure = error ?? pending();\n      if (failure) fail(failure);\n      else done();",
+      "replace": "      done();",
+      "why": "Node hands end's callback the stream error. Discarding it made ENOSPC print 'done: N rows', record complete, and exit 0 with a truncated file."
+    },
+    {
+      "name": "no 'error' listener at stream creation",
+      "file": "src/backfill.ts",
+      "find": "  handle.on('error', (error: Error) => {\n    streamError = error;\n  });",
+      "replace": "",
+      "why": "write() never throws synchronously, so a filesystem error becomes an unhandled 'error' event that kills the run with five of six parks unattempted."
+    },
+    {
+      "name": "a resumed failure deletes the accumulated file",
+      "file": "src/backfill.ts",
+      "find": "    if (written === 0 && resumed) {",
+      "replace": "    if (false) {",
+      "why": "`written` counts rows THIS process wrote; on a resumed run the file holds everything earlier runs fetched."
+    },
+    {
+      "name": "the empty-window skip deletes a resumed file and exits 0",
+      "file": "src/backfill.ts",
+      "find": "    if (resumed) {\n      process.stderr.write(\n        `  the rows already downloaded are left alone.",
+      "replace": "    if (false) {\n      process.stderr.write(\n        `  the rows already downloaded are left alone.",
+      "why": "A key rotated out of a cron's environment wiped the partial archive and exited 0, so the scheduler logged success."
+    },
+    {
+      "name": "the column fingerprint is ignored",
+      "file": "src/backfill.ts",
+      "find": "  if (state.columns !== columnsFingerprint(format)) {",
+      "replace": "  if (false) {",
+      "why": "A file written under a different header resumes and gains rows no reader can parse."
+    },
+    {
+      "name": "a state file from the other SDK is accepted",
+      "file": "src/backfill.ts",
+      "find": "  if (state.sdk !== SDK_NAME) {",
+      "replace": "  if (false) {",
+      "why": "The two SDKs' keys differ only on the interrupted path, so the safe paths interoperate silently and a cross-SDK resume duplicated 64 of 108 rows."
+    },
+    {
+      "name": "the checkpoint comes from the newest row",
+      "file": "src/backfill.ts",
+      "find": "        resumeFrom = page.next === null ? null : nextPageFrom(page.next);",
+      "replace": "        resumeFrom = lastDay;",
+      "why": "An entity that stopped reporting has no rows for the tail days of its page, so resuming there re-downloads days already written."
+    },
+    {
+      "name": "csvCell stops quoting a carriage return",
+      "file": "src/backfill.ts",
+      "find": "return /[\",\\r\\n]/u.test(text)",
+      "replace": "return /[\",\\n]/u.test(text)",
+      "why": "One row parses as two, with every later column shifted."
+    },
+    {
+      "name": "the CSV loses its BOM",
+      "file": "src/backfill.ts",
+      "find": "    handle.write(`\\ufeff${CSV_COLUMNS.join(',')}\\n`);",
+      "replace": "    handle.write(`${CSV_COLUMNS.join(',')}\\n`);",
+      "why": "Excel on Windows reads the local code page and mangles every registered mark and accent."
+    },
+    {
+      "name": "a negative number is prefixed as a formula",
+      "file": "src/backfill.ts",
+      "find": "  if (!FORMULA_LEADERS.test(text) || NUMERIC.test(text)) return text;",
+      "replace": "  if (!FORMULA_LEADERS.test(text)) return text;",
+      "why": "Every negative value in the file becomes text and arithmetic breaks in the tool the prefixing protects."
+    },
+    {
+      "name": "a query that folds to empty matches everything",
+      "file": "src/backfill.ts",
+      "find": "  if (needle === '') {",
+      "replace": "  if (false) {",
+      "why": "normalize('\u6771\u4eac') is '', and ''.includes is true of every string, so a CJK query listed all 127 parks as candidates."
+    },
+    {
+      "name": "the ambiguity list sorts by uuid",
+      "file": "src/backfill.ts",
+      "find": "    .sort((a, b) => (a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0))",
+      "replace": "    .sort((a, b) => (a.line < b.line ? -1 : 1))",
+      "why": "Sorting the formatted line sorts by the id it starts with, so ten Hurricane Harbor parks came back in an order that looks random."
+    },
+    {
+      "name": "a bare --list is an error again",
+      "file": "src/backfill.ts",
+      "find": "  argv = argv.map((arg, i) => (arg === '--list' && !isFilterNext(argv, i) ? '--list=' : arg));",
+      "replace": "",
+      "why": "parseArgs makes the value mandatory, so `--list` exited 2 while the help advertised `--list [TEXT]`."
+    },
+    {
+      "name": "--list swallows the next flag as its filter",
+      "file": "src/backfill.ts",
+      "find": "  const next = argv[i + 1];\n  return next !== undefined && !next.startsWith('-');",
+      "replace": "  const next = argv[i + 1];\n  return next !== undefined;",
+      "why": "`--list --out x` would filter on '--out' and list nothing."
+    },
+    {
+      "name": "an empty API key counts as a key",
+      "file": "src/backfill.ts",
+      "find": "  const apiKey = rawKey === '' ? undefined : rawKey;",
+      "replace": "  const apiKey = rawKey;",
+      "why": "THEMEPARKS_API_KEY=\"\" is a clobbered env var in a cron file, and the anonymous notice never printed."
+    },
+    {
+      "name": "no positionals costs a request",
+      "file": "src/backfill.ts",
+      "find": "  if (!listing && positionals.length === 0) {",
+      "replace": "  if (false) {",
+      "why": "Running with no arguments fetched /destinations first, so with no network it exited 75 -- telling a scheduler to retry a command that can never succeed."
+    },
+    {
+      "name": "--version drops the command name",
+      "file": "src/backfill.ts",
+      "find": "    process.stdout.write(`themeparks-backfill ${PACKAGE_VERSION}\\n`);",
+      "replace": "    process.stdout.write(`${PACKAGE_VERSION}\\n`);",
+      "why": "A bare 8.3.0 cannot be pasted into a bug report, and the Python SDK prints the name."
+    },
+    {
+      "name": "the page hook fires before its rows",
+      "file": "src/ergonomic/history.ts",
+      "find": "      yield* dailyEntries(envelope);\n      const next = envelope.next;\n      // AFTER the rows, never before: a caller checkpointing on this has to be\n      // able to trust that everything the page held is already written.\n      options.onPage?.(",
+      "replace": "      const next = envelope.next;\n      options.onPage?.(",
+      "why": "A consumer that died mid-page would record a checkpoint past rows it never wrote. Losing rows is worse than duplicating them."
+    },
+    {
+      "name": "a daily row loses the name the response gave it",
+      "file": "src/ergonomic/history.ts",
+      "find": "      for (const row of entity.days) yield { entityId: entity.id, ...label, row };",
+      "replace": "      for (const row of entity.days) yield { entityId: entity.id, row };",
+      "why": "The name a row is labelled with must be the one recorded then; a park's current children list rewrites history for a ride since renamed."
+    },
+    {
+      "name": "the generated columns drift from the contract",
+      "file": "src/_generated/dailyColumns.ts",
+      "find": "  'inParkHoursScheduledMinutes',",
+      "replace": "  'inParkScheduledMinutes',",
+      "why": "This SDK wrote 32 columns while Python wrote 41. The shared csv_contract.json fixture is what stops the two diverging again."
+    }
+  ]
+}

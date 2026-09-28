@@ -1,0 +1,47 @@
+name: Mutation
+
+# NIGHTLY AND NON-GATING, deliberately. It re-runs the whole suite once per
+# mutant, which is minutes rather than the seconds a commit gate can spend, and a
+# survivor is information rather than a reason to block a merge.
+#
+# The mutants are committed (test/mutation/mutants.json) rather than generated. A
+# list written by the author of the tests contains the mutations those tests
+# already catch: an author-written set scored 18/18 on this package while an
+# independent sweep found ten survivors. A list a reviewer can read is the part
+# that makes the score mean anything.
+#
+# The Python SDK carries the same job and the same file shape. This is one
+# command with two implementations, and the two should stay comparable.
+on:
+  schedule:
+    - cron: '51 4 * * *'
+  workflow_dispatch:
+  # On demand from a PR too, because the moment a mutant is worth adding is the
+  # moment a defect is being fixed.
+  pull_request:
+    paths:
+      - 'test/mutation/**'
+
+jobs:
+  mutate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # The suite must be green BEFORE anything is mutated, or every mutant
+      # "survives" against an already-red suite and the run means nothing.
+      - name: Baseline
+        run: npx vitest run test/unit
+      - name: Mutate
+        id: mutate
+        continue-on-error: true
+        run: node test/mutation/run.mjs | tee "$GITHUB_STEP_SUMMARY"
+      - name: Say so in the log when something survived
+        if: steps.mutate.outcome == 'failure'
+        run: |
+          echo "::warning::A mutant survived or went stale — see the job summary."
+          echo "Not a failure: a survivor is a gap to close, not a merge to block."
