@@ -1,0 +1,3356 @@
+{
+  "id": "b2260923-9315-40fd-9c6b-44dd811dbe64",
+  "name": "Space Mountain",
+  "entityType": "ATTRACTION",
+  "parentId": "75ea578a-adc8-4116-a54d-dccb60765ef9",
+  "destinationId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "timezone": "America/New_York",
+  "range": {
+    "from": "2026-09-26",
+    "to": "2026-09-26"
+  },
+  "coverage": {
+    "firstRecordedAt": "2021-07-03"
+  },
+  "opening": {
+    "time": "2026-09-26T04:00:00Z",
+    "observedAt": "2026-09-26T03:56:53Z",
+    "observedAtByKind": {
+      "status": "2026-09-26T03:56:53Z",
+      "queue.STANDBY": "2026-09-26T03:56:53Z",
+      "queue.RETURN_TIME": "2026-09-26T03:56:53Z"
+    },
+    "status": "OPERATING",
+    "queue": {
+      "STANDBY": {
+        "waitTime": 15
+      },
+      "RETURN_TIME": {
+        "state": "FINISHED",
+        "returnStart": null,
+        "returnEnd": null
+      }
+    }
+  },
+  "history": [
+    {
+      "time": "2026-09-26T04:01:03Z",
+      "changed": [
+        "status",
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "CLOSED",
+      "queue": {
+        "STANDBY": {
+          "waitTime": null
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T04:04:53Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "CLOSED",
+      "queue": {
+        "STANDBY": {
+          "waitTime": null
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T08:10:00-04:00",
+          "returnEnd": "2026-09-26T09:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T11:30:53Z",
+      "changed": [
+        "status",
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 10
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T08:10:00-04:00",
+          "returnEnd": "2026-09-26T09:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T11:31:58Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T08:10:00-04:00",
+          "returnEnd": "2026-09-26T09:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T11:34:39Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T08:00:00-04:00",
+          "returnEnd": "2026-09-26T09:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T11:55:45Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:05:00-04:00",
+          "returnEnd": "2026-09-26T10:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:05:43Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T08:55:00-04:00",
+          "returnEnd": "2026-09-26T09:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:09:16Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T08:10:00-04:00",
+          "returnEnd": "2026-09-26T09:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:15:06Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T08:55:00-04:00",
+          "returnEnd": "2026-09-26T09:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:21:18Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T08:40:00-04:00",
+          "returnEnd": "2026-09-26T09:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:24:32Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T08:25:00-04:00",
+          "returnEnd": "2026-09-26T09:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:30:01Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T08:35:00-04:00",
+          "returnEnd": "2026-09-26T09:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:34:37Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:05:00-04:00",
+          "returnEnd": "2026-09-26T10:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:39:54Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:00:00-04:00",
+          "returnEnd": "2026-09-26T10:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:46:10Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:15:00-04:00",
+          "returnEnd": "2026-09-26T10:15:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:55:30Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 5
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:20:00-04:00",
+          "returnEnd": "2026-09-26T10:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T12:57:59Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 10
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:20:00-04:00",
+          "returnEnd": "2026-09-26T10:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:04:51Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 10
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:25:00-04:00",
+          "returnEnd": "2026-09-26T10:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:11:06Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 10
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:35:00-04:00",
+          "returnEnd": "2026-09-26T10:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:15:14Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 10
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:30:00-04:00",
+          "returnEnd": "2026-09-26T10:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:15:56Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 15
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:30:00-04:00",
+          "returnEnd": "2026-09-26T10:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:18:01Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:30:00-04:00",
+          "returnEnd": "2026-09-26T10:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:20:26Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:45:00-04:00",
+          "returnEnd": "2026-09-26T10:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:24:44Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T09:55:00-04:00",
+          "returnEnd": "2026-09-26T10:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:29:45Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T10:10:00-04:00",
+          "returnEnd": "2026-09-26T11:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:34:42Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T10:20:00-04:00",
+          "returnEnd": "2026-09-26T11:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:39:10Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T10:25:00-04:00",
+          "returnEnd": "2026-09-26T11:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:45:23Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T10:35:00-04:00",
+          "returnEnd": "2026-09-26T11:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:49:47Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T10:40:00-04:00",
+          "returnEnd": "2026-09-26T11:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T13:54:23Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T10:45:00-04:00",
+          "returnEnd": "2026-09-26T11:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:00:06Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T10:55:00-04:00",
+          "returnEnd": "2026-09-26T11:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:06:00Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T11:00:00-04:00",
+          "returnEnd": "2026-09-26T12:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:08:57Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T11:15:00-04:00",
+          "returnEnd": "2026-09-26T12:15:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:15:28Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T11:20:00-04:00",
+          "returnEnd": "2026-09-26T12:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:21:30Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T11:25:00-04:00",
+          "returnEnd": "2026-09-26T12:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:22:03Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T11:25:00-04:00",
+          "returnEnd": "2026-09-26T12:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:24:32Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T11:20:00-04:00",
+          "returnEnd": "2026-09-26T12:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:30:41Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T11:45:00-04:00",
+          "returnEnd": "2026-09-26T12:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:40:04Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T11:55:00-04:00",
+          "returnEnd": "2026-09-26T12:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:43:04Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T11:55:00-04:00",
+          "returnEnd": "2026-09-26T12:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:45:01Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:05:00-04:00",
+          "returnEnd": "2026-09-26T13:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:49:27Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:15:00-04:00",
+          "returnEnd": "2026-09-26T13:15:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:54:56Z",
+      "changed": [
+        "queue.STANDBY.waitTime",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:20:00-04:00",
+          "returnEnd": "2026-09-26T13:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T14:59:25Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:10:00-04:00",
+          "returnEnd": "2026-09-26T13:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:05:08Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:30:00-04:00",
+          "returnEnd": "2026-09-26T13:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:06:12Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:30:00-04:00",
+          "returnEnd": "2026-09-26T13:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:11:26Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T11:15:00-04:00",
+          "returnEnd": "2026-09-26T12:15:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:14:31Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:00:00-04:00",
+          "returnEnd": "2026-09-26T13:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:16:56Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:00:00-04:00",
+          "returnEnd": "2026-09-26T13:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:20:46Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:25:00-04:00",
+          "returnEnd": "2026-09-26T13:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:20:56Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:25:00-04:00",
+          "returnEnd": "2026-09-26T13:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:24:25Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:50:00-04:00",
+          "returnEnd": "2026-09-26T13:50:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:30:10Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:55:00-04:00",
+          "returnEnd": "2026-09-26T13:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:36:28Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:50:00-04:00",
+          "returnEnd": "2026-09-26T13:50:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:39:46Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T13:20:00-04:00",
+          "returnEnd": "2026-09-26T14:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:44:59Z",
+      "changed": [
+        "queue.STANDBY.waitTime",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T13:35:00-04:00",
+          "returnEnd": "2026-09-26T14:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:49:12Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T13:50:00-04:00",
+          "returnEnd": "2026-09-26T14:50:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:54:04Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T13:50:00-04:00",
+          "returnEnd": "2026-09-26T14:50:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:54:08Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:40:00-04:00",
+          "returnEnd": "2026-09-26T13:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:58:12Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T12:40:00-04:00",
+          "returnEnd": "2026-09-26T13:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T15:59:02Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T14:25:00-04:00",
+          "returnEnd": "2026-09-26T15:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:04:37Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T14:40:00-04:00",
+          "returnEnd": "2026-09-26T15:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:06:56Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T14:40:00-04:00",
+          "returnEnd": "2026-09-26T15:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:10:55Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T14:45:00-04:00",
+          "returnEnd": "2026-09-26T15:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:14:03Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:00:00-04:00",
+          "returnEnd": "2026-09-26T16:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:17:56Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:00:00-04:00",
+          "returnEnd": "2026-09-26T16:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:20:16Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T14:45:00-04:00",
+          "returnEnd": "2026-09-26T15:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:26:36Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:00:00-04:00",
+          "returnEnd": "2026-09-26T16:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:27:05Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 60
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:00:00-04:00",
+          "returnEnd": "2026-09-26T16:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:29:47Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 60
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:20:00-04:00",
+          "returnEnd": "2026-09-26T16:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:34:56Z",
+      "changed": [
+        "queue.STANDBY.waitTime",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:30:00-04:00",
+          "returnEnd": "2026-09-26T16:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:36:03Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 60
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:30:00-04:00",
+          "returnEnd": "2026-09-26T16:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:39:09Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 60
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:40:00-04:00",
+          "returnEnd": "2026-09-26T16:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:42:19Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:40:00-04:00",
+          "returnEnd": "2026-09-26T16:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:44:58Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:50:00-04:00",
+          "returnEnd": "2026-09-26T16:50:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:46:56Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 60
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:50:00-04:00",
+          "returnEnd": "2026-09-26T16:50:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:50:58Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 60
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:35:00-04:00",
+          "returnEnd": "2026-09-26T16:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:52:55Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:35:00-04:00",
+          "returnEnd": "2026-09-26T16:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:58:15Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T15:35:00-04:00",
+          "returnEnd": "2026-09-26T16:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T16:59:59Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T14:30:00-04:00",
+          "returnEnd": "2026-09-26T15:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:04:14Z",
+      "changed": [
+        "queue.STANDBY.waitTime",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T14:40:00-04:00",
+          "returnEnd": "2026-09-26T15:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:14:41Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T16:35:00-04:00",
+          "returnEnd": "2026-09-26T17:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:20:52Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T16:55:00-04:00",
+          "returnEnd": "2026-09-26T17:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:24:04Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T17:00:00-04:00",
+          "returnEnd": "2026-09-26T18:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:26:24Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T17:00:00-04:00",
+          "returnEnd": "2026-09-26T18:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:30:05Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T17:10:00-04:00",
+          "returnEnd": "2026-09-26T18:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:33:11Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T17:20:00-04:00",
+          "returnEnd": "2026-09-26T18:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:39:36Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T17:25:00-04:00",
+          "returnEnd": "2026-09-26T18:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:45:34Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T17:40:00-04:00",
+          "returnEnd": "2026-09-26T18:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:49:07Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T17:35:00-04:00",
+          "returnEnd": "2026-09-26T18:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:55:03Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T17:55:00-04:00",
+          "returnEnd": "2026-09-26T18:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T17:58:00Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T14:30:00-04:00",
+          "returnEnd": "2026-09-26T15:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:04:15Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T18:20:00-04:00",
+          "returnEnd": "2026-09-26T19:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:10:37Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T18:10:00-04:00",
+          "returnEnd": "2026-09-26T19:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:12:58Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T18:10:00-04:00",
+          "returnEnd": "2026-09-26T19:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:14:56Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T18:35:00-04:00",
+          "returnEnd": "2026-09-26T19:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:19:58Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T18:45:00-04:00",
+          "returnEnd": "2026-09-26T19:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:22:56Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T18:45:00-04:00",
+          "returnEnd": "2026-09-26T19:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:24:54Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T18:55:00-04:00",
+          "returnEnd": "2026-09-26T19:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:26:03Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T18:55:00-04:00",
+          "returnEnd": "2026-09-26T19:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:29:14Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T19:05:00-04:00",
+          "returnEnd": "2026-09-26T20:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:32:55Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T19:05:00-04:00",
+          "returnEnd": "2026-09-26T20:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:35:36Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T19:15:00-04:00",
+          "returnEnd": "2026-09-26T20:15:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:40:16Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T19:30:00-04:00",
+          "returnEnd": "2026-09-26T20:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:44:59Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T19:20:00-04:00",
+          "returnEnd": "2026-09-26T20:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:49:31Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T19:45:00-04:00",
+          "returnEnd": "2026-09-26T20:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T18:54:39Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:00:00-04:00",
+          "returnEnd": "2026-09-26T21:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:00:38Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T19:45:00-04:00",
+          "returnEnd": "2026-09-26T20:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:05:21Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:10:00-04:00",
+          "returnEnd": "2026-09-26T21:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:14:03Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:10:00-04:00",
+          "returnEnd": "2026-09-26T21:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:18:09Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:25:00-04:00",
+          "returnEnd": "2026-09-26T21:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:27:31Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:35:00-04:00",
+          "returnEnd": "2026-09-26T21:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:34:03Z",
+      "changed": [
+        "queue.STANDBY.waitTime",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:40:00-04:00",
+          "returnEnd": "2026-09-26T21:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:47:33Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:45:00-04:00",
+          "returnEnd": "2026-09-26T21:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:53:49Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:50:00-04:00",
+          "returnEnd": "2026-09-26T21:50:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:54:58Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:50:00-04:00",
+          "returnEnd": "2026-09-26T21:50:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:56:02Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:50:00-04:00",
+          "returnEnd": "2026-09-26T21:50:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T19:58:26Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:45:00-04:00",
+          "returnEnd": "2026-09-26T21:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:04:20Z",
+      "changed": [
+        "queue.STANDBY.waitTime",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:40:00-04:00",
+          "returnEnd": "2026-09-26T21:40:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:08:04Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:50:00-04:00",
+          "returnEnd": "2026-09-26T21:50:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:14:23Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:20:00-04:00",
+          "returnEnd": "2026-09-26T22:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:18:10Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:25:00-04:00",
+          "returnEnd": "2026-09-26T22:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:20:05Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:25:00-04:00",
+          "returnEnd": "2026-09-26T22:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:22:04Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:25:00-04:00",
+          "returnEnd": "2026-09-26T22:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:23:59Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:35:00-04:00",
+          "returnEnd": "2026-09-26T22:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:28:22Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T18:05:00-04:00",
+          "returnEnd": "2026-09-26T19:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:28:58Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T18:05:00-04:00",
+          "returnEnd": "2026-09-26T19:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:33:18Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:45:00-04:00",
+          "returnEnd": "2026-09-26T22:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:38:41Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:35:00-04:00",
+          "returnEnd": "2026-09-26T22:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:42:06Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:35:00-04:00",
+          "returnEnd": "2026-09-26T22:35:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:43:22Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:55:00-04:00",
+          "returnEnd": "2026-09-26T22:55:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:49:17Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:45:00-04:00",
+          "returnEnd": "2026-09-26T22:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:52:45Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:00:00-04:00",
+          "returnEnd": "2026-09-26T23:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T20:59:12Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T19:00:00-04:00",
+          "returnEnd": "2026-09-26T20:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:02:57Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T19:00:00-04:00",
+          "returnEnd": "2026-09-26T20:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:05:12Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:00:00-04:00",
+          "returnEnd": "2026-09-26T23:00:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:09:10Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:05:00-04:00",
+          "returnEnd": "2026-09-26T23:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:14:54Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:10:00-04:00",
+          "returnEnd": "2026-09-26T23:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:16:57Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:10:00-04:00",
+          "returnEnd": "2026-09-26T23:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:18:33Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T21:20:00-04:00",
+          "returnEnd": "2026-09-26T22:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:24:04Z",
+      "changed": [
+        "queue.STANDBY.waitTime",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:15:00-04:00",
+          "returnEnd": "2026-09-26T23:15:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:24:58Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:15:00-04:00",
+          "returnEnd": "2026-09-26T23:15:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:28:59Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:15:00-04:00",
+          "returnEnd": "2026-09-26T23:15:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:32:00Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:15:00-04:00",
+          "returnEnd": "2026-09-26T23:15:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:34:07Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:20:00-04:00",
+          "returnEnd": "2026-09-26T23:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:43:41Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:25:00-04:00",
+          "returnEnd": "2026-09-26T23:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:48:32Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:20:00-04:00",
+          "returnEnd": "2026-09-26T23:20:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:56:16Z",
+      "changed": [
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:30:00-04:00",
+          "returnEnd": "2026-09-26T23:30:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T21:59:25Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:12:06Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:24:59Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:45:00-04:00",
+          "returnEnd": "2026-09-26T21:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:25:59Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:45:00-04:00",
+          "returnEnd": "2026-09-26T21:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:26:58Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:45:00-04:00",
+          "returnEnd": "2026-09-26T21:45:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:28:06Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:33:04Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:34:06Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:36:06Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 60
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:43:01Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 65
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:53:06Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 60
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:54:10Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 60
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T20:25:00-04:00",
+          "returnEnd": "2026-09-26T21:25:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T22:57:46Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 60
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T23:15:00Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 55
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T23:20:06Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T23:30:57Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-26T23:36:09Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T00:02:12Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T00:12:57Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T00:24:05Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T00:44:58Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 30
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T00:58:02Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T01:06:06Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T01:13:31Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:10:00-04:00",
+          "returnEnd": "2026-09-26T23:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T01:16:07Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:10:00-04:00",
+          "returnEnd": "2026-09-26T23:10:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T01:19:12Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 35
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T01:20:05Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 30
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T01:28:47Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 30
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:05:00-04:00",
+          "returnEnd": "2026-09-26T23:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T01:32:02Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 25
+        },
+        "RETURN_TIME": {
+          "state": "AVAILABLE",
+          "returnStart": "2026-09-26T22:05:00-04:00",
+          "returnEnd": "2026-09-26T23:05:00-04:00"
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T01:34:46Z",
+      "changed": [
+        "queue.RETURN_TIME.state",
+        "queue.RETURN_TIME.returnStart",
+        "queue.RETURN_TIME.returnEnd"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 25
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T01:42:06Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 20
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T01:58:58Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 25
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T02:02:01Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 30
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T02:13:01Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 40
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T02:14:05Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T02:14:58Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 50
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T02:31:00Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 45
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T02:36:00Z",
+      "changed": [
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "OPERATING",
+      "queue": {
+        "STANDBY": {
+          "waitTime": 30
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    },
+    {
+      "time": "2026-09-27T03:01:04Z",
+      "changed": [
+        "status",
+        "queue.STANDBY.waitTime"
+      ],
+      "status": "CLOSED",
+      "queue": {
+        "STANDBY": {
+          "waitTime": null
+        },
+        "RETURN_TIME": {
+          "state": "FINISHED",
+          "returnStart": null,
+          "returnEnd": null
+        }
+      }
+    }
+  ],
+  "next": null
+}

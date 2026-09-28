@@ -25,3 +25,18 @@ rows after 2026-08-30 — so a checkpoint taken from the newest ROW rewinds and
 re-downloads days already written. On the full 72-entity capture the same page
 holds 1,684 rows, of which every one carries `unknownMinutes` and an
 `inParkHours` block that the published schema does not mention.
+
+## space_mountain_history_2026-09-26.json / space_mountain_daily_2026-09-26.json
+
+`GET /entity/b2260923-9315-40fd-9c6b-44dd811dbe64/history?date=2026-09-26` and
+`GET /entity/b2260923-9315-40fd-9c6b-44dd811dbe64/history/daily?date=2026-09-26`,
+both captured 2026-09-28 without a key, verbatim. The same bytes are in the
+Python SDK, so `.prettierignore` leaves them alone.
+
+They are the oracle for `changeRows().opening`. Space Mountain's opening that
+day is `OPERATING`, because the previous night's hours ran past midnight, and its
+first row is the close at 00:01:03 local. A day rebuilt from the rows alone has
+63 seconds with no known status; rebuilt from the opening plus the rows it has
+none, and its first open and last close are the daily row's `firstOperatingAt`
+and `lastClosedAt`. If a re-capture picks a day whose opening is `CLOSED`, the
+tests stop being able to tell the two apart, and one of them says so.

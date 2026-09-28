@@ -30,6 +30,8 @@ export {
   type ChangesOptions,
   type DailyEntry,
   type DaysOptions,
+  type HistoryChanges,
+  type HistoryOpening,
   // `HistoryPage` is what `onPage` hands you, so a caller who wants to name the
   // type or store a page needs it. It was declared `export` in its own module and
   // never re-exported here, so `import type { HistoryPage } from 'themeparks'`

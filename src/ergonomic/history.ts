@@ -33,6 +33,12 @@ type HistoryDailyRow = components['schemas']['HistoryDailyRow'];
 type HistoryRow = components['schemas']['HistoryRow'];
 
 /**
+ * The state an entity was in at the START of a raw history range, before its
+ * first change: the same shape as a row, plus when it was last observed.
+ */
+export type HistoryOpening = components['schemas']['HistoryOpening'];
+
+/**
  * The hourly history budget is spent and the wait is longer than this client
  * will sit through.
  *
@@ -111,20 +117,41 @@ export interface HistorySpan {
    * run ends in 403s.
    */
   retrievableThrough: string | null;
+  /**
+   * The newest day whose daily rows will not change again, or null.
+   *
+   * `retrievableThrough` is usually today, and today's row is the day so far.
+   * Recent days can still change after that too: the archive records days 2 to
+   * 3 behind live data. `recordedTo` is the newest day the archive holds, so a
+   * day on or before it is final. Store those, and ask for anything later again
+   * once `finalThrough` has moved past it.
+   *
+   * The earlier of `recordedTo` and `retrievableThrough`, because a key may be
+   * entitled to fewer days than the archive holds. Null when either is unknown.
+   */
+  finalThrough: string | null;
+}
+
+/** The earlier of the two days, or null when either is unknown. ISO days sort as text. */
+function earlierDay(a: string | null, b: string | null): string | null {
+  if (a === null || b === null) return null;
+  return a < b ? a : b;
 }
 
 function toSpan(document: EntityHistoryCoverage): HistorySpan {
-  if ('summary' in document) {
-    return {
-      archiveFrom: document.summary.archiveFrom,
-      recordedTo: document.summary.recordedTo,
-      retrievableThrough: document.summary.retrievableThrough,
-    };
-  }
+  const [archiveFrom, recordedTo, retrievableThrough] =
+    'summary' in document
+      ? [
+          document.summary.archiveFrom,
+          document.summary.recordedTo,
+          document.summary.retrievableThrough,
+        ]
+      : [document.firstRecordedAt, document.lastRecordedAt, document.retrievableThrough];
   return {
-    archiveFrom: document.firstRecordedAt,
-    recordedTo: document.lastRecordedAt,
-    retrievableThrough: document.retrievableThrough,
+    archiveFrom,
+    recordedTo,
+    retrievableThrough,
+    finalThrough: earlierDay(recordedTo, retrievableThrough),
   };
 }
 
@@ -160,6 +187,43 @@ function* changeEntries(envelope: EntityHistory): Generator<ChangeEntry> {
   }
   for (const row of envelope.history) yield { entityId: envelope.id, row };
 }
+
+/** Each entity's `opening`, keyed by id, in the order the response lists them. */
+function openingsOf(envelope: EntityHistory): Record<string, HistoryOpening> {
+  if ('entities' in envelope) {
+    const out: Record<string, HistoryOpening> = {};
+    for (const entity of envelope.entities) out[entity.id] = entity.opening;
+    return out;
+  }
+  return { [envelope.id]: envelope.opening };
+}
+
+/**
+ * What {@link HistoryApi.changeRows} returns: the rows, and the state before them.
+ *
+ * It is the async generator it always was. `for await` yields the same
+ * `{ entityId, row }` entries, and each row is the entity's complete live data
+ * from its `time` until the next row's.
+ *
+ * `opening` is the one thing the rows cannot tell you: the state in force at the
+ * START of the range, before the first change. Without it, the stretch between
+ * midnight and an entity's first change has no known status. On a night a ride
+ * runs past midnight that is real operating time, and a day rebuilt from the
+ * rows alone disagrees with the daily summary. It has an entry for every entity
+ * in the response, including one that did not change at all that day.
+ *
+ * Nothing is requested until the result is first used, as before. A getter
+ * cannot await, so `opening` is readable once the response has arrived: after
+ * the first step of iteration, or straight away with
+ * `const changes = await history.changeRows(query).load()`. Either way it is
+ * one request.
+ */
+export type HistoryChanges = AsyncGenerator<ChangeEntry, void, undefined> & {
+  /** The state at the start of the range, per entity id. Throws before the response. */
+  readonly opening: Record<string, HistoryOpening>;
+  /** Make the request now, if it has not been made, and resolve to this object. */
+  load(): Promise<HistoryChanges>;
+};
 
 export interface BudgetOptions {
   /** Past this, a 429 becomes {@link BudgetExhaustedError} instead of a retry. */
@@ -273,20 +337,61 @@ export class HistoryApi {
   }
 
   /**
-   * Every recorded change in the range, flattened to one stream.
+   * Every recorded change in the range, flattened to one stream, plus the state
+   * before the first of them.
    *
    * A park answers one day per call; a single entity answers up to 31 days.
    * The caller does not have to know which cap applies: ask for what you want,
    * and the API answers or says the range is too long.
+   *
+   * Iterate the result for the rows. Its `opening` is each entity's state at the
+   * start of the range, which is what a day has to be rebuilt from. See
+   * {@link HistoryChanges}.
    */
-  async *changeRows(options: ChangesOptions = {}): AsyncGenerator<ChangeEntry> {
+  changeRows(options: ChangesOptions = {}): HistoryChanges {
     const maxWaitMs = options.maxWaitMs ?? DEFAULT_MAX_WAIT_MS;
-    let envelope: EntityHistory;
-    try {
-      envelope = await this.raw.getEntityHistory(this.entityId, toQuery(options));
-    } catch (error) {
-      throw asBudgetError(error, maxWaitMs);
+    // ONE promise, shared, so `load()` and the iteration (or two `load()`s in
+    // flight) cost one request between them.
+    let pending: Promise<EntityHistory> | null = null;
+    let envelope: EntityHistory | null = null;
+    const fetchOnce = (): Promise<EntityHistory> => {
+      pending ??= this.raw.getEntityHistory(this.entityId, toQuery(options)).then(
+        (value) => {
+          envelope = value;
+          return value;
+        },
+        (error: unknown) => {
+          throw asBudgetError(error, maxWaitMs);
+        },
+      );
+      return pending;
+    };
+
+    async function* rows(): AsyncGenerator<ChangeEntry, void, undefined> {
+      yield* changeEntries(await fetchOnce());
     }
-    yield* changeEntries(envelope);
+
+    const changes = rows() as HistoryChanges;
+    Object.defineProperties(changes, {
+      opening: {
+        enumerable: true,
+        get(): Record<string, HistoryOpening> {
+          if (envelope === null) {
+            throw new Error(
+              'the response has not arrived yet: iterate first, or ' +
+                '`await changes.load()` before reading `opening`',
+            );
+          }
+          return openingsOf(envelope);
+        },
+      },
+      load: {
+        value: async (): Promise<HistoryChanges> => {
+          await fetchOnce();
+          return changes;
+        },
+      },
+    });
+    return changes;
   }
 }

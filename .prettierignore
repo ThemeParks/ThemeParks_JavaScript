@@ -4,3 +4,5 @@ docs-site/
 coverage/
 src/_generated/
 *.log
+# Shared byte for byte with the Python SDK, which tests against the same capture.
+test/fixtures/space_mountain_*.json

@@ -1,0 +1,47 @@
+{
+  "id": "b2260923-9315-40fd-9c6b-44dd811dbe64",
+  "name": "Space Mountain",
+  "entityType": "ATTRACTION",
+  "parentId": "75ea578a-adc8-4116-a54d-dccb60765ef9",
+  "destinationId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "timezone": "America/New_York",
+  "range": {
+    "from": "2026-09-26",
+    "to": "2026-09-26"
+  },
+  "coverage": {
+    "firstRecordedAt": "2021-07-03"
+  },
+  "days": [
+    {
+      "date": "2026-09-26",
+      "firstOperatingAt": "2026-09-26T11:30:53Z",
+      "lastClosedAt": "2026-09-27T03:01:04Z",
+      "operatingMinutes": 929,
+      "downMinutes": 0,
+      "unknownMinutes": 4,
+      "standby": {
+        "min": 5,
+        "p50": 40,
+        "mean": 37,
+        "p90": 55,
+        "max": 65
+      },
+      "inParkHours": {
+        "scheduledMinutes": 930,
+        "operatingMinutes": 929,
+        "downMinutes": 0,
+        "unknownMinutes": 0,
+        "standby": {
+          "min": 5,
+          "p50": 40,
+          "mean": 37,
+          "p90": 55,
+          "max": 65
+        }
+      },
+      "changes": 187
+    }
+  ],
+  "next": null
+}
