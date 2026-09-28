@@ -46,6 +46,7 @@ import {
   resolve as resolveParks,
   windowFloor,
   EX_TEMPFAIL,
+  STATE_VERSION,
 } from '../../src/backfill';
 import { ApiError } from '../../src/errors';
 import { PACKAGE_VERSION } from '../../src/client';
@@ -112,7 +113,7 @@ function stateFile(
     JSON.stringify({
       sdk: 'js',
       sdkVersion: PACKAGE_VERSION,
-      stateVersion: 1,
+      stateVersion: STATE_VERSION,
       columns: columnsFingerprint(format),
       format,
       start: '2025-01-01',
@@ -443,15 +444,18 @@ describe('decide', () => {
   });
 
   it('starts at the archive floor when there is nothing there', () => {
-    expect(decide(out, state, opts(), '2021-07-03')).toEqual({
+    expect(decide(out, state, opts(), '2021-07-03', '2026-09-23')).toEqual({
       start: '2021-07-03',
       hasRows: false,
       priorStart: null,
       resumed: false,
+      extending: false,
+      since: '2021-07-03',
+      priorLastDay: null,
     });
   });
 
-  it('does nothing and exits 0 when the park is already complete', () => {
+  it('asks for nothing and exits 0 when a finished park has no new final day', () => {
     writeFileSync(out, '{"a":1}\n');
     stateFile(dir, {
       start: '2021-07-03',
@@ -460,19 +464,19 @@ describe('decide', () => {
       resumeFrom: null,
       complete: true,
     });
-    expect(decide(out, state, opts(), '2021-07-03')).toBe(0);
+    expect(decide(out, state, opts(), '2021-07-03', '2026-09-23')).toBe(0);
     expect(readFileSync(out, 'utf8')).toBe('{"a":1}\n');
   });
 
   it('refuses a file with rows and no state beside it', () => {
     // Appending would double someone's data; truncating would destroy it.
     writeFileSync(out, '{"a":1}\n');
-    expect(decide(out, state, opts(), '2021-07-03')).toBe(1);
+    expect(decide(out, state, opts(), '2021-07-03', '2026-09-23')).toBe(1);
     expect(readFileSync(out, 'utf8')).toBe('{"a":1}\n');
   });
 
   it('refuses to switch format part-way through a park', () => {
-    writeFileSync(out, '{"a":1}\n');
+    writeFileSync(join(dir, 'p.csv'), 'a\n1\n');
     stateFile(dir, {
       start: '2021-07-03',
       end: '2026-09-23',
@@ -480,7 +484,9 @@ describe('decide', () => {
       resumeFrom: '2024-01-02',
       complete: false,
     });
-    expect(decide(join(dir, 'p.csv'), state, opts({ format: 'csv' }), '2021-07-03')).toBe(1);
+    expect(
+      decide(join(dir, 'p.csv'), state, opts({ format: 'csv' }), '2021-07-03', '2026-09-23'),
+    ).toBe(1);
   });
 
   it('resumes from the page boundary, not the newest row', () => {
@@ -497,11 +503,12 @@ describe('decide', () => {
       resumeFrom: '2026-09-01',
       complete: false,
     });
-    expect(decide(out, state, opts(), '2021-07-03')).toEqual({
+    expect(decide(out, state, opts(), '2021-07-03', '2026-09-23')).toMatchObject({
       start: '2026-09-01',
       hasRows: true,
       priorStart: '2021-07-03',
       resumed: true,
+      extending: false,
     });
   });
 
@@ -515,7 +522,7 @@ describe('decide', () => {
       lastDay: '2026-08-30',
       complete: false,
     });
-    expect(decide(out, state, opts(), '2021-07-03')).toMatchObject({
+    expect(decide(out, state, opts(), '2021-07-03', '2026-09-23')).toMatchObject({
       start: '2026-08-30',
       hasRows: true,
     });
@@ -524,18 +531,20 @@ describe('decide', () => {
   it('treats corrupt state as a file it must not touch', () => {
     writeFileSync(out, '{"a":1}\n');
     writeFileSync(state, 'not json');
-    expect(decide(out, state, opts(), '2021-07-03')).toBe(1);
+    expect(decide(out, state, opts(), '2021-07-03', '2026-09-23')).toBe(1);
   });
 
   it('--overwrite clears both files first', () => {
     writeFileSync(out, '{"a":1}\n');
     stateFile(dir, { complete: true });
-    expect(decide(out, state, opts({ overwrite: true }), '2021-07-03')).toEqual({
-      start: '2021-07-03',
-      hasRows: false,
-      priorStart: null,
-      resumed: false,
-    });
+    expect(decide(out, state, opts({ overwrite: true }), '2021-07-03', '2026-09-23')).toMatchObject(
+      {
+        start: '2021-07-03',
+        hasRows: false,
+        priorStart: null,
+        resumed: false,
+      },
+    );
     expect(existsSync(out)).toBe(false);
     expect(existsSync(state)).toBe(false);
   });
@@ -757,7 +766,7 @@ describe('a whole run', () => {
     expect(await mainWith(second.fetchFn, [MK, '--out', dir])).toBe(0);
     expect(readFileSync(join(dir, `${MK}.ndjson`), 'utf8')).toBe(before);
     expect(second.calls()).toBe(0);
-    expect(err.join('')).toContain('already complete');
+    expect(err.join('')).toContain('up to date');
   });
 
   it('a typo exits 1 with the listing hint and no traceback', async () => {
@@ -1017,7 +1026,13 @@ describe('a state file this build cannot resume', () => {
     writeFileSync(join(dir, 'p.csv'), 'old,header\n1,2\n');
     stateFile(dir, { columns: '0000deadbeef0000', lastDay: '2026-08-30' }, 'p', 'csv');
     expect(
-      decide(join(dir, 'p.csv'), statePathFor(dir, 'p', 'csv'), opts('csv'), '2021-07-03'),
+      decide(
+        join(dir, 'p.csv'),
+        statePathFor(dir, 'p', 'csv'),
+        opts('csv'),
+        '2021-07-03',
+        '2026-09-23',
+      ),
     ).toBe(1);
     expect(err.join('')).toContain('column layout changed');
   });
@@ -1029,7 +1044,13 @@ describe('a state file this build cannot resume', () => {
     writeFileSync(join(dir, 'p.ndjson'), '{"a":1}\n');
     stateFile(dir, { sdk: 'py', lastDay: '2026-08-30' });
     expect(
-      decide(join(dir, 'p.ndjson'), statePathFor(dir, 'p', 'ndjson'), opts(), '2021-07-03'),
+      decide(
+        join(dir, 'p.ndjson'),
+        statePathFor(dir, 'p', 'ndjson'),
+        opts(),
+        '2021-07-03',
+        '2026-09-23',
+      ),
     ).toBe(1);
     expect(err.join('')).toContain('py SDK');
   });
@@ -1038,7 +1059,13 @@ describe('a state file this build cannot resume', () => {
     writeFileSync(join(dir, 'p.ndjson'), '{"a":1}\n');
     stateFile(dir, { stateVersion: 99, lastDay: '2026-08-30' });
     expect(
-      decide(join(dir, 'p.ndjson'), statePathFor(dir, 'p', 'ndjson'), opts(), '2021-07-03'),
+      decide(
+        join(dir, 'p.ndjson'),
+        statePathFor(dir, 'p', 'ndjson'),
+        opts(),
+        '2021-07-03',
+        '2026-09-23',
+      ),
     ).toBe(1);
     expect(err.join('')).toContain('different version');
   });

@@ -22,11 +22,22 @@
  *    full archive is before your window opens. So the first request is refused,
  *    and the floor is read out of that 403.
  *
- * 3. It records what it has written, so re-running continues an interrupted run
- *    and never appends a second copy of a finished one.
+ * 3. It records what it has written, so re-running is safe in every direction:
+ *    an interrupted run continues at its page boundary, a FINISHED park is
+ *    brought up to date from the day after its last one rather than appended to
+ *    twice, and a file this command did not write is never touched without
+ *    `--overwrite`. `(entityId, date)` is the natural key if you load blind: a
+ *    run that died inside its first page resumes on the last day it wrote, so
+ *    that one day can appear twice.
  *
  * 4. It takes names and destinations, not just park ids. A customer has
  *    "Walt Disney World Resort", not four uuids.
+ *
+ * 5. It writes FINAL days only. Today's row is the day so far, and the archive
+ *    records days 2 to 3 behind live data, so the newest days the API serves can
+ *    still change. The run ends at `span().finalThrough`, the newest day the
+ *    archive holds, and the next run carries on from the day after. Every row in
+ *    the file is one that will not change, so a nightly run only ever appends.
  */
 // Several internals are exported for tests. They are not in the package's public
 // surface: `bin` points at this file and `src/index.ts` does not re-export it, so
@@ -34,14 +45,20 @@
 // alternative is driving every branch through argv, which is how the resolution
 // layer ended up with no tests at all in the Python SDK.
 import {
+  closeSync,
   createWriteStream,
   existsSync,
   mkdirSync,
+  openSync,
   readFileSync,
+  readSync,
+  renameSync,
   rmSync,
   statSync,
   writeFileSync,
+  writeSync,
 } from 'node:fs';
+import { StringDecoder } from 'node:string_decoder';
 import { basename, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { parseArgs } from 'node:util';
@@ -65,8 +82,25 @@ export const EX_TEMPFAIL = 75;
 // duplicated, exit 0.
 const STATE_SUFFIX = '.backfill-state.json';
 
-/** Bumped when a field changes meaning. A foreign version is refused, not guessed. */
-const STATE_VERSION = 1;
+/**
+ * Bumped when a field changes meaning. A foreign version is refused, not guessed,
+ * with one exception: version 1, below.
+ *
+ * 2: `end` is the newest FINAL day, and nothing after it is in the file. In
+ * version 1 it was `retrievableThrough`, usually today, so the newest rows of a
+ * finished file were partial days that no later run replaced. Version 2 also
+ * records `since`, the first day the file was asked to start from.
+ */
+export const STATE_VERSION = 2;
+
+/**
+ * How far back from a version-1 file's `end` its rows may be partial. The
+ * archive records days 2 to 3 behind live data, so an 8.3 run that ended on its
+ * `retrievableThrough` wrote two or three days that were not final. A week covers
+ * that with room to spare, and every day fetched again costs nothing more than
+ * the one request its page already needs.
+ */
+export const V1_UNSETTLED_DAYS = 7;
 const SDK_NAME = 'js';
 
 /** Where this park's state lives, for this format. */
@@ -123,6 +157,19 @@ function nextPageFrom(next: string): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * True for a real calendar day written YYYY-MM-DD, the form the API itself uses.
+ *
+ * Strict on purpose, and the same rule as the Python SDK: `2025-1-1`,
+ * `20250101` and `2025-02-30` are all refused rather than read as something
+ * the person may not have meant. `Date` would roll the last one over to March.
+ */
+export function isoDay(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
 /** A park's identity, so rows can name themselves. */
@@ -490,6 +537,14 @@ interface BackfillState {
    */
   resumeFrom: string | null;
   complete: boolean;
+  /**
+   * The first day the file was ASKED to start from: `--since`, or where the
+   * archive starts, whichever is later. Not the same as `start` on a plan
+   * short of the full archive, where the request is clamped up to the first
+   * day the key may read. It is what lets a nightly cron with a fixed
+   * `--since` before that day keep running. Absent from version-1 files.
+   */
+  since?: string | null;
 }
 
 function readState(path: string): BackfillState | null {
@@ -514,11 +569,13 @@ function readState(path: string): BackfillState | null {
  * them duplicates, marked complete.
  */
 function stateMismatch(state: BackfillState, format: string): string | null {
-  if (state.stateVersion !== STATE_VERSION) {
-    return `it was written by a different version of this command (state v${String(state.stateVersion)})`;
-  }
+  // The SDK first, so an old file from the other SDK says which SDK wrote it
+  // rather than blaming the version, which is not what needs fixing.
   if (state.sdk !== SDK_NAME) {
     return `it was written by the ${String(state.sdk)} SDK, and resuming across SDKs is not supported`;
+  }
+  if (state.stateVersion !== STATE_VERSION) {
+    return `it was written by a different version of this command (state v${String(state.stateVersion)})`;
   }
   if (state.format !== format) return `it is a ${String(state.format)} run`;
   if (state.columns !== columnsFingerprint(format)) {
@@ -539,6 +596,10 @@ interface RunOptions {
   outDir: string;
   format: 'ndjson' | 'csv';
   overwrite: boolean;
+  /** First day to download, inclusive. Absent: as far back as the plan reaches. */
+  since?: string | null;
+  /** Last day to download, inclusive. Absent: the newest final day. */
+  until?: string | null;
 }
 
 /** A plan to proceed with, or an exit code meaning do not. */
@@ -553,31 +614,127 @@ type Decision =
        * nothing", which on a resumed run is not "the file is empty".
        */
       resumed: boolean;
+      /** True when a FINISHED file is being carried forward to new final days. */
+      extending: boolean;
+      /** The first day the file was asked to start from. See {@link BackfillState}. */
+      since: string | null;
+      /** The newest day already in the file, kept if this run writes nothing. */
+      priorLastDay: string | null;
     }
   | number;
+
+/** YYYY-MM-DD for the day after `day`. */
+function nextDay(day: string): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/** YYYY-MM-DD for `n` days before `day`. */
+function daysBefore(day: string, n: number): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** The later of two days, either of which may be null. ISO days sort as text. */
+function later(a: string | null, b: string | null): string | null {
+  if (a === null) return b;
+  if (b === null) return a;
+  return a >= b ? a : b;
+}
+
+function refuse(outPath: string, why: string): number {
+  process.stderr.write(
+    `  ${basename(outPath)}: ${why}.\n` +
+      `    --overwrite   replace it with the range asked for\n` +
+      `    or pass a different --out and run again\n`,
+  );
+  return 1;
+}
+
+/**
+ * Null when `--since`/`--until` agree with the file being continued, else an
+ * exit code.
+ *
+ * A file here is one contiguous range of days, and a run can only append to it,
+ * so two requests cannot be honoured without rewriting it: a `--since` before
+ * the file starts, and one after the day it would continue from, which would
+ * leave a gap the state file could not describe. Both are refused rather than
+ * quietly ignored, which would hand back a file that is not what was asked for.
+ *
+ * A `--since` inside the file is fine and common: a cron line with a fixed
+ * `--since` runs it every night, and one computed as "30 days ago" moves
+ * forward every night. "Before the file" is judged against what the file was
+ * ASKED to start from, not where it does start: on a plan short of the full
+ * archive the first request is clamped up to the key's first day, and a fixed
+ * `--since` before that day has to keep working the next night.
+ */
+function rangeFits(
+  outPath: string,
+  state: BackfillState,
+  opts: RunOptions,
+  archiveFrom: string | null,
+  continueAt: string,
+): number | null {
+  const since = opts.since != null ? later(opts.since, archiveFrom) : null;
+  const until = opts.until ?? null;
+  const fileStart = state.start;
+  const askedFrom = state.since ?? fileStart;
+  if (since !== null && askedFrom !== null && since < askedFrom) {
+    return refuse(
+      outPath,
+      `it was started from ${String(fileStart)}, and --since ${String(opts.since)} would ` +
+        `need days before that. Appending cannot add them`,
+    );
+  }
+  if (until !== null && fileStart !== null && until < fileStart) {
+    return refuse(outPath, `it was started from ${fileStart}, after --until ${until}`);
+  }
+  if (since !== null && since > continueAt) {
+    return refuse(
+      outPath,
+      `it continues from ${continueAt}, so starting at --since ${String(opts.since)} ` +
+        `would leave a gap`,
+    );
+  }
+  return null;
+}
 
 export function decide(
   outPath: string,
   statePath: string,
   opts: RunOptions,
   archiveFrom: string | null,
+  end: string | null,
 ): Decision {
+  if (end === null) {
+    // Nothing is final: a park the archive has not recorded a day of yet.
+    // Nothing is touched, so an existing file and its state stay as they are.
+    process.stderr.write(
+      `  nothing final to fetch into ${basename(outPath)} yet. The archive records ` +
+        `days 2 to 3 behind live data; run again later\n`,
+    );
+    return 0;
+  }
   if (opts.overwrite) {
     rmSync(outPath, { force: true });
     rmSync(statePath, { force: true });
   }
-  const state = opts.overwrite ? null : readState(statePath);
-  const fileHasRows = existsSync(outPath) && statSync(outPath).size > 0;
-  const mismatch = state === null ? null : stateMismatch(state, opts.format);
-  const resumable = state !== null && mismatch === null;
+  let state = opts.overwrite ? null : readState(statePath);
+  const hasRows = (): boolean => existsSync(outPath) && statSync(outPath).size > 0;
+  let fileHasRows = hasRows();
 
-  if (state?.complete === true && resumable && fileHasRows) {
-    process.stderr.write(
-      `  already complete: ${String(state.start)} .. ${String(state.end)} ` +
-        `in ${basename(outPath)} — pass --overwrite to fetch it again\n`,
-    );
-    return 0;
+  // A state file describing a data file that is no longer there. Continuing
+  // would write a file that starts part-way through its range and then record
+  // it as complete. There is nothing to continue, so start again.
+  if (state !== null && !fileHasRows) state = null;
+
+  if (state !== null && upgradable(state, opts.format)) {
+    state = upgradeV1(state, outPath, statePath, opts.format);
+    fileHasRows = hasRows();
   }
+
   if (fileHasRows && state === null) {
     // Appending would double it; truncating would destroy someone's data.
     process.stderr.write(
@@ -587,29 +744,276 @@ export function decide(
     );
     return 1;
   }
-  // A state file this build cannot resume. Refusing is the only safe answer: the
-  // file beside it was written to a different contract, and appending to it
+  // A state file this build cannot continue. Refusing is the only safe answer:
+  // the file beside it was written to a different contract, and appending to it
   // produces a file no reader can parse, or one that parses wrongly.
-  if (state !== null && mismatch !== null && state.complete !== true) {
+  //
+  // FINISHED OR NOT. Only an unfinished one used to be refused: a finished one
+  // fell through to a fresh start, and a fresh start opens the existing file in
+  // append mode, so the whole archive went in a second time under a second
+  // header, exit 0. A finished file is continued now, so it is refused too.
+  const mismatch = state === null ? null : stateMismatch(state, opts.format);
+  if (state !== null && mismatch !== null) {
+    const kind = state.complete ? 'a finished' : 'an unfinished';
     process.stderr.write(
-      `  there is an unfinished ${basename(outPath)} beside this state file, but ${mismatch}.\n` +
+      `  there is ${kind} ${basename(outPath)} beside this state file, but ${mismatch}.\n` +
         `    --overwrite   start this park again from the beginning\n` +
         `    or move both files aside and run again\n`,
     );
     return 1;
   }
-  const resuming = resumable && state.complete !== true;
-  // `lastDay` is the fallback for the two cases with no page boundary to use: a
-  // state file written by an older version, and a run that died part-way through
-  // its FIRST page. It re-fetches one day, so that day's rows appear twice --
-  // bad, and still far better than starting from the top and appending a second
-  // copy of everything, which is what an unconditional archiveFrom would do.
+  if (state === null) return firstRun(outPath, opts, archiveFrom, end);
+  return continueFile(outPath, state, opts, archiveFrom, end);
+}
+
+/** A park with no file yet: from `--since`, or wherever the archive starts. */
+function firstRun(
+  outPath: string,
+  opts: RunOptions,
+  archiveFrom: string | null,
+  end: string,
+): Decision {
+  const since = opts.since ?? null;
+  const start = since !== null ? later(since, archiveFrom) : archiveFrom;
+  if (since !== null && start !== null && start > end) {
+    process.stderr.write(
+      `  nothing to fetch into ${basename(outPath)}: --since ${since} is after ` +
+        `${end}, the newest final day\n`,
+    );
+    return 0;
+  }
   return {
-    start: (resuming ? (state.resumeFrom ?? state.lastDay) : null) ?? archiveFrom,
-    hasRows: fileHasRows && resuming,
-    priorStart: resuming ? state.start : null,
-    resumed: resuming,
+    start,
+    hasRows: false,
+    priorStart: null,
+    resumed: false,
+    extending: false,
+    since: start,
+    priorLastDay: null,
   };
+}
+
+/** A file this command wrote: carry it forward, or say why not. */
+function continueFile(
+  outPath: string,
+  state: BackfillState,
+  opts: RunOptions,
+  archiveFrom: string | null,
+  end: string,
+): Decision {
+  const carried = {
+    hasRows: true,
+    priorStart: state.start,
+    resumed: true,
+    since: state.since ?? state.start,
+    priorLastDay: state.lastDay,
+  };
+  if (state.complete) {
+    // FINISHED IS NOT FOREVER. It used to be: a rerun printed "already
+    // complete" and exited 0 without asking for a single new day, so a nightly
+    // cron looked healthy and never updated. The file holds every final day
+    // through `end`, so the next day is where it carries on.
+    const continueAt = state.end !== null ? nextDay(state.end) : String(state.start);
+    const refused = rangeFits(outPath, state, opts, archiveFrom, continueAt);
+    if (refused !== null) return refused;
+    if (continueAt > end) {
+      process.stderr.write(
+        `  up to date: ${basename(outPath)} is complete through ${String(state.end)}, ` +
+          `and there is no final day after it yet\n`,
+      );
+      return 0;
+    }
+    return { ...carried, start: continueAt, extending: true };
+  }
+  // THE PAGE BOUNDARY, not the newest row. `lastDay` is the fallback for the one
+  // case with no boundary recorded: a run that died part-way through its FIRST
+  // page. It re-fetches one day, so that day's rows appear twice -- bad, and
+  // still far better than starting from the top and appending a second copy of
+  // everything.
+  const continueAt = state.resumeFrom ?? state.lastDay ?? state.start ?? archiveFrom;
+  const refused = rangeFits(outPath, state, opts, archiveFrom, String(continueAt));
+  if (refused !== null) return refused;
+  return { ...carried, start: continueAt, extending: false };
+}
+
+// ---------------------------------------------------------------------------
+// Files written by 8.3.x, whose newest rows may be partial days.
+// ---------------------------------------------------------------------------
+
+/** A version-1 state file from this SDK, for this format and column layout. */
+function upgradable(state: BackfillState, format: string): boolean {
+  return (
+    state.stateVersion === 1 &&
+    state.sdk === SDK_NAME &&
+    state.format === format &&
+    state.columns === columnsFingerprint(format)
+  );
+}
+
+/**
+ * Make an 8.3 file one this build can continue, replacing its unsettled tail.
+ *
+ * 8.3 ended every run at `retrievableThrough`, usually today, so the last few
+ * days of a finished 8.3 file were written while they were still changing.
+ * Nothing ever replaced them, because a finished park was never fetched again.
+ *
+ * Which of those days were final at the time was not recorded, so every row
+ * dated within {@link V1_UNSETTLED_DAYS} of that run's end is removed and the
+ * state is set to carry on from the day after the cut. The next request then
+ * fetches those days again, final this time. A file whose newest row is already
+ * older than the cut, a park that stopped reporting long ago, is not read at all.
+ *
+ * A file that lies wholly inside the cut, as every anonymous 7-day file does, is
+ * started again instead: trimming would leave it empty with a state saying it
+ * continues from a day before the key can read.
+ *
+ * The new state is written straight away, so a run that fails after this point
+ * does not trim the same file twice.
+ */
+function upgradeV1(
+  state: BackfillState,
+  outPath: string,
+  statePath: string,
+  format: string,
+): BackfillState | null {
+  const upgraded: BackfillState = { ...state, stateVersion: STATE_VERSION };
+  if (state.end === null) return upgraded;
+  const keepThrough = daysBefore(state.end, V1_UNSETTLED_DAYS);
+  if (state.start !== null && keepThrough < state.start) {
+    rmSync(outPath, { force: true });
+    rmSync(statePath, { force: true });
+    return null;
+  }
+  const lastDay = state.lastDay;
+  if (lastDay === null || lastDay > keepThrough) {
+    trimAfter(outPath, format, keepThrough);
+    upgraded.lastDay = lastDay !== null ? keepThrough : null;
+  }
+  if (state.complete) {
+    upgraded.end = keepThrough;
+  } else {
+    const resume = state.resumeFrom ?? lastDay;
+    if (resume === null || resume > nextDay(keepThrough)) {
+      upgraded.resumeFrom = nextDay(keepThrough);
+    }
+  }
+  writeState(statePath, upgraded);
+  return upgraded;
+}
+
+/**
+ * The cells of one CSV record, as written by {@link csvLine}: quoted where
+ * needed, `""` for a quote inside quotes. The record has no trailing newline.
+ */
+function csvCells(record: string): string[] {
+  const cells: string[] = [];
+  let cell = '';
+  let quoted = false;
+  for (let i = 0; i < record.length; i += 1) {
+    const c = record[i]!;
+    if (quoted) {
+      if (c === '"' && record[i + 1] === '"') {
+        cell += '"';
+        i += 1;
+      } else if (c === '"') {
+        quoted = false;
+      } else {
+        cell += c;
+      }
+    } else if (c === '"') {
+      quoted = true;
+    } else if (c === ',') {
+      cells.push(cell);
+      cell = '';
+    } else {
+      cell += c;
+    }
+  }
+  cells.push(cell);
+  return cells;
+}
+
+/**
+ * Remove every row dated after `keepThrough`, leaving the rest byte for byte.
+ *
+ * Streamed into a file beside the original and swapped in with one rename, so an
+ * interruption leaves either the old file or the new one, never half of each.
+ * A line or record that cannot be read is kept: this command does not get to
+ * decide that something it does not understand is worthless.
+ *
+ * Kept records are copied as the raw text they were read from, never parsed and
+ * written back, so quoting is untouched by construction. A CSV record ends at a
+ * newline outside quotes; `csvLine` quotes every cell holding a CR or LF, so a
+ * name with a line break in it stays one record.
+ */
+export function trimAfter(outPath: string, format: string, keepThrough: string): void {
+  const scratch = `${outPath}.trimming`;
+  const input = openSync(outPath, 'r');
+  const output = openSync(scratch, 'w');
+  try {
+    const decoder = new StringDecoder('utf8');
+    const chunk = Buffer.alloc(1 << 20);
+    let pending = '';
+    let quoted = false;
+    let scanned = 0;
+    let dateColumn: number | null = null; // null until the CSV header is read
+    let header = true;
+
+    const keep = (record: string): boolean => {
+      const body = record.endsWith('\n') ? record.slice(0, -1) : record;
+      if (format !== 'csv') {
+        let day: unknown;
+        try {
+          day = (JSON.parse(body) as { date?: unknown } | null)?.date;
+        } catch {
+          day = undefined;
+        }
+        return !(typeof day === 'string' && day > keepThrough);
+      }
+      if (header) {
+        header = false;
+        const names = csvCells(body).map((name) => name.replace(/^\ufeff/u, ''));
+        dateColumn = names.indexOf('date');
+        return true;
+      }
+      // No `date` column: not a file this can read, so it is copied whole.
+      if (dateColumn === null || dateColumn < 0) return true;
+      const day = csvCells(body)[dateColumn];
+      return !(day !== undefined && day > keepThrough);
+    };
+
+    const drain = (final: boolean): void => {
+      let from = 0;
+      for (let i = scanned; i < pending.length; i += 1) {
+        const c = pending[i];
+        if (format === 'csv' && c === '"') quoted = !quoted;
+        else if (c === '\n' && !(format === 'csv' && quoted)) {
+          const record = pending.slice(from, i + 1);
+          if (keep(record)) writeSync(output, record);
+          from = i + 1;
+        }
+      }
+      pending = pending.slice(from);
+      scanned = pending.length;
+      if (final && pending !== '') {
+        if (keep(pending)) writeSync(output, pending);
+        pending = '';
+      }
+    };
+
+    for (;;) {
+      const read = readSync(input, chunk, 0, chunk.length, null);
+      if (read === 0) break;
+      pending += decoder.write(chunk.subarray(0, read));
+      drain(false);
+    }
+    pending += decoder.end();
+    drain(true);
+  } finally {
+    closeSync(input);
+    closeSync(output);
+  }
+  renameSync(scratch, outPath);
 }
 
 /** The minimum of a writable stream this module needs, so a test can stand in. */
@@ -641,6 +1045,21 @@ export function flushAndClose(handle: Closable, pending: () => Error | null): Pr
   });
 }
 
+/**
+ * The last day this run asks for: the newest FINAL day, or `--until` if earlier.
+ *
+ * Not `retrievableThrough`. That is usually today, and today's row is the day so
+ * far; the archive records days 2 to 3 behind, so the days in between can still
+ * change too. Ending there wrote partial rows and, since a finished park was
+ * never fetched again, they stayed partial.
+ */
+function runEnd(span: HistorySpan, opts: RunOptions): string | null {
+  const final = span.finalThrough;
+  const until = opts.until ?? null;
+  if (final !== null && until !== null && until < final) return until;
+  return final;
+}
+
 export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions): Promise<number> {
   const history = tp.entity(park.id).history;
 
@@ -667,17 +1086,22 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
   const ext = opts.format === 'csv' ? 'csv' : 'ndjson';
   const outPath = join(opts.outDir, `${park.id}.${ext}`);
   const statePath = statePathFor(opts.outDir, park.id, opts.format);
-  const end = span.retrievableThrough;
+  const end = runEnd(span, opts);
 
-  const decided = decide(outPath, statePath, opts, span.archiveFrom);
+  const decided = decide(outPath, statePath, opts, span.archiveFrom, end);
   if (typeof decided === 'number') return decided;
   let { start } = decided;
-  const { hasRows, priorStart, resumed } = decided;
+  const { hasRows, priorStart, resumed, extending, since, priorLastDay } = decided;
 
-  process.stderr.write(
-    `${park.id}: ${String(start)} .. ${String(end)}` +
-      `${priorStart !== null ? ' (resumed)' : ''} -> ${outPath}\n`,
-  );
+  const note = extending ? ' (new days)' : resumed ? ' (resumed)' : '';
+  process.stderr.write(`${park.id}: ${String(start)} .. ${String(end)}${note} -> ${outPath}\n`);
+  const through = span.retrievableThrough;
+  if (through !== null && end !== null && through > end && end === span.finalThrough) {
+    process.stderr.write(
+      `  stopping at ${end}: the days after it are still being recorded and can ` +
+        `change. The next run adds them once they are final\n`,
+    );
+  }
 
   if (isEmptyWindow(start, end)) {
     process.stderr.write(
@@ -726,8 +1150,30 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
   let lastDay: string | null = null;
   let resumeFrom: string | null = null;
   let skipped = false;
+  let outOfReach = false;
+  // The day this run's request started on, which is where a rerun has to carry
+  // on if the run fails before its first page is finished.
+  let firstDay: string | null = null;
+
+  /**
+   * Where a rerun should continue, for the state file.
+   *
+   * The next page's start once a page is done. Before that, with rows written,
+   * null: `lastDay` is the fallback and costs one duplicated day. Before ANY
+   * row, the day this run began on. That last case had nothing recorded, which
+   * was harmless while only a first run could reach it -- a rerun of a file
+   * with no rows starts from the top anyway -- and is not now that a finished
+   * file is carried forward. A rerun interrupted before its first page would
+   * otherwise fall back to the file's start and append the whole range again.
+   */
+  const resumePoint = (): string | null => {
+    if (resumeFrom !== null) return resumeFrom;
+    if (lastDay !== null) return null;
+    return firstDay;
+  };
 
   const stream = async (from: string | null): Promise<void> => {
+    firstDay = from;
     // `exactOptionalPropertyTypes` means an explicit undefined is not the same
     // as an absent key, so the query is built rather than spread with nulls.
     const query: { from?: string; to?: string; onPage: (page: HistoryPage) => void } = {
@@ -777,9 +1223,10 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
       format: opts.format,
       start: priorStart ?? start,
       end,
-      lastDay,
-      resumeFrom,
+      lastDay: lastDay ?? priorLastDay,
+      resumeFrom: complete ? null : resumePoint(),
       complete,
+      since: since ?? priorStart ?? start,
     });
   };
 
@@ -791,17 +1238,34 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
       // Retry only when nothing was written: a 403 mid-stream is not a plan
       // boundary, and restarting would duplicate rows.
       if (floor === null || written > 0) throw error;
-      process.stderr.write(
-        `  this key reaches back to ${floor}, not ${String(start)} — starting there\n`,
-      );
-      start = floor;
-      if (isEmptyWindow(floor, end)) {
+      // A FILE BEING CONTINUED CANNOT JUMP FORWARD. Starting at the key's first
+      // day instead of the day the file continues from leaves a gap that the
+      // state file cannot describe, so the file would claim days it does not
+      // hold. It happens when a cron has not run for longer than the key's
+      // window, or the key lost its plan. Refused, with the file left alone.
+      if (resumed) {
+        if (start === null || floor <= start) throw error;
         process.stderr.write(
-          `  nothing in your window: this park's data ends ${String(end)} — skipping\n`,
+          `  this key reaches back to ${floor}, but ${basename(outPath)} continues from ` +
+            `${start}: the days between are out of reach, and carrying on from ${floor} ` +
+            `would leave a gap in the file. The rows already downloaded are left alone.\n` +
+            `    --overwrite   start the file again from what this key can read\n` +
+            `    or pass a different --out and run again\n`,
         );
-        skipped = true;
+        outOfReach = true;
       } else {
-        await stream(floor);
+        process.stderr.write(
+          `  this key reaches back to ${floor}, not ${String(start)} — starting there\n`,
+        );
+        start = floor;
+        if (isEmptyWindow(floor, end)) {
+          process.stderr.write(
+            `  nothing in your window: this park's data ends ${String(end)} — skipping\n`,
+          );
+          skipped = true;
+        } else {
+          await stream(floor);
+        }
       }
     }
   } catch (error) {
@@ -833,6 +1297,9 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
   }
 
   await finish();
+  // Nothing was written and the state is not touched, so the next run meets the
+  // same refusal until someone decides, rather than carrying on with a gap.
+  if (outOfReach) return 1;
   if (skipped && written === 0) {
     if (resumed) {
       // Same rule: keep the file, record where it got to, and say it did not finish.
@@ -861,7 +1328,13 @@ options:
   --api-key KEY    API key. Defaults to $THEMEPARKS_API_KEY.
   --format FORMAT  ndjson (default) or csv
   --out DIR        output directory (default: .)
-  --overwrite      replace an existing file instead of refusing
+  --since DAY      first day to download, YYYY-MM-DD, inclusive
+                   (default: as far back as your plan reaches)
+  --until DAY      last day to download, YYYY-MM-DD, inclusive
+                   (default: the newest final day)
+  --overwrite      replace an existing file instead of refusing. Without it, a
+                   park that finished is brought up to date rather than fetched
+                   twice, and a file this command did not write is never touched
   --help           this
   --version        print the package version
 
@@ -881,6 +1354,23 @@ examples:
       a DESTINATION: every park in it, one file each
 
   themeparks-backfill 7340550b-c14d-4def-80bb-acdb51d49a66 --format csv --out ./data
+
+  themeparks-backfill "Epcot" --since 2025-01-01
+      from a day of your choosing instead of as far back as your plan reaches.
+      --until YYYY-MM-DD sets the last day. Both are inclusive.
+
+  themeparks-backfill "Epcot"     (again, from cron, every night)
+      adds the days that became final since the last run, and nothing else.
+
+only final days are written. Today's row is the day so far, and the archive
+records days 2 to 3 behind live data, so the newest days can still change. A run
+ends at the newest final day and the next run carries on from the day after, so
+the file only ever grows and no row in it changes later.
+
+--since applies when a file is started. A later run continues that file forward
+and accepts the same --since, or a later one. One earlier than the file's first
+day, or past the day it continues from, is refused: use --overwrite, or a
+different --out.
 
 exit codes:
   0   done
@@ -924,6 +1414,8 @@ export async function main(
         format: { type: 'string', default: 'ndjson' },
         out: { type: 'string', default: '.' },
         overwrite: { type: 'boolean', default: false },
+        since: { type: 'string' },
+        until: { type: 'string' },
         help: { type: 'boolean', default: false },
         version: { type: 'boolean', default: false },
       },
@@ -946,6 +1438,19 @@ export async function main(
   }
   if (values.format !== 'ndjson' && values.format !== 'csv') {
     process.stderr.write(`--format must be ndjson or csv, not "${String(values.format)}"\n`);
+    return 2;
+  }
+  // CHECKED BEFORE ANY REQUEST, like every other argument error: a range that
+  // can never be satisfied should not spend a history request finding out.
+  for (const flag of ['since', 'until'] as const) {
+    const value = values[flag];
+    if (value !== undefined && !isoDay(value)) {
+      process.stderr.write(`--${flag}: expected a day as YYYY-MM-DD, got "${value}"\n`);
+      return 2;
+    }
+  }
+  if (values.since !== undefined && values.until !== undefined && values.since > values.until) {
+    process.stderr.write(`--since ${values.since} is after --until ${values.until}\n`);
     return 2;
   }
 
@@ -1042,6 +1547,8 @@ export async function main(
     outDir: values.out,
     format: values.format,
     overwrite: values.overwrite,
+    ...(values.since !== undefined ? { since: values.since } : {}),
+    ...(values.until !== undefined ? { until: values.until } : {}),
   };
   // ONE PARK'S FAILURE IS NOT THE DESTINATION'S. A 500 on Animal Kingdom used
   // to throw straight out of here, so the four parks after it were never

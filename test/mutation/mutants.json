@@ -154,6 +154,132 @@
       "find": "  'inParkHoursScheduledMinutes',",
       "replace": "  'inParkScheduledMinutes',",
       "why": "This SDK wrote 32 columns while Python wrote 41. The shared csv_contract.json fixture is what stops the two diverging again."
+    },
+    {
+      "name": "a finished park is never fetched again",
+      "file": "src/backfill.ts",
+      "find": "    if (continueAt > end) {",
+      "replace": "    if (true) {",
+      "why": "A rerun printed 'already complete' and exited 0 without asking for a new day, so a nightly cron looked healthy and never updated."
+    },
+    {
+      "name": "the run ends at retrievableThrough",
+      "file": "src/backfill.ts",
+      "find": "const final = span.finalThrough;",
+      "replace": "const final = span.retrievableThrough;",
+      "why": "retrievableThrough is usually today. Ending there wrote the day so far, and the unsettled days before it, as if they were final."
+    },
+    {
+      "name": "--since is ignored on a first run",
+      "file": "src/backfill.ts",
+      "find": "const since = opts.since ?? null;",
+      "replace": "const since = null;",
+      "why": "The flag parsed but the download still started at the top of the archive."
+    },
+    {
+      "name": "an earlier --since than the file is accepted",
+      "file": "src/backfill.ts",
+      "find": "if (since !== null && askedFrom !== null && since < askedFrom) {",
+      "replace": "if (false) {",
+      "why": "Appending cannot add days before the file's first one, so accepting it hands back a file that is not what was asked for."
+    },
+    {
+      "name": "a --since past the file's end leaves a gap",
+      "file": "src/backfill.ts",
+      "find": "if (since !== null && since > continueAt) {",
+      "replace": "if (false) {",
+      "why": "Starting after the day the file continues from leaves a gap the state file cannot describe."
+    },
+    {
+      "name": "a fixed --since before the key's floor is refused the next night",
+      "file": "src/backfill.ts",
+      "find": "const askedFrom = state.since ?? fileStart;",
+      "replace": "const askedFrom = fileStart;",
+      "why": "On a plan short of the archive the file starts at the key's first day, so judging --since against that refused the same cron line the next night."
+    },
+    {
+      "name": "--since after --until is accepted",
+      "file": "src/backfill.ts",
+      "find": "values.since > values.until) {",
+      "replace": "values.since < '') {",
+      "why": "A range that can never be satisfied should be refused before any request is spent on it."
+    },
+    {
+      "name": "a day that does not exist is accepted",
+      "file": "src/backfill.ts",
+      "find": "toISOString().slice(0, 10) === value",
+      "replace": "toISOString().length > 0",
+      "why": "Date rolls 2025-02-30 over to March 2; the person did not ask for March."
+    },
+    {
+      "name": "a finished file with a foreign layout is appended to",
+      "file": "src/backfill.ts",
+      "find": "if (state !== null && mismatch !== null) {",
+      "replace": "if (state !== null && mismatch !== null && !state.complete) {",
+      "why": "Only an unfinished mismatched state was refused; a finished one got the whole archive appended under a second header, exit 0."
+    },
+    {
+      "name": "a state without its data file is continued",
+      "file": "src/backfill.ts",
+      "find": "if (state !== null && !fileHasRows) state = null;",
+      "replace": "",
+      "why": "Continuing writes a file that starts part-way through its range and records it as complete."
+    },
+    {
+      "name": "a rerun interrupted before its first page records no resume point",
+      "file": "src/backfill.ts",
+      "find": "return firstDay;",
+      "replace": "return null;",
+      "why": "The next run fell back to the file's start and appended the whole range again."
+    },
+    {
+      "name": "an 8.3 file keeps its partial tail",
+      "file": "src/backfill.ts",
+      "find": "upgradable(state, opts.format)) {",
+      "replace": "upgradable(state, opts.format) && false) {",
+      "why": "8.3 wrote the newest days while they were still changing and never replaced them."
+    },
+    {
+      "name": "the trim ends a CSV record at a quoted newline",
+      "file": "src/backfill.ts",
+      "find": "quoted = !quoted;",
+      "replace": "quoted = false;",
+      "why": "A name with a line break in it is one record, not two; splitting it corrupts the kept rows."
+    },
+    {
+      "name": "an anonymous 8.3 file is trimmed to nothing",
+      "file": "src/backfill.ts",
+      "find": "keepThrough < state.start) {",
+      "replace": "keepThrough < '') {",
+      "why": "A file wholly inside the cut would be emptied and continued from a day the key can no longer read."
+    },
+    {
+      "name": "a continued file jumps forward to the key's floor",
+      "file": "src/backfill.ts",
+      "find": "      if (resumed) {",
+      "replace": "      if (false) {",
+      "why": "Carrying on from the key's first day instead of the file's next day leaves a gap the file then claims not to have."
+    },
+    {
+      "name": "changeRows drops opening",
+      "file": "src/ergonomic/history.ts",
+      "find": "return openingsOf(envelope);",
+      "replace": "return {};",
+      "why": "Without the opening, the time before an entity's first change has no known status: 63 seconds of Space Mountain on 2026-09-26."
+    },
+    {
+      "name": "load() and iteration make two requests",
+      "file": "src/ergonomic/history.ts",
+      "find": "pending ??= ",
+      "replace": "pending = ",
+      "why": "Reading opening must cost the same single request the rows do."
+    },
+    {
+      "name": "finalThrough is the later of the two days",
+      "file": "src/ergonomic/history.ts",
+      "find": "return a < b ? a : b;",
+      "replace": "return a > b ? a : b;",
+      "why": "The later day is retrievableThrough on most keys: today, whose row is not final."
     }
   ]
 }
