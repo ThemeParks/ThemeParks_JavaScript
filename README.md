@@ -283,10 +283,11 @@ const DISNEYLAND = '7340550b-c14d-4def-80bb-acdb51d49a66';
 const tp = new ThemeParks({ apiKey: process.env.THEMEPARKS_API_KEY });
 const history = tp.entity(DISNEYLAND).history;
 
-// What exists, and what your key may read. The same three fields whether the
-// id is a park or a single ride.
+// What exists, and what your key may read. The same fields whether the id is a
+// park or a single ride.
 const span = await history.span();
-// -> { archiveFrom: '2021-07-03', recordedTo: '2026-09-22', retrievableThrough: '2026-09-23' }
+// -> { archiveFrom: '2021-07-03', recordedTo: '2026-09-22',
+//      retrievableThrough: '2026-09-23', finalThrough: '2026-09-22' }
 
 // Pages until the server stops offering a `next`, yielding as it goes.
 for await (const { entityId, row } of history.days({
@@ -307,6 +308,13 @@ thing you give up.
 what your key may read, the second is what the archive holds. They differ on
 every plan below the top one, and asking past the entitlement is how a long run
 ends in 403s.
+
+**If you write each day once, end at `finalThrough`.** `retrievableThrough` is
+usually today, and today's row is the day so far. Recent days can still change
+too, because the archive records days 2 to 3 behind live data. `finalThrough` is
+the earlier of `recordedTo` and `retrievableThrough`: the newest day whose row
+will not change again. Store through that, and fetch the days after it on your
+next run.
 
 **`days()` yields, it does not collect.** Nothing accumulates, so the only thing
 that grows is whatever you write the rows to.
@@ -332,6 +340,27 @@ try {
 `history.changeRows(query)` is the same treatment for `changes`: one flattened
 stream of `{ entityId, row }` whether you asked a park or a ride.
 
+To rebuild what an entity was doing at any moment you also need the state before
+its first change. That is `opening`, keyed by entity id, on the same result:
+
+```js
+const changes = history.changeRows({ date: '2026-09-20' });
+for await (const { entityId, row } of changes) console.log(row.time, entityId, row.status);
+for (const [entityId, opening] of Object.entries(changes.opening)) {
+  // In force from opening.time until this entity's first row.
+  console.log(entityId, opening.time, opening.status);
+}
+```
+
+Each row holds from its `time` until the next row's, so `opening` plus the rows
+cover the whole range with no gap. Without it, a ride still running from the
+night before has no known status until its first change. There is an entry for
+every entity in the response, including one that did not change all day, and
+`opening.observedAt` says when that state was last seen, which can be long before
+the range for a ride whose feed stopped. `opening` is readable once the response
+has arrived: iterate first, or `await changes.load()`. Either way it is one
+request.
+
 ### Or skip the code: there is a command
 
 Installing the package puts `themeparks-backfill` on your path. It is the same
@@ -346,6 +375,7 @@ export THEMEPARKS_API_KEY=tpw_your_key
 npx themeparks-backfill --list disney          # find your park. This part needs no key.
 npx themeparks-backfill "magic kingdom"        # NDJSON, into the current directory
 npx themeparks-backfill "Walt Disney World Resort" --format csv --out ./data
+npx themeparks-backfill "magic kingdom" --since 2025-01-01 --until 2025-12-31
 ```
 
 A park or a **destination**, by name or by id; a destination writes one file per
@@ -357,6 +387,18 @@ How far back it reaches is your plan, and it asks the API rather than making you
 work it out. It checkpoints against the hourly history budget and exits 75
 (`EX_TEMPFAIL`) when that runs out, so a cron or systemd timer retries instead of
 alerting and the same command continues where it stopped. `--help` has the rest.
+
+**Run it again to update.** A second run of a finished park fetches only the days
+that have become final since the last one and appends them, so a nightly cron
+keeps the file current. Only final days are written: a run ends at the newest day
+the archive has finished recording and says so when it holds newer days back, so
+no row in the file changes later.
+
+**`--since` and `--until`** (`YYYY-MM-DD`, both inclusive) pick the days, instead
+of everything your plan reaches. `--since` applies when a file is started: a
+later run accepts the same `--since` or a later one, so a fixed or a rolling cron
+line both work, and refuses one earlier than the file's first day, or one that
+would leave a gap, with what to do instead. `--overwrite` starts the file again.
 
 The CSV is byte-for-byte identical to the Python SDK's, which runs the same
 command: Magic Kingdom's five-year archive is 94,223 rows and 41 columns from
