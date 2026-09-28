@@ -1264,3 +1264,65 @@ describe('argument handling', () => {
     expect(err.join('')).toContain('no park or destination matching');
   });
 });
+
+describe('an anonymous run says so when it finishes', () => {
+  // The notice at the START scrolls away under a run that takes minutes, and the
+  // last thing on screen is `done: 433 rows` — which for a customer who thought
+  // they were downloading five years is indistinguishable from success. Running
+  // the documented example without a key gives 433 rows of Magic Kingdom instead
+  // of ~94,000, and exits 0.
+  let dir: string;
+  let err: string[];
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'bf-anon-'));
+    err = [];
+    vi.spyOn(process.stderr, 'write').mockImplementation((c) => {
+      err.push(String(c));
+      return true;
+    });
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const server = async () => {
+    const page = await loadFixture('mk_park_daily_page2.json');
+    const coverage = await loadFixture('mk_history_coverage.json');
+    return vi.fn((input: unknown) => {
+      const url = String(input);
+      const body = url.includes('/history/coverage')
+        ? coverage
+        : url.includes('/history/daily')
+          ? page
+          : DESTINATIONS;
+      return Promise.resolve(
+        new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } }),
+      );
+    });
+  };
+
+  it('says it at the end as well as the start', async () => {
+    const previous = process.env.THEMEPARKS_API_KEY;
+    delete process.env.THEMEPARKS_API_KEY;
+    try {
+      expect(await main([MK, '--out', dir], { fetch: await server() })).toBe(0);
+    } finally {
+      if (previous !== undefined) process.env.THEMEPARKS_API_KEY = previous;
+    }
+    const text = err.join('');
+    expect(text).toContain('ANONYMOUS ACCESS');
+    // Both ends: before, so it can be acted on, and after, so it is read.
+    expect(text.split('7 days').length - 1).toBeGreaterThanOrEqual(2);
+    expect(text.trimEnd().endsWith('keys: https://www.themeparks.wiki/profile')).toBe(true);
+  });
+
+  it('says nothing of the sort when a key was given', async () => {
+    expect(await main([MK, '--out', dir, '--api-key', 'tpw_test'], { fetch: await server() })).toBe(
+      0,
+    );
+    expect(err.join('')).not.toContain('ANONYMOUS');
+    expect(err.join('')).not.toContain('no API key');
+  });
+});

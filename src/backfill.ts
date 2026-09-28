@@ -866,6 +866,10 @@ options:
   --version        print the package version
 
 examples:
+  export THEMEPARKS_API_KEY=tpw_your_key
+      how far back this reaches is your plan, so without a key you get the 7 days
+      anonymous access allows — and the run still succeeds, quietly.
+
   themeparks-backfill --list disney
       find an id, or check a spelling. Destinations with their parks indented
       underneath. Works before you have a key.
@@ -1070,13 +1074,30 @@ export async function main(
     if (status === EX_TEMPFAIL) return status;
     if (status !== 0) failed.push(park.name);
   }
+  // SAID AGAIN AT THE END, and this is the point of it. The notice above is
+  // printed before a run that takes minutes, so it scrolls away, and the last
+  // thing on screen is `done: 433 rows` -- which for a customer who thought they
+  // were downloading five years is indistinguishable from success. They paid for
+  // 400 days, got seven, and the command exited 0.
+  const anonymousNotice = (): void => {
+    if (apiKey != null) return;
+    process.stderr.write(
+      `\nthat was ANONYMOUS ACCESS: the last 7 days only.\n` +
+        `  a free key reads 30 days, Pro 400, Business the whole archive\n` +
+        `  set THEMEPARKS_API_KEY and run the same command again\n` +
+        `  keys: https://www.themeparks.wiki/profile\n`,
+    );
+  };
+
   if (failed.length > 0) {
     process.stderr.write(
       `\n${String(failed.length)} of ${String(targets.length)} did not finish: ${failed.join(', ')}\n` +
         `  the rest are written. Run the same command again to retry just these.\n`,
     );
+    anonymousNotice();
     return 1;
   }
+  anonymousNotice();
   return 0;
 }
 
