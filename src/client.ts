@@ -8,9 +8,10 @@ import {
   type FetchLike,
   type RetryConfig,
 } from './transport';
+import type { RateLimits } from './ratelimit';
 
 const DEFAULT_BASE_URL = 'https://api.themeparks.wiki/v1';
-const PACKAGE_VERSION = '8.1.0';
+const PACKAGE_VERSION = '8.2.0';
 const DEFAULT_USER_AGENT = `themeparks-sdk-js/${PACKAGE_VERSION}`;
 
 export interface ThemeParksOptions {
@@ -51,6 +52,7 @@ export class ThemeParks {
         max: options.retry?.max ?? 3,
         on429: options.retry?.on429 ?? true,
         maxRetryAfterMs: options.retry?.maxRetryAfterMs ?? DEFAULT_MAX_RETRY_AFTER_MS,
+        respectRemaining: options.retry?.respectRemaining ?? true,
       },
       fetch: fetchFn,
     });
@@ -58,6 +60,26 @@ export class ThemeParks {
     const cachingTransport = wrapTransportWithCache(this.transport, this.cache);
     this.raw = new RawClient(cachingTransport);
     this.destinations = new DestinationsApi(this.raw);
+  }
+
+  /**
+   * What the server last said about your two budgets.
+   *
+   * `rateLimit.rest` is the per-minute REST meter; `rateLimit.history` is the
+   * separate hourly history budget. Every field can be null, because every
+   * field can legitimately be absent: an unmetered plan advertises nothing,
+   * and neither does a publicly cacheable response, since the figures are
+   * per-caller and a shared cache would hand one caller's to another.
+   *
+   * null therefore means "the server did not say", never "nothing left". Use
+   * `isExhausted`, which is true only when it said zero.
+   *
+   * Read from the inner transport rather than a copy, so a cache HIT -- which
+   * sends no request and so learns nothing -- correctly leaves the last known
+   * figures standing. A hit spent no budget either.
+   */
+  get rateLimit(): RateLimits {
+    return this.transport.rateLimit;
   }
 
   entity(id: string): EntityHandle {
