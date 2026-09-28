@@ -13,7 +13,7 @@ import type { RateLimits } from './ratelimit';
 const DEFAULT_BASE_URL = 'https://api.themeparks.wiki/v1';
 /** Exported so the backfill command can announce the same version rather
  *  than carrying a second literal that drifts. test/unit/version.test.ts pins it. */
-export const PACKAGE_VERSION = '8.3.0';
+export const PACKAGE_VERSION = '8.3.1';
 export const DEFAULT_USER_AGENT = `themeparks-sdk-js/${PACKAGE_VERSION}`;
 
 export interface ThemeParksOptions {

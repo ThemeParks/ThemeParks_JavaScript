@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.3.1] - 2026-09-28
+
+### Fixed
+
+- **A run with no API key now says so when it finishes**, not only when it
+  starts. Without a key the command SUCCEEDS: it reads the 7 days anonymous
+  access allows, writes 433 rows of Magic Kingdom instead of about 94,000, and
+  exits 0. The notice was printed before a run that takes minutes, so it scrolled
+  away, and the last thing on screen was `done: 433 rows` — which for someone who
+  has just paid for 400 days is indistinguishable from success. There is a file,
+  there is no error, and the number means nothing unless you already know what it
+  should have been.
+
+  The README and `--help` now `export THEMEPARKS_API_KEY` before the example that
+  needs it, and still say `--list` does not: finding a park before you have paid
+  is the point of that flag.
+
+### Added
+
+- **A committed mutant list** (`test/mutation/mutants.json`) and a nightly,
+  non-gating job that runs it. An author-written mutant list contains the
+  mutations that author's tests already catch — one scored 18/18 on this package
+  while an independent sweep found ten survivors. The list is committed so a
+  reviewer can see what is checked and, more usefully, what is not. One mutant
+  targets the generated column list, so the shared `csv_contract.json` fixture is
+  exercised as a mutation as well as a test: renaming a column there must turn
+  the suite red, or the two SDKs can drift apart again.
+
 ## [8.3.0] - 2026-09-28
 
 ### Added
