@@ -1,0 +1,1465 @@
+{
+  "id": "75ea578a-adc8-4116-a54d-dccb60765ef9",
+  "name": "Magic Kingdom Park",
+  "entityType": "PARK",
+  "parentId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "destinationId": "e957da41-3552-4cf6-b636-5babc5cbc4e5",
+  "timezone": "America/New_York",
+  "range": {
+    "from": "2026-08-01",
+    "to": "2026-08-31"
+  },
+  "entities": [
+    {
+      "id": "f5aad2d4-a419-4384-bd9a-42f86385c750",
+      "name": "\"it's a small world\"",
+      "entityType": "ATTRACTION",
+      "coverage": {
+        "firstRecordedAt": "2021-07-03"
+      },
+      "days": [
+        {
+          "date": "2026-08-01",
+          "firstOperatingAt": "2026-08-01T12:31:02Z",
+          "lastClosedAt": "2026-08-02T03:00:14Z",
+          "operatingMinutes": 734,
+          "downMinutes": 134,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 5,
+            "p50": 10,
+            "mean": 14,
+            "p90": 30,
+            "max": 40
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 734,
+            "downMinutes": 134,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 5,
+              "p50": 10,
+              "mean": 14,
+              "p90": 30,
+              "max": 40
+            }
+          },
+          "changes": 177
+        },
+        {
+          "date": "2026-08-02",
+          "firstOperatingAt": "2026-08-02T12:31:10Z",
+          "lastClosedAt": "2026-08-03T03:00:16Z",
+          "operatingMinutes": 868,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 10,
+            "mean": 10,
+            "p90": 20,
+            "max": 30
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 868,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 10,
+              "mean": 10,
+              "p90": 20,
+              "max": 30
+            }
+          },
+          "changes": 191
+        },
+        {
+          "date": "2026-08-03",
+          "firstOperatingAt": "2026-08-03T12:31:26Z",
+          "lastClosedAt": "2026-08-04T03:00:24Z",
+          "operatingMinutes": 868,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 10,
+            "mean": 14,
+            "p90": 25,
+            "max": 35
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 868,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 10,
+              "mean": 14,
+              "p90": 25,
+              "max": 35
+            }
+          },
+          "changes": 191
+        },
+        {
+          "date": "2026-08-04",
+          "firstOperatingAt": "2026-08-04T12:31:30Z",
+          "lastClosedAt": "2026-08-05T03:00:34Z",
+          "operatingMinutes": 859,
+          "downMinutes": 9,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 15,
+            "mean": 16,
+            "p90": 30,
+            "max": 35
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 859,
+            "downMinutes": 9,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 15,
+              "mean": 16,
+              "p90": 30,
+              "max": 35
+            }
+          },
+          "changes": 203
+        },
+        {
+          "date": "2026-08-05",
+          "firstOperatingAt": "2026-08-05T12:30:35Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 882,
+          "downMinutes": 47,
+          "unknownMinutes": 0,
+          "standby": {
+            "min": 0,
+            "p50": 15,
+            "mean": 17,
+            "p90": 30,
+            "max": 40
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 882,
+            "downMinutes": 47,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 15,
+              "mean": 17,
+              "p90": 30,
+              "max": 40
+            }
+          },
+          "changes": 188
+        },
+        {
+          "date": "2026-08-06",
+          "firstOperatingAt": "2026-08-06T12:31:45Z",
+          "lastClosedAt": "2026-08-07T03:00:52Z",
+          "operatingMinutes": 928,
+          "downMinutes": 0,
+          "unknownMinutes": 2,
+          "standby": {
+            "min": 0,
+            "p50": 10,
+            "mean": 18,
+            "p90": 45,
+            "max": 50
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 868,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 15,
+              "mean": 18,
+              "p90": 45,
+              "max": 50
+            }
+          },
+          "changes": 187
+        },
+        {
+          "date": "2026-08-07",
+          "firstOperatingAt": "2026-08-07T16:01:57Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 656,
+          "downMinutes": 271,
+          "unknownMinutes": 2,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 11,
+            "p90": 25,
+            "max": 35
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 656,
+            "downMinutes": 271,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 11,
+              "p90": 25,
+              "max": 35
+            }
+          },
+          "changes": 69
+        },
+        {
+          "date": "2026-08-08",
+          "firstOperatingAt": "2026-08-08T11:31:03Z",
+          "lastClosedAt": "2026-08-09T03:00:11Z",
+          "operatingMinutes": 928,
+          "downMinutes": 0,
+          "unknownMinutes": 2,
+          "standby": {
+            "min": 0,
+            "p50": 15,
+            "mean": 14,
+            "p90": 25,
+            "max": 30
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 928,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 15,
+              "mean": 14,
+              "p90": 25,
+              "max": 30
+            }
+          },
+          "changes": 211
+        },
+        {
+          "date": "2026-08-09",
+          "firstOperatingAt": "2026-08-09T12:31:17Z",
+          "lastClosedAt": "2026-08-10T03:00:27Z",
+          "operatingMinutes": 868,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 10,
+            "p90": 20,
+            "max": 30
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 868,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 10,
+              "p90": 20,
+              "max": 30
+            }
+          },
+          "changes": 202
+        },
+        {
+          "date": "2026-08-10",
+          "firstOperatingAt": "2026-08-10T12:31:24Z",
+          "lastClosedAt": "2026-08-11T03:00:31Z",
+          "operatingMinutes": 861,
+          "downMinutes": 7,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 10,
+            "p90": 20,
+            "max": 40
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 861,
+            "downMinutes": 7,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 10,
+              "p90": 20,
+              "max": 40
+            }
+          },
+          "changes": 212
+        },
+        {
+          "date": "2026-08-11",
+          "firstOperatingAt": "2026-08-11T11:32:08Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 986,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 6,
+            "p90": 10,
+            "max": 15
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 927,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 6,
+              "p90": 10,
+              "max": 15
+            }
+          },
+          "changes": 161
+        },
+        {
+          "date": "2026-08-12",
+          "firstOperatingAt": "2026-08-12T12:31:25Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 928,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 20,
+            "mean": 17,
+            "p90": 30,
+            "max": 40
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 928,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 20,
+              "mean": 17,
+              "p90": 30,
+              "max": 40
+            }
+          },
+          "changes": 200
+        },
+        {
+          "date": "2026-08-13",
+          "firstOperatingAt": "2026-08-13T12:30:33Z",
+          "lastClosedAt": "2026-08-14T03:00:41Z",
+          "operatingMinutes": 929,
+          "downMinutes": 0,
+          "unknownMinutes": 2,
+          "standby": {
+            "min": 5,
+            "p50": 10,
+            "mean": 12,
+            "p90": 15,
+            "max": 30
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 869,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 5,
+              "p50": 10,
+              "mean": 12,
+              "p90": 15,
+              "max": 30
+            }
+          },
+          "changes": 180
+        },
+        {
+          "date": "2026-08-14",
+          "firstOperatingAt": "2026-08-14T11:30:49Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 928,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 5,
+            "p50": 5,
+            "mean": 8,
+            "p90": 10,
+            "max": 20
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 928,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 5,
+              "p50": 5,
+              "mean": 8,
+              "p90": 10,
+              "max": 20
+            }
+          },
+          "changes": 155
+        },
+        {
+          "date": "2026-08-15",
+          "firstOperatingAt": "2026-08-15T11:30:56Z",
+          "lastClosedAt": "2026-08-16T03:01:01Z",
+          "operatingMinutes": 737,
+          "downMinutes": 192,
+          "unknownMinutes": 3,
+          "standby": {
+            "min": 5,
+            "p50": 15,
+            "mean": 13,
+            "p90": 25,
+            "max": 35
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 737,
+            "downMinutes": 192,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 5,
+              "p50": 15,
+              "mean": 13,
+              "p90": 25,
+              "max": 35
+            }
+          },
+          "changes": 164
+        },
+        {
+          "date": "2026-08-16",
+          "firstOperatingAt": "2026-08-16T12:31:12Z",
+          "lastClosedAt": "2026-08-17T02:00:15Z",
+          "operatingMinutes": 808,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 5,
+            "p50": 10,
+            "mean": 9,
+            "p90": 15,
+            "max": 20
+          },
+          "inParkHours": {
+            "scheduledMinutes": 810,
+            "operatingMinutes": 808,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 5,
+              "p50": 10,
+              "mean": 9,
+              "p90": 15,
+              "max": 20
+            }
+          },
+          "changes": 179
+        },
+        {
+          "date": "2026-08-17",
+          "firstOperatingAt": "2026-08-17T12:30:28Z",
+          "lastClosedAt": "2026-08-18T03:00:25Z",
+          "operatingMinutes": 869,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 10,
+            "mean": 10,
+            "p90": 15,
+            "max": 25
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 869,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 10,
+              "mean": 10,
+              "p90": 15,
+              "max": 25
+            }
+          },
+          "changes": 193
+        },
+        {
+          "date": "2026-08-18",
+          "firstOperatingAt": "2026-08-18T11:31:25Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 907,
+          "downMinutes": 50,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 5,
+            "p90": 10,
+            "max": 25
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 878,
+            "downMinutes": 50,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 6,
+              "p90": 15,
+              "max": 25
+            }
+          },
+          "changes": 157
+        },
+        {
+          "date": "2026-08-19",
+          "firstOperatingAt": "2026-08-19T12:31:42Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 928,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 5,
+            "p50": 10,
+            "mean": 13,
+            "p90": 25,
+            "max": 30
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 928,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 5,
+              "p50": 10,
+              "mean": 13,
+              "p90": 25,
+              "max": 30
+            }
+          },
+          "changes": 196
+        },
+        {
+          "date": "2026-08-20",
+          "firstOperatingAt": "2026-08-20T12:30:52Z",
+          "lastClosedAt": "2026-08-21T03:00:55Z",
+          "operatingMinutes": 929,
+          "downMinutes": 0,
+          "unknownMinutes": 3,
+          "standby": {
+            "min": 0,
+            "p50": 20,
+            "mean": 18,
+            "p90": 35,
+            "max": 45
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 869,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 20,
+              "mean": 18,
+              "p90": 35,
+              "max": 45
+            }
+          },
+          "changes": 202
+        },
+        {
+          "date": "2026-08-21",
+          "firstOperatingAt": "2026-08-21T11:30:58Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 957,
+          "downMinutes": 0,
+          "unknownMinutes": 2,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 6,
+            "p90": 10,
+            "max": 15
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 929,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 6,
+              "p90": 10,
+              "max": 15
+            }
+          },
+          "changes": 145
+        },
+        {
+          "date": "2026-08-22",
+          "firstOperatingAt": "2026-08-22T11:31:09Z",
+          "lastClosedAt": "2026-08-23T03:00:21Z",
+          "operatingMinutes": 928,
+          "downMinutes": 0,
+          "unknownMinutes": 3,
+          "standby": {
+            "min": 5,
+            "p50": 10,
+            "mean": 11,
+            "p90": 20,
+            "max": 25
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 928,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 5,
+              "p50": 10,
+              "mean": 11,
+              "p90": 20,
+              "max": 25
+            }
+          },
+          "changes": 206
+        },
+        {
+          "date": "2026-08-23",
+          "firstOperatingAt": "2026-08-23T11:30:23Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 958,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 7,
+            "p90": 10,
+            "max": 20
+          },
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 929,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 7,
+              "p90": 15,
+              "max": 20
+            }
+          },
+          "changes": 159
+        },
+        {
+          "date": "2026-08-24",
+          "firstOperatingAt": "2026-08-24T12:31:33Z",
+          "lastClosedAt": "2026-08-25T03:27:44Z",
+          "operatingMinutes": 836,
+          "downMinutes": 58,
+          "unknownMinutes": 2,
+          "standby": {
+            "min": 0,
+            "p50": 10,
+            "mean": 12,
+            "p90": 25,
+            "max": 30
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 810,
+            "downMinutes": 58,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 10,
+              "mean": 13,
+              "p90": 25,
+              "max": 30
+            }
+          },
+          "changes": 204
+        },
+        {
+          "date": "2026-08-25",
+          "firstOperatingAt": "2026-08-25T12:30:46Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 898,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 5,
+            "p90": 10,
+            "max": 15
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 869,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 5,
+              "p90": 10,
+              "max": 15
+            }
+          },
+          "changes": 136
+        },
+        {
+          "date": "2026-08-26",
+          "firstOperatingAt": "2026-08-26T12:32:07Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 752,
+          "downMinutes": 115,
+          "unknownMinutes": 61,
+          "standby": {
+            "min": 0,
+            "p50": 10,
+            "mean": 11,
+            "p90": 20,
+            "max": 30
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 752,
+            "downMinutes": 115,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 10,
+              "mean": 11,
+              "p90": 20,
+              "max": 30
+            }
+          },
+          "changes": 135
+        },
+        {
+          "date": "2026-08-27",
+          "firstOperatingAt": "2026-08-27T13:01:18Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 803,
+          "downMinutes": 7,
+          "unknownMinutes": 511,
+          "standby": {
+            "min": 0,
+            "p50": 10,
+            "mean": 10,
+            "p90": 25,
+            "max": 25
+          },
+          "inParkHours": {
+            "scheduledMinutes": 810,
+            "operatingMinutes": 803,
+            "downMinutes": 7,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 10,
+              "mean": 10,
+              "p90": 25,
+              "max": 25
+            }
+          },
+          "changes": 177
+        },
+        {
+          "date": "2026-08-28",
+          "firstOperatingAt": "2026-08-28T12:30:32Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 898,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 5,
+            "p90": 10,
+            "max": 10
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 869,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 6,
+              "p90": 10,
+              "max": 10
+            }
+          },
+          "changes": 136
+        },
+        {
+          "date": "2026-08-29",
+          "firstOperatingAt": "2026-08-29T12:30:36Z",
+          "lastClosedAt": "2026-08-30T03:00:43Z",
+          "operatingMinutes": 869,
+          "downMinutes": 0,
+          "unknownMinutes": 2,
+          "standby": {
+            "min": 0,
+            "p50": 10,
+            "mean": 10,
+            "p90": 20,
+            "max": 25
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 869,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 10,
+              "mean": 10,
+              "p90": 20,
+              "max": 25
+            }
+          },
+          "changes": 224
+        },
+        {
+          "date": "2026-08-30",
+          "firstOperatingAt": "2026-08-30T12:30:52Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 898,
+          "downMinutes": 0,
+          "unknownMinutes": 1,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 5,
+            "p90": 5,
+            "max": 10
+          },
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 869,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 5,
+              "p90": 5,
+              "max": 10
+            }
+          },
+          "changes": 142
+        },
+        {
+          "date": "2026-08-31",
+          "firstOperatingAt": "2026-08-31T12:31:00Z",
+          "lastClosedAt": "2026-09-01T02:01:13Z",
+          "operatingMinutes": 809,
+          "downMinutes": 0,
+          "unknownMinutes": 3,
+          "standby": {
+            "min": 0,
+            "p50": 5,
+            "mean": 5,
+            "p90": 5,
+            "max": 10
+          },
+          "inParkHours": {
+            "scheduledMinutes": 810,
+            "operatingMinutes": 809,
+            "downMinutes": 0,
+            "unknownMinutes": 0,
+            "standby": {
+              "min": 0,
+              "p50": 5,
+              "mean": 5,
+              "p90": 5,
+              "max": 10
+            }
+          },
+          "changes": 196
+        }
+      ]
+    },
+    {
+      "id": "51392ca4-f824-42d8-8808-8110ec8e0e22",
+      "name": "Main Street Philharmonic at Main Street, U.S.A.",
+      "entityType": "SHOW",
+      "coverage": {
+        "firstRecordedAt": "2021-07-04"
+      },
+      "days": [
+        {
+          "date": "2026-08-01",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 870,
+          "downMinutes": 0,
+          "unknownMinutes": 570,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-02",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 0,
+          "downMinutes": 0,
+          "unknownMinutes": 2,
+          "showCount": 0,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 0,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-04",
+          "firstOperatingAt": "2026-08-04T04:05:15Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 1110,
+          "downMinutes": 0,
+          "unknownMinutes": 324,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-05",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-06",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-07",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-08",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-09",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 0,
+          "downMinutes": 0,
+          "unknownMinutes": 4,
+          "showCount": 0,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 0,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-11",
+          "firstOperatingAt": "2026-08-11T04:07:02Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 1170,
+          "downMinutes": 0,
+          "unknownMinutes": 262,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-12",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-13",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-14",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-15",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-16",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 0,
+          "downMinutes": 0,
+          "unknownMinutes": 6,
+          "showCount": 0,
+          "inParkHours": {
+            "scheduledMinutes": 810,
+            "operatingMinutes": 0,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-18",
+          "firstOperatingAt": "2026-08-18T04:05:35Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 1170,
+          "downMinutes": 0,
+          "unknownMinutes": 264,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-19",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-20",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-21",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-22",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-23",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 0,
+          "downMinutes": 0,
+          "unknownMinutes": 4,
+          "showCount": 0,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 0,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-25",
+          "firstOperatingAt": "2026-08-25T04:01:17Z",
+          "lastClosedAt": null,
+          "operatingMinutes": 1110,
+          "downMinutes": 0,
+          "unknownMinutes": 328,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-26",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 870,
+          "downMinutes": 0,
+          "unknownMinutes": 570,
+          "showCount": 5,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-27",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 810,
+          "downMinutes": 0,
+          "unknownMinutes": 630,
+          "showCount": 5,
+          "inParkHours": {
+            "scheduledMinutes": 810,
+            "operatingMinutes": 810,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-28",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 870,
+          "downMinutes": 0,
+          "unknownMinutes": 570,
+          "showCount": 4,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-29",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 870,
+          "downMinutes": 0,
+          "unknownMinutes": 570,
+          "showCount": 5,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        },
+        {
+          "date": "2026-08-30",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 0,
+          "downMinutes": 0,
+          "unknownMinutes": 4,
+          "showCount": 0,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 0,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 1
+        }
+      ]
+    },
+    {
+      "id": "55bdcccc-217b-416c-b8b0-4b6a87d16179",
+      "name": "Cinderella's Royal Table",
+      "entityType": "RESTAURANT",
+      "coverage": {
+        "firstRecordedAt": "2021-07-03"
+      },
+      "days": [
+        {
+          "date": "2026-08-02",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 870,
+          "downMinutes": 0,
+          "unknownMinutes": 570,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 0
+        },
+        {
+          "date": "2026-08-04",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 870,
+          "downMinutes": 0,
+          "unknownMinutes": 570,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 0
+        },
+        {
+          "date": "2026-08-09",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 870,
+          "downMinutes": 0,
+          "unknownMinutes": 570,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 0
+        },
+        {
+          "date": "2026-08-18",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 0
+        },
+        {
+          "date": "2026-08-22",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 930,
+          "downMinutes": 0,
+          "unknownMinutes": 510,
+          "inParkHours": {
+            "scheduledMinutes": 930,
+            "operatingMinutes": 930,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 0
+        },
+        {
+          "date": "2026-08-28",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 870,
+          "downMinutes": 0,
+          "unknownMinutes": 570,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 0
+        },
+        {
+          "date": "2026-08-30",
+          "firstOperatingAt": null,
+          "lastClosedAt": null,
+          "operatingMinutes": 870,
+          "downMinutes": 0,
+          "unknownMinutes": 570,
+          "inParkHours": {
+            "scheduledMinutes": 870,
+            "operatingMinutes": 870,
+            "downMinutes": 0,
+            "unknownMinutes": 0
+          },
+          "changes": 0
+        }
+      ]
+    }
+  ],
+  "next": "https://api.themeparks.wiki/v1/entity/75ea578a-adc8-4116-a54d-dccb60765ef9/history/daily?from=2026-09-01&to=2026-09-20"
+}

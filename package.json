@@ -1,6 +1,6 @@
 {
   "name": "themeparks",
-  "version": "8.2.0",
+  "version": "8.3.0",
   "description": "Official SDK for the ThemeParks.wiki API",
   "license": "MIT",
   "repository": "github:ThemeParks/ThemeParks_JavaScript",
@@ -16,6 +16,9 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     }
+  },
+  "bin": {
+    "themeparks-backfill": "./dist/backfill-cli.js"
   },
   "files": [
     "dist",
@@ -39,7 +42,8 @@
     "regenerate": "tsx scripts/regenerate.ts",
     "docs": "typedoc",
     "docs:serve": "npx serve docs-site",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build && npm run test:package",
+    "test:package": "tsx scripts/check-package.ts"
   },
   "devDependencies": {
     "@types/node": "^26.4.1",
@@ -53,6 +57,7 @@
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.11.0",
     "typescript": "^5.4.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "yaml": "^2.5.0"
   }
 }

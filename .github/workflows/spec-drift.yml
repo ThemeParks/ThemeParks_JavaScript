@@ -58,7 +58,15 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }}
-          add-paths: src/_generated/schema.ts
+          # BOTH GENERATED FILES. `npm run regenerate` writes the schema and the
+          # daily column list; committing only the schema meant the next field
+          # upstream added would be typed and not exported, the CSV would silently
+          # drop it again, and the Python SDK -- which derives its columns at
+          # runtime -- would pick it up, so the two headers would diverge with
+          # nothing red anywhere.
+          add-paths: |
+            src/_generated/schema.ts
+            src/_generated/dailyColumns.ts
           branch: automated/spec-drift
           commit-message: 'chore: regenerate schema from upstream spec'
           title: 'chore: regenerate schema from upstream spec'

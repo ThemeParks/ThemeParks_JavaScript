@@ -1,0 +1,7 @@
+{
+  "error": {
+    "type": "HISTORY_RATE_LIMITED",
+    "message": "This key can make 120 history requests an hour.",
+    "retryAfter": 1847
+  }
+}

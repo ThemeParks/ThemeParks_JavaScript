@@ -37,3 +37,6 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
+      # Packs the tarball, installs it elsewhere and runs the binary. The unit
+      # suite cannot see a bin that does not resolve when installed.
+      - run: npm run test:package

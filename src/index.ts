@@ -30,7 +30,13 @@ export {
   type ChangesOptions,
   type DailyEntry,
   type DaysOptions,
+  // `HistoryPage` is what `onPage` hands you, so a caller who wants to name the
+  // type or store a page needs it. It was declared `export` in its own module and
+  // never re-exported here, so `import type { HistoryPage } from 'themeparks'`
+  // failed while the changelog advertised it as the new API.
+  type HistoryPage,
   type HistorySpan,
+  type PageOptions,
 } from './ergonomic/history';
 export { DestinationsApi } from './ergonomic/destinations';
 export {
