@@ -339,7 +339,11 @@ job as the example below, resumable, and it is what to reach for if what you
 want is the file rather than the code:
 
 ```bash
-npx themeparks-backfill --list disney          # find your park. No key needed.
+# How far back it reaches is your plan, so set the key first: without one you get
+# the 7 days anonymous access allows, and the run still succeeds, quietly.
+export THEMEPARKS_API_KEY=tpw_your_key
+
+npx themeparks-backfill --list disney          # find your park. This part needs no key.
 npx themeparks-backfill "magic kingdom"        # NDJSON, into the current directory
 npx themeparks-backfill "Walt Disney World Resort" --format csv --out ./data
 ```
