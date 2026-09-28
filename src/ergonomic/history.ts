@@ -65,9 +65,23 @@ function asBudgetError(error: unknown, maxWaitMs: number): unknown {
   );
 }
 
-/** One daily row, tagged with the entity it belongs to. */
+/**
+ * One daily row, tagged with the entity it belongs to.
+ *
+ * `name` and `entityType` come from the history response itself, which matters
+ * for more than convenience: they are the labels that response gives for these
+ * rows. A park's current `/children` list gives TODAY's name, and stamping that
+ * on a row recorded three years ago rewrites the record, because rides get
+ * renamed. They are also already in the payload, so nothing needs to ask what
+ * an id refers to.
+ *
+ * Empty strings rather than undefined when the envelope omits them: a writer
+ * should not have to branch, and "" is what lands in a CSV cell either way.
+ */
 export interface DailyEntry {
   entityId: string;
+  name: string;
+  entityType: string;
   row: HistoryDailyRow;
 }
 
@@ -118,14 +132,23 @@ function toSpan(document: EntityHistoryCoverage): HistorySpan {
  * A park envelope carries many entities; an entity envelope carries its own
  * rows. Both flatten to the same stream, so a caller writes one loop.
  */
+function labelOf(source: { name?: string; entityType?: string }): {
+  name: string;
+  entityType: string;
+} {
+  return { name: source.name ?? '', entityType: source.entityType ?? '' };
+}
+
 function* dailyEntries(envelope: EntityHistoryDaily): Generator<DailyEntry> {
   if ('entities' in envelope) {
     for (const entity of envelope.entities) {
-      for (const row of entity.days) yield { entityId: entity.id, row };
+      const label = labelOf(entity);
+      for (const row of entity.days) yield { entityId: entity.id, ...label, row };
     }
     return;
   }
-  for (const row of envelope.days) yield { entityId: envelope.id, row };
+  const label = labelOf(envelope);
+  for (const row of envelope.days) yield { entityId: envelope.id, ...label, row };
 }
 
 function* changeEntries(envelope: EntityHistory): Generator<ChangeEntry> {
@@ -143,10 +166,37 @@ export interface BudgetOptions {
   maxWaitMs?: number;
 }
 
-export type DaysOptions = HistoryQuery & BudgetOptions;
+/**
+ * One page of daily history, as the server described it.
+ *
+ * `from`/`to` are the park-local days this page actually covered, which is not
+ * the range you asked for: a park call is capped, so a 50-day request comes
+ * back as 31 days plus a `next`. `next` is the URL of the following page, or
+ * null on the last one.
+ *
+ * This exists for resumable downloads. A checkpoint taken from the ROWS is
+ * wrong in both directions: the newest row's date can be earlier than the page
+ * covered, since an entity that stopped reporting has no rows for the tail
+ * days, so resuming there re-fetches days already written; and there is no way
+ * to tell a complete page from one interrupted mid-write. The page boundary is
+ * the server's own answer to "where do I carry on", so it is the only safe
+ * checkpoint.
+ */
+export interface HistoryPage {
+  from: string;
+  to: string;
+  next: string | null;
+}
+
+export interface PageOptions {
+  /** Called after every row of a page has been yielded. See {@link HistoryPage}. */
+  onPage?: (page: HistoryPage) => void;
+}
+
+export type DaysOptions = HistoryQuery & BudgetOptions & PageOptions;
 export type ChangesOptions = HistoryQuery & BudgetOptions;
 
-function toQuery(options: HistoryQuery & BudgetOptions): HistoryQuery {
+function toQuery(options: HistoryQuery & BudgetOptions & PageOptions): HistoryQuery {
   const query: HistoryQuery = {};
   if (options.date !== undefined) query.date = options.date;
   if (options.from !== undefined) query.from = options.from;
@@ -203,6 +253,13 @@ export class HistoryApi {
     for (;;) {
       yield* dailyEntries(envelope);
       const next = envelope.next;
+      // AFTER the rows, never before: a caller checkpointing on this has to be
+      // able to trust that everything the page held is already written.
+      options.onPage?.({
+        from: envelope.range.from,
+        to: envelope.range.to,
+        next: next === '' ? null : next,
+      });
       if (next === null || next === '') return;
       try {
         // Followed verbatim: the server has already applied every parameter,

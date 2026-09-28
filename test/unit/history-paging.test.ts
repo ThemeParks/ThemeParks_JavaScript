@@ -292,3 +292,86 @@ describe('the API key', () => {
     expect(seen[1]!['x-api-key']).toBe('tpw_example');
   });
 });
+
+describe('what a daily row is labelled with', () => {
+  it('names each row from the history response, not a lookup', async () => {
+    // The name AS RECORDED. A park's current /children list gives today's name,
+    // and stamping that on a row from three years ago rewrites the record —
+    // rides get renamed, and the history is supposed to be what was true then.
+    // It is also already in the payload, so there is nothing to ask.
+    const page = await loadFixture('mk_park_daily_page1.json');
+    const entities = page.entities as { id: string; name: string; entityType: string }[];
+    const rows = await collect(
+      client(vi.fn(() => Promise.resolve(json({ ...page, next: null }))))
+        .entity('mk')
+        .history.days(),
+    );
+    expect(rows.length).toBeGreaterThan(50);
+    for (const row of rows) {
+      const source = entities.find((e) => e.id === row.entityId);
+      expect(source).toBeDefined();
+      expect(row.name).toBe(source?.name);
+      expect(row.entityType).toBe(source?.entityType);
+    }
+    // Three different types in this capture, so a single hardcoded value fails.
+    expect(new Set(rows.map((r) => r.entityType)).size).toBe(3);
+  });
+});
+
+describe('the page hook', () => {
+  it('reports the range and the next page the server gave', async () => {
+    const page1 = await loadFixture('mk_park_daily_page1.json');
+    const page2 = await loadFixture('mk_park_daily_page2.json');
+    let call = 0;
+    const fetchFn = vi.fn(() => {
+      call += 1;
+      return Promise.resolve(json(call === 1 ? page1 : page2));
+    });
+    const pages: unknown[] = [];
+    await collect(
+      client(fetchFn)
+        .entity('mk')
+        .history.days({ onPage: (p) => pages.push(p) }),
+    );
+    expect(pages).toEqual([
+      { from: '2026-08-01', to: '2026-08-31', next: page1.next },
+      { from: '2026-09-01', to: '2026-09-20', next: null },
+    ]);
+  });
+
+  it('fires only after every row of its page has been yielded', async () => {
+    // A resumable download checkpoints on this. If it fired first, a consumer
+    // that died mid-page would have recorded a checkpoint past rows it never
+    // wrote, and those rows would be missing from the file for good — the one
+    // failure mode worse than duplicating them.
+    const page1 = await loadFixture('mk_park_daily_page1.json');
+    const page2 = await loadFixture('mk_park_daily_page2.json');
+    let call = 0;
+    const fetchFn = vi.fn(() => {
+      call += 1;
+      return Promise.resolve(json(call === 1 ? page1 : page2));
+    });
+    const order: string[] = [];
+    for await (const row of client(fetchFn)
+      .entity('mk')
+      .history.days({ onPage: (p) => order.push(`page:${p.to}`) })) {
+      order.push(`row:${(row.row as { date: string }).date}`);
+    }
+    const firstPageAt = order.indexOf('page:2026-08-31');
+    const lastRowOfPage1 = order.lastIndexOf('row:2026-08-31');
+    expect(firstPageAt).toBeGreaterThan(lastRowOfPage1);
+    // And every row of page one comes before the page-one boundary.
+    const page1Dates = new Set(
+      (page1.entities as { days: { date: string }[] }[]).flatMap((e) => e.days.map((d) => d.date)),
+    );
+    for (const [i, item] of order.entries()) {
+      if (
+        item.startsWith('row:') &&
+        page1Dates.has(item.slice(4)) &&
+        !order.slice(0, i).includes('page:2026-08-31')
+      ) {
+        expect(i).toBeLessThan(firstPageAt);
+      }
+    }
+  });
+});

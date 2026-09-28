@@ -5,6 +5,97 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.3.0] - 2026-09-28
+
+### Added
+
+- **`themeparks-backfill`: the archive download as a command.** The Python SDK
+  shipped this first; this is the same tool, and the two write byte-for-byte
+  identical CSVs. Magic Kingdom's full five-year archive: 94,223 rows, 41 columns,
+  identical from both, the only differences being today's row, which grows as the
+  day elapses.
+
+  ```bash
+  npm install themeparks
+  npx themeparks-backfill "magic kingdom"
+  ```
+
+  - Takes a park or a **destination**, by name or id, and a name that identifies one
+    park unambiguously is enough. A destination back fills every park in it, one
+    file each. An ambiguous name lists the ids that match, sorted by park name.
+  - `--list [text]` prints destinations with their parks underneath and **needs no
+    key**, so you can find your park before deciding whether to pay.
+  - **Runs without a key**, reading the 7 days anonymous access allows, and says
+    what a key would add.
+  - NDJSON by default, `--format csv` for one wide row per entity per day. Every row
+    carries `parkId`, `parkName`, `entityId`, `entityName` and `entityType`, so two
+    files load into one table and `(entityId, date)` is the natural key. The entity
+    name is the one the history response gave for those rows, not the park's current
+    children list: rides get renamed, and today's name on a row from three years ago
+    rewrites the record. Files are named for the park's id, because names change.
+  - The CSV carries a **UTF-8 BOM** so Excel on Windows does not mangle `®` and
+    accents, and a cell a spreadsheet would execute as a formula is prefixed with an
+    apostrophe. Numeric cells are untouched, so a negative number stays a number.
+  - **Resumable.** It checkpoints against the hourly history budget and exits 75
+    (`EX_TEMPFAIL`), so a cron or systemd timer retries rather than alerting, and
+    running the same command again continues. The checkpoint is the day the server's
+    own `next` URL starts on, never the newest row written -- an entity that stopped
+    reporting has no rows for the tail days of its page, so resuming from a row
+    re-fetches days already in the file.
+  - The state file is `<parkId>.<format>.backfill-state.json` and records the SDK,
+    its version, a state version and a fingerprint of the exact header. Anything
+    that does not match is refused with a message saying why, never resumed --
+    including a state file written by the Python SDK, whose keys differ.
+  - One park's failure does not abandon the rest of a destination; what did not
+    finish is named at the end. A network failure or timeout exits 75, anything the
+    API rejected exits 1, and neither is a traceback.
+  - An earlier run's rows are never deleted. A failure or a closed window on a
+    resumed run keeps the file and says the run did not finish.
+
+- **`onPage` on `days()`**, called once every row of a page has been yielded, with a
+  `HistoryPage` (`from`, `to`, `next`). The page boundary is the server's own answer
+  to "where do I carry on", and the rows cannot tell you -- so it is the only safe
+  checkpoint for a resumable download. `HistoryPage` and `PageOptions` are exported.
+
+- **`DailyEntry` carries `name` and `entityType`**, taken from the history response
+  itself. Already in the payload, so nothing has to ask what an id refers to. Both
+  are required fields, so a hand-built `DailyEntry` in a test double needs them.
+
+- **`test/fixtures/csv_contract.json`**, an identical copy of which lives in the
+  Python SDK. Both suites assert their column list against it, because this is one
+  command with two implementations and a customer using both should get one file
+  format. Before it existed, this SDK wrote 32 columns and Python wrote 41.
+
+- **`npm run test:package`**, in CI and `prepublishOnly`: it packs the tarball,
+  installs it elsewhere and runs the binary. See below for why.
+
+### Fixed
+
+- **The vendored OpenAPI schema was stale.** `unknownMinutes`, `inParkHours` (the
+  day's numbers limited to the park's published hours) and `extremeWaits` (how many
+  readings of 480+ minutes are folded into the statistics, which is how you spot a
+  feed error) are on the rows the API returns and were in none of the types. The CSV
+  column list is now **generated from the spec**, the nightly drift job commits it
+  alongside the schema, and the generator refuses a duplicate column name or a
+  missing nested block.
+
+- **A failed write was reported as success.** Node hands `end`'s callback the
+  stream's error; the callback took no arguments and resolved regardless, so on
+  ENOSPC or EDQUOT mid-download the command printed `done: N rows`, recorded
+  `complete: true` and exited 0 with a truncated file that no rerun would continue.
+  The stream also had no `'error'` listener until the flush, so an earlier failure
+  became an unhandled `'error'` event that killed the whole run.
+
+- **A bare `\r` in an entity name was written unquoted**, so one row parsed as two
+  with every later column shifted.
+
+- **`--list` with no value exited 2** although the help advertises `--list [TEXT]`;
+  `-h` was not accepted; a query that folds to nothing (`東京`) listed all 127 parks
+  instead of none; an empty `--api-key` or `THEMEPARKS_API_KEY=""` counted as a key;
+  running with no arguments fetched `/destinations` before saying so, which exited
+  75 with no network; `--version` printed a bare number; and the 404 hint for a
+  mistyped id sat where nothing could reach it.
+
 ## [8.2.0] - 2026-09-26
 
 ### Added

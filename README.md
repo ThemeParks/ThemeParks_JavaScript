@@ -332,7 +332,33 @@ try {
 `history.changeRows(query)` is the same treatment for `changes`: one flattened
 stream of `{ entityId, row }` whether you asked a park or a ride.
 
-A complete backfill with resume and CSV output is in
+### Or skip the code: there is a command
+
+Installing the package puts `themeparks-backfill` on your path. It is the same
+job as the example below, resumable, and it is what to reach for if what you
+want is the file rather than the code:
+
+```bash
+npx themeparks-backfill --list disney          # find your park. No key needed.
+npx themeparks-backfill "magic kingdom"        # NDJSON, into the current directory
+npx themeparks-backfill "Walt Disney World Resort" --format csv --out ./data
+```
+
+A park or a **destination**, by name or by id; a destination writes one file per
+park. Every row carries `parkId`, `parkName`, `entityId`, `entityName` and
+`entityType`, so two files load into one table and `(entityId, date)` is the
+natural key. Files are named for the park's id, because names change.
+
+How far back it reaches is your plan, and it asks the API rather than making you
+work it out. It checkpoints against the hourly history budget and exits 75
+(`EX_TEMPFAIL`) when that runs out, so a cron or systemd timer retries instead of
+alerting and the same command continues where it stopped. `--help` has the rest.
+
+The CSV is byte-for-byte identical to the Python SDK's, which runs the same
+command: Magic Kingdom's five-year archive is 94,223 rows and 41 columns from
+either.
+
+A library version of the same loop, if you want to own it, is in
 [`examples/backfill.mjs`](examples/backfill.mjs). It pulled Disneyland Resort's
 whole daily archive, 98,452 rows, in one run.
 

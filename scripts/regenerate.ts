@@ -1,9 +1,11 @@
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import openapiTS, { astToString } from 'openapi-typescript';
+import { parse } from 'yaml';
 
 const SPEC_URL = 'https://api.themeparks.wiki/docs/v1.yaml';
 const OUTPUT = resolve(process.cwd(), 'src/_generated/schema.ts');
+const COLUMNS_OUTPUT = resolve(process.cwd(), 'src/_generated/dailyColumns.ts');
 
 const header = `/* eslint-disable */
 /**
@@ -12,11 +14,80 @@ const header = `/* eslint-disable */
  */
 `;
 
+interface SchemaNode {
+  properties?: Record<string, { $ref?: string; type?: string }>;
+  $ref?: string;
+}
+
+/**
+ * Every scalar on a daily history row, flattened to one column name each, in the
+ * order the spec declares them.
+ *
+ * GENERATED, not typed out. The hand-written list in backfill.ts had drifted
+ * three ways at once: `unknownMinutes` and the whole `inParkHours` block were on
+ * every row the API returns and in no column, `extremeWaits` likewise, and
+ * `singleRider` carried two of its five percentiles while `standby` carried all
+ * five. Ten of thirty-six fields silently absent from a file people pay for, and
+ * the two SDKs disagreeing about the header of a file they both claim to write.
+ * Regenerate and the columns follow.
+ */
+function dailyColumns(schemas: Record<string, SchemaNode>): string[] {
+  const walk = (name: string, prefix: string): string[] => {
+    const node = schemas[name];
+    const out: string[] = [];
+    for (const [field, value] of Object.entries(node?.properties ?? {})) {
+      const head = prefix === '' ? field : `${prefix}${field[0]!.toUpperCase()}${field.slice(1)}`;
+      const ref = value.$ref?.split('/').pop();
+      if (ref !== undefined && schemas[ref]?.properties !== undefined) {
+        out.push(...walk(ref, head));
+      } else {
+        out.push(head);
+      }
+    }
+    return out;
+  };
+  return walk('HistoryDailyRow', '');
+}
+
 async function main() {
   const ast = await openapiTS(new URL(SPEC_URL));
   const body = astToString(ast);
   await writeFile(OUTPUT, header + body, 'utf8');
   console.log(`Wrote ${OUTPUT}`);
+
+  const spec = parse(await (await fetch(SPEC_URL)).text()) as {
+    components: { schemas: Record<string, SchemaNode> };
+  };
+  const columns = dailyColumns(spec.components.schemas);
+  // A FLOOR NEAR THE REAL COUNT. `< 10` caught a total wipe-out and nothing else:
+  // a spec that expressed one nested block inline or behind allOf would drop seven
+  // columns and pass, and the header would gain an always-empty `inParkHours`.
+  if (columns.length < 30) {
+    throw new Error(
+      `only ${String(columns.length)} daily columns, expected 36ish: has the spec moved to allOf/inline blocks?`,
+    );
+  }
+  for (const block of ['standby', 'singleRider', 'extremeWaits', 'inParkHours']) {
+    if (!columns.some((c) => c.startsWith(block))) {
+      throw new Error(
+        `no ${block} columns: the generator only follows $ref, and this block is no longer one`,
+      );
+    }
+  }
+  // The <outer><Inner> rule is not injective. A collision writes one value into two
+  // slots under a right-looking header, so it fails the build instead.
+  const dupes = columns.filter((c, i) => columns.indexOf(c) !== i);
+  if (dupes.length > 0) throw new Error(`duplicate daily column names: ${dupes.join(', ')}`);
+  // No eslint-disable on this one: it is a plain array, and an unused directive
+  // is itself a warning.
+  const columnsHeader = header.replace('/* eslint-disable */\n', '');
+  await writeFile(
+    COLUMNS_OUTPUT,
+    `${columnsHeader}\n/** Every scalar on a daily history row, flattened, in spec order. */\n` +
+      `export const DAILY_COLUMNS = [\n${columns.map((c) => `  '${c}',`).join('\n')}\n] as const;\n`,
+    'utf8',
+  );
+  console.log(`Wrote ${COLUMNS_OUTPUT} (${columns.length} columns)`);
 }
 
 main().catch((err) => {
