@@ -14,9 +14,12 @@
  *    resort is around a hundred times fewer calls than the same data pulled
  *    ride by ride.
  *
- * 2. It bounds the range with span().retrievableThrough, not with what the
- *    archive holds. Those are different dates on every plan below the top one,
- *    and asking past the entitlement is how a long backfill ends in 403s.
+ * 2. It ends at span().finalThrough: the earlier of what your key may read
+ *    (retrievableThrough) and what the archive holds (recordedTo). Asking past
+ *    the entitlement is how a long backfill ends in 403s, and the days past
+ *    recordedTo are not final: today's row is the day so far, and the archive
+ *    records days 2 to 3 behind live data. Stopping there means each day is
+ *    written once, as the archive recorded it.
  *
  * 3. It checkpoints. The history budget is hourly, so a spent one can be most
  *    of an hour from resetting. The SDK raises BudgetExhaustedError rather
@@ -98,7 +101,11 @@ async function backfillPark(tp, parkId, outDir, format) {
   const resuming = existsSync(checkpointPath);
   const hasRows = existsSync(outPath) && statSync(outPath).size > 0;
   const from = resuming ? readFileSync(checkpointPath, 'utf8').trim() : span.archiveFrom;
-  const to = span.retrievableThrough;
+  const to = span.finalThrough;
+  if (to === null) {
+    console.error(`${parkId}: nothing final to fetch yet; run again later`);
+    return 0;
+  }
 
   console.error(`${parkId}: ${from} .. ${to}${resuming ? ' (resumed)' : ''} -> ${outPath}`);
 

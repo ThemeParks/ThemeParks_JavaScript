@@ -165,6 +165,42 @@ describe('span()', () => {
     expect(span.recordedTo).toBe(summary.recordedTo);
     expect(span.retrievableThrough).toBe(summary.retrievableThrough);
   });
+
+  it('finalThrough is the earlier of recordedTo and retrievableThrough', async () => {
+    // retrievableThrough is usually today, whose row is the day so far, and the
+    // archive records days 2 to 3 behind. The real capture has recordedTo two
+    // days before retrievableThrough, so the fixture itself tells the two apart.
+    const park = await loadFixture('mk_history_coverage.json');
+    const summary = park.summary as { recordedTo: string; retrievableThrough: string };
+    expect(summary.recordedTo < summary.retrievableThrough).toBe(true);
+    const at = async (recordedTo: string | null, retrievableThrough: string | null) =>
+      (
+        await client(
+          vi.fn(() =>
+            Promise.resolve(
+              json({ ...park, summary: { ...summary, recordedTo, retrievableThrough } }),
+            ),
+          ),
+        )
+          .entity('mk')
+          .history.span()
+      ).finalThrough;
+    expect(await at(summary.recordedTo, summary.retrievableThrough)).toBe(summary.recordedTo);
+    // A key entitled to fewer days than the archive holds.
+    expect(await at('2026-09-21', '2026-09-01')).toBe('2026-09-01');
+    expect(await at(null, '2026-09-23')).toBeNull();
+    expect(await at('2026-09-21', null)).toBeNull();
+  });
+
+  it('finalThrough reads an entity document too', async () => {
+    const entity = await loadFixture('mk_attraction_history_coverage.json');
+    const span = await client(vi.fn(() => Promise.resolve(json(entity))))
+      .entity('ride')
+      .history.span();
+    const last = entity.lastRecordedAt as string;
+    const through = entity.retrievableThrough as string;
+    expect(span.finalThrough).toBe(last < through ? last : through);
+  });
 });
 
 describe('the hourly history budget', () => {
@@ -319,6 +355,31 @@ describe('what a daily row is labelled with', () => {
 });
 
 describe('the page hook', () => {
+  it('waits for a promise it returns before asking for the next page', async () => {
+    // A checkpoint written in the hook has to be durable before the next
+    // request: an interruption during that request must find it on disk.
+    const page1 = await loadFixture('mk_park_daily_page1.json');
+    const page2 = await loadFixture('mk_park_daily_page2.json');
+    const order: string[] = [];
+    let call = 0;
+    const fetchFn = vi.fn(() => {
+      call += 1;
+      order.push(`fetch:${String(call)}`);
+      return Promise.resolve(json(call === 1 ? page1 : page2));
+    });
+    await collect(
+      client(fetchFn)
+        .entity('mk')
+        .history.days({
+          onPage: async (p) => {
+            await new Promise((r) => setTimeout(r, 20));
+            order.push(`saved:${p.to}`);
+          },
+        }),
+    );
+    expect(order).toEqual(['fetch:1', 'saved:2026-08-31', 'fetch:2', 'saved:2026-09-20']);
+  });
+
   it('reports the range and the next page the server gave', async () => {
     const page1 = await loadFixture('mk_park_daily_page1.json');
     const page2 = await loadFixture('mk_park_daily_page2.json');

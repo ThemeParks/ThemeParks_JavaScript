@@ -60,8 +60,8 @@
     {
       "name": "the checkpoint comes from the newest row",
       "file": "src/backfill.ts",
-      "find": "        resumeFrom = page.next === null ? null : nextPageFrom(page.next);",
-      "replace": "        resumeFrom = lastDay;",
+      "find": "        const nextFrom = page.next === null ? null : nextPageFrom(page.next);",
+      "replace": "        const nextFrom = lastDay;",
       "why": "An entity that stopped reporting has no rows for the tail days of its page, so resuming there re-downloads days already written."
     },
     {
@@ -74,8 +74,8 @@
     {
       "name": "the CSV loses its BOM",
       "file": "src/backfill.ts",
-      "find": "    handle.write(`\\ufeff${CSV_COLUMNS.join(',')}\\n`);",
-      "replace": "    handle.write(`${CSV_COLUMNS.join(',')}\\n`);",
+      "find": "    append(`\\ufeff${CSV_COLUMNS.join(',')}\\n`);",
+      "replace": "    append(`${CSV_COLUMNS.join(',')}\\n`);",
       "why": "Excel on Windows reads the local code page and mangles every registered mark and accent."
     },
     {
@@ -137,8 +137,8 @@
     {
       "name": "the page hook fires before its rows",
       "file": "src/ergonomic/history.ts",
-      "find": "      yield* dailyEntries(envelope);\n      const next = envelope.next;\n      // AFTER the rows, never before: a caller checkpointing on this has to be\n      // able to trust that everything the page held is already written.\n      options.onPage?.(",
-      "replace": "      const next = envelope.next;\n      options.onPage?.(",
+      "find": "      yield* dailyEntries(envelope);\n      const next = envelope.next;",
+      "replace": "      const next = envelope.next;",
       "why": "A consumer that died mid-page would record a checkpoint past rows it never wrote. Losing rows is worse than duplicating them."
     },
     {
@@ -154,6 +154,181 @@
       "find": "  'inParkHoursScheduledMinutes',",
       "replace": "  'inParkScheduledMinutes',",
       "why": "This SDK wrote 32 columns while Python wrote 41. The shared csv_contract.json fixture is what stops the two diverging again."
+    },
+    {
+      "name": "a finished park is never fetched again",
+      "file": "src/backfill.ts",
+      "find": "    if (continueAt > end) {",
+      "replace": "    if (true) {",
+      "why": "A rerun printed 'already complete' and exited 0 without asking for a new day, so a nightly cron looked healthy and never updated."
+    },
+    {
+      "name": "the run ends at retrievableThrough",
+      "file": "src/backfill.ts",
+      "find": "const final = span.finalThrough;",
+      "replace": "const final = span.retrievableThrough;",
+      "why": "retrievableThrough is usually today. Ending there wrote the day so far, and the unsettled days before it, as if they were final."
+    },
+    {
+      "name": "--since is ignored on a first run",
+      "file": "src/backfill.ts",
+      "find": "const since = opts.since ?? null;",
+      "replace": "const since = null;",
+      "why": "The flag parsed but the download still started at the top of the archive."
+    },
+    {
+      "name": "an earlier --since than the file is accepted",
+      "file": "src/backfill.ts",
+      "find": "  if (since !== null && fileStart !== null && since < fileStart && since !== asked) {",
+      "replace": "  if (false) {",
+      "why": "Appending cannot add days before the file's first one, so accepting it hands back a file that is not what was asked for."
+    },
+    {
+      "name": "a --since past the file's end leaves a gap",
+      "file": "src/backfill.ts",
+      "find": "if (since !== null && since > continueAt) {",
+      "replace": "if (false) {",
+      "why": "Starting after the day the file continues from leaves a gap the state file cannot describe."
+    },
+    {
+      "name": "a fixed --since before the key's floor is refused the next night",
+      "file": "src/backfill.ts",
+      "find": "since < fileStart && since !== asked) {",
+      "replace": "since < fileStart) {",
+      "why": "On a plan short of the archive the file starts at the key's first day, so judging --since against that refused the same cron line the next night."
+    },
+    {
+      "name": "--since after --until is accepted",
+      "file": "src/backfill.ts",
+      "find": "values.since > values.until) {",
+      "replace": "values.since < '') {",
+      "why": "A range that can never be satisfied should be refused before any request is spent on it."
+    },
+    {
+      "name": "a day that does not exist is accepted",
+      "file": "src/backfill.ts",
+      "find": "toISOString().slice(0, 10) === value",
+      "replace": "toISOString().length > 0",
+      "why": "Date rolls 2025-02-30 over to March 2; the person did not ask for March."
+    },
+    {
+      "name": "a finished file with a foreign layout is appended to",
+      "file": "src/backfill.ts",
+      "find": "if (state !== null && mismatch !== null) {",
+      "replace": "if (state !== null && mismatch !== null && !state.complete) {",
+      "why": "Only an unfinished mismatched state was refused; a finished one got the whole archive appended under a second header, exit 0."
+    },
+    {
+      "name": "a state without its data file is continued",
+      "file": "src/backfill.ts",
+      "find": "if (state !== null && !fileHasRows) state = null;",
+      "replace": "",
+      "why": "Continuing writes a file that starts part-way through its range and records it as complete."
+    },
+    {
+      "name": "no checkpoint before the first request",
+      "file": "src/backfill.ts",
+      "find": "  await checkpoint(start);\n",
+      "replace": "",
+      "why": "A run killed before its first page left no state, or an extending run's state still said complete; the next run started over or skipped the days."
+    },
+    {
+      "name": "an 8.3 file keeps its partial tail",
+      "file": "src/backfill.ts",
+      "find": "upgradable(state, opts.format)) {",
+      "replace": "upgradable(state, opts.format) && false) {",
+      "why": "8.3 wrote the newest days while they were still changing and never replaced them."
+    },
+    {
+      "name": "the trim ends a CSV record at a quoted newline",
+      "file": "src/backfill.ts",
+      "find": "quoted = !quoted;",
+      "replace": "quoted = false;",
+      "why": "A name with a line break in it is one record, not two; splitting it corrupts the kept rows."
+    },
+    {
+      "name": "an anonymous 8.3 file is trimmed to nothing",
+      "file": "src/backfill.ts",
+      "find": "  if (state.start !== null && keepThrough < state.start) {",
+      "replace": "  if (false) {",
+      "why": "A file wholly inside the cut would be emptied and continued from a day the key can no longer read."
+    },
+    {
+      "name": "a continued file jumps forward to the key's floor",
+      "file": "src/backfill.ts",
+      "find": "      if (resumed && priorLastDay !== null) {",
+      "replace": "      if (false) {",
+      "why": "Carrying on from the key's first day instead of the file's next day leaves a gap the file then claims not to have."
+    },
+    {
+      "name": "changeRows drops opening",
+      "file": "src/ergonomic/history.ts",
+      "find": "return openingsOf(envelope);",
+      "replace": "return {};",
+      "why": "Without the opening, the time before an entity's first change has no known status: 63 seconds of Space Mountain on 2026-09-26."
+    },
+    {
+      "name": "load() and iteration make two requests",
+      "file": "src/ergonomic/history.ts",
+      "find": "pending ??= ",
+      "replace": "pending = ",
+      "why": "Reading opening must cost the same single request the rows do."
+    },
+    {
+      "name": "finalThrough is the later of the two days",
+      "file": "src/ergonomic/history.ts",
+      "find": "return a < b ? a : b;",
+      "replace": "return a > b ? a : b;",
+      "why": "The later day is retrievableThrough on most keys: today, whose row is not final."
+    },
+    {
+      "name": "onPage is not awaited",
+      "file": "src/ergonomic/history.ts",
+      "find": "      await options.onPage?.({",
+      "replace": "      void options.onPage?.({",
+      "why": "The next page was requested while the checkpoint was still being written, so a kill in between recorded the wrong page."
+    },
+    {
+      "name": "a resume does not cut back to the checkpoint",
+      "file": "src/backfill.ts",
+      "find": "    truncateSync(outPath, size);",
+      "replace": "",
+      "why": "Rows written after the last checkpoint by an interrupted page were kept, and the resume appended the same page again."
+    },
+    {
+      "name": "a checkpoint does not wait for the rows",
+      "file": "src/backfill.ts",
+      "find": "    await flushed;\n",
+      "replace": "",
+      "why": "The size recorded would not cover the rows before it, and the resume would cut some of them off."
+    },
+    {
+      "name": "overlapping runs are not locked out",
+      "file": "src/backfill.ts",
+      "find": "  if (owner !== null) {",
+      "replace": "  if (false) {",
+      "why": "Two runs appending to one file interleave rows and each records its own checkpoint."
+    },
+    {
+      "name": "an 8.3 file starting on the cut is downloaded again",
+      "file": "src/backfill.ts",
+      "find": "keepThrough < state.start) {",
+      "replace": "keepThrough <= state.start) {",
+      "why": "A file that starts on the last kept day has a day that is final; restarting refetched the whole file."
+    },
+    {
+      "name": "a run that adds no rows forgets the file's newest day",
+      "file": "src/backfill.ts",
+      "find": "    lastDay: lastDay ?? priorLastDay,",
+      "replace": "    lastDay,",
+      "why": "A seasonal park closed for the new days recorded lastDay null, so the state no longer said what the file holds."
+    },
+    {
+      "name": "a sizeless state resumes at lastDay",
+      "file": "src/backfill.ts",
+      "find": "    const back = daysBefore(state.lastDay, PAGE_DAYS);",
+      "replace": "    const back = daysBefore(state.lastDay, 1);",
+      "why": "lastDay is the newest day ANY entity reached; resuming there lost the days later entities had not reached."
     }
   ]
 }

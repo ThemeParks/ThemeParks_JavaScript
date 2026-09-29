@@ -17,14 +17,24 @@
  *
  * A file whose only job is to run has no condition to get wrong.
  */
-import { run } from './backfill.js';
+import { releaseLocks, run } from './backfill.js';
 
-// Ctrl-C says how to continue, like the Python SDK. 130 is the shell's convention
-// for SIGINT, and the state files on disk already say where each park got to.
-process.on('SIGINT', () => {
-  process.stderr.write('\nstopped. Run the same command again to continue.\n');
-  process.exit(130);
-});
+// Ctrl-C, or a scheduler's SIGTERM, says how to continue, like the Python SDK.
+// Exiting straight away is safe: the state file is rewritten atomically after
+// every complete page, and the next run cuts off any rows written after that
+// checkpoint before resuming, so an interrupted page is fetched again rather
+// than appended twice. The locks are released so the next run need not wait
+// to find them stale. 130 and 143 are the shell's conventions (128 + signal).
+for (const [signal, code] of [
+  ['SIGINT', 130],
+  ['SIGTERM', 143],
+] as const) {
+  process.on(signal, () => {
+    releaseLocks();
+    process.stderr.write('\nstopped. Run the same command again to continue.\n');
+    process.exit(code);
+  });
+}
 
 run().then(
   (code) => {

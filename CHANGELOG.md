@@ -5,6 +5,122 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+To be released as **8.4.0**, a minor: the additions below are backwards
+compatible at runtime. One is not quite so at the type level: `HistorySpan`
+gains a required field, `finalThrough`, so code that builds a `HistorySpan`
+object by hand (a test double, say) needs to add it. Code that only reads the
+spans `span()` returns is unaffected.
+
+### Added
+
+- **`themeparks-backfill --since YYYY-MM-DD` and `--until YYYY-MM-DD`.** There
+  was no way to ask for less than everything: `--since` was an unknown option,
+  so a key that reaches the whole archive downloaded all of it, every time. Both
+  days are inclusive and must be real calendar days written `YYYY-MM-DD`
+  (`2025-02-30`, `2025-1-1` and `20250101` are refused), and `--since` after
+  `--until` is refused before anything is requested. `--since` applies when a
+  file is started. A later run accepts the same `--since` or a later one, so a
+  fixed or a rolling cron line both work, and refuses one earlier than the day
+  the file was started from, or one that would leave a gap, with what to do
+  instead of quietly handing back a file that is not what was asked for.
+
+- **`history.changeRows()` exposes the `opening` state.** The raw history
+  response carries, per entity, the state in force at the start of the range,
+  and `changeRows()` threw it away. Without it the time between midnight and an
+  entity's first change had no known status, so a day rebuilt from raw history
+  disagreed with the daily summary whenever a ride was still running from the
+  night before. The result is still the same async generator and yields exactly
+  what it always did; it now also has `opening`, an object of `HistoryOpening`
+  keyed by entity id, covering every entity in the response, including one that
+  did not change all day. It is readable once the response has arrived: iterate
+  first, or `await changes.load()`. Either way it is one request. It is not
+  enumerable, so spreading or logging the result is safe, and after a failed
+  request it says so. The `HistoryChanges` and `HistoryOpening` types are
+  exported, and the README explains `opening.degraded`.
+
+- **`HistorySpan.finalThrough`**: the newest day the archive has recorded that
+  the key may read, the earlier of `recordedTo` and `retrievableThrough`: the
+  place to stop if you fetch each day once.
+
+- **An interrupted `themeparks-backfill` never appends a day twice.** The state
+  file is written before the first request and after every page, atomically,
+  with the size of the data file at that moment; the next run first cuts the
+  file back to that size. Ctrl-C, SIGTERM (now exit 143, as well as Ctrl-C's 130) and a kill at any point cost at most the page in flight. Two runs on the
+  same park and `--out` at once are refused.
+
+- **`days()` awaits `onPage`.** A hook that returns a promise holds the next page
+  until it settles, so a checkpoint written there is on disk before the next
+  request. The hook's type is widened to return `unknown`, so existing callbacks
+  still compile.
+
+### Fixed
+
+- **A finished park now updates on the next run.** A rerun printed
+  `already complete` and exited 0 without fetching a single new day, so a nightly
+  cron looked healthy and never updated; the only way to get yesterday was
+  `--overwrite`, which downloads the whole archive again. A finished file is now
+  carried forward from the day after its last one, appending only the new days.
+  An interrupted run still resumes at its page boundary, including a rerun
+  interrupted before its first page, which would otherwise have started again
+  from the top of the file's range.
+
+- **The newest rows of a backfill were partial days, and stayed that way.** A run
+  ended on `retrievableThrough`, which is usually today: today's row is the day
+  so far, and the archive records days 2 to 3 behind live data, so the last few
+  days of every file were still changing when they were written. A run now ends
+  at `finalThrough`, says so when it holds days back, and the next run adds them
+  once they are final. Each day is fetched once, as the archive recorded it; the
+  README says how to fetch a range again if the archive later re-records it.
+
+  **Files written by 8.3.x are corrected once.** Their state file does not say
+  which of their newest days were final, so the first run of this version
+  removes the rows dated within seven days of that run's end and fetches those
+  days again. Every other row is left byte for byte as it was, and a file whose
+  newest row is older than that is not rewritten at all. A file that lies wholly
+  inside those seven days, as an anonymous run's does, is downloaded again. The
+  state file format moves to version 2 for this; version 1 files from this SDK
+  are upgraded, not refused.
+
+- **A continued file no longer jumps forward to the key's first day.** When the
+  day a file continues from is older than the key may read (a cron that did not
+  run for longer than the key's window, or a key that lost its plan), the run
+  used to carry on from the key's first day and leave a gap the file then did not
+  record. It is refused now, the file is left alone, and the message says how to
+  start again.
+
+- **A finished file written to a different column layout was appended to.** Only
+  an unfinished one was refused. A finished one fell through to a fresh start,
+  which opened the existing file in append mode and wrote the whole archive into
+  it a second time under a second header, exit 0. It is refused now, the same
+  way.
+
+- **An interrupted nightly extension appended the same days twice.** The state
+  was written only at the end of a run or on an error the command caught, so
+  Ctrl-C, SIGTERM or a kill during an extension left it saying finished through
+  the old day, and the rerun appended those days again. See the checkpointing
+  above.
+
+- **A run that stopped part-way through its first page lost days.** It resumed
+  from the newest day any entity had reached; rows arrive entity by entity, so
+  the entities behind it lost the days in between. Checkpoints make this
+  impossible for new files, and an older state with only that day goes back a
+  whole page (31 days) instead.
+
+- **The state recorded the start asked for, not the first day written.** `start`
+  is now the first day the file covers, after the key's window, and a new
+  `since` field keeps the start that was asked for, so the same `--since` keeps
+  working and a different one before the file is refused.
+
+- **The anonymous-access notice promised 7 days.** Only final days are written,
+  so an anonymous run writes usually 4 or 5 days per park, and the notice now
+  says so.
+
+- **A state file whose data file had been deleted was continued**, producing a
+  file that started part-way through its range and was then recorded as
+  complete. The park is downloaded again from the start instead.
+
 ## [8.3.1] - 2026-09-28
 
 ### Fixed
