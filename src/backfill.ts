@@ -36,8 +36,10 @@
  * 5. It writes FINAL days only. Today's row is the day so far, and the archive
  *    records days 2 to 3 behind live data, so the newest days the API serves can
  *    still change. The run ends at `span().finalThrough`, the newest day the
- *    archive holds, and the next run carries on from the day after. Every row in
- *    the file is one that will not change, so a nightly run only ever appends.
+ *    archive has recorded, and the next run carries on from the day after. Each
+ *    day is fetched once, as the archive recorded it, so a nightly run only ever
+ *    appends. (The archive can re-record a past day after a feed repair; the
+ *    README says how to fetch a range again.)
  */
 // Several internals are exported for tests. They are not in the package's public
 // surface: `bin` points at this file and `src/index.ts` does not re-export it, so
@@ -1617,7 +1619,14 @@ examples:
 only final days are written. Today's row is the day so far, and the archive
 records days 2 to 3 behind live data, so the newest days can still change. A run
 ends at the newest final day and the next run carries on from the day after, so
-the file only ever grows and no row in it changes later.
+the file only ever grows, and each day is fetched once, as the archive recorded
+it. To pick up a day the archive re-recorded later, fetch that range into a
+different --out (--since and --until) and replace those rows where you load them.
+
+stopping a run is safe at any point: the state file is written after every page
+with the size of the file, and the next run cuts off anything written after it,
+so no day is appended twice. Ctrl-C and SIGTERM exit 130 and 143. Two runs on
+the same park and --out at once are refused.
 
 --since applies when a file is started. A later run continues that file forward
 and accepts the same --since, or a later one. One earlier than the file's first

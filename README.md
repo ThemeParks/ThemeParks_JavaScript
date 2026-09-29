@@ -265,8 +265,9 @@ Three things to know before polling these:
   fails fast by default rather than looking hung. A REST 429, which asks for
   seconds, is still ridden out.
 - **Today is not final.** The default cache leaves `changes` and `daily`
-  uncached and keeps `coverage` for an hour. A completed day never changes, so
-  cache it yourself for as long as you like.
+  uncached and keeps `coverage` for an hour. A day on or before `recordedTo`
+  has been recorded, so cache it yourself for as long as you like; the archive
+  only re-records a past day in the rare case of a feed repair.
 
 `tp.raw.getEntityHistory(id, query)`, `getEntityHistoryDaily(id, query)` and
 `getEntityHistoryCoverage(id)` are the underlying calls.
@@ -312,9 +313,10 @@ ends in 403s.
 **If you write each day once, end at `finalThrough`.** `retrievableThrough` is
 usually today, and today's row is the day so far. Recent days can still change
 too, because the archive records days 2 to 3 behind live data. `finalThrough` is
-the earlier of `recordedTo` and `retrievableThrough`: the newest day whose row
-will not change again. Store through that, and fetch the days after it on your
-next run.
+the earlier of `recordedTo` and `retrievableThrough`: the newest day the archive
+has recorded. Store through that, and fetch the days after it on your next run.
+The archive can occasionally re-record a past day, for example after a park's
+feed is repaired, so fetch a range again if you need to pick that up.
 
 **`days()` yields, it does not collect.** Nothing accumulates, so the only thing
 that grows is whatever you write the rows to.
@@ -359,7 +361,12 @@ every entity in the response, including one that did not change all day, and
 `opening.observedAt` says when that state was last seen, which can be long before
 the range for a ride whose feed stopped. `opening` is readable once the response
 has arrived: iterate first, or `await changes.load()`. Either way it is one
-request.
+request. It is not enumerable, so spreading or logging the result is safe.
+
+An opening with `degraded: true` is incomplete: the server could not look far
+enough back for this response, and `degradedReason` says why (`timeout`,
+`error` or `capacity`). A field it holds may be missing, so ask again in a
+minute for the full opening before rebuilding a day from it.
 
 ### Or skip the code: there is a command
 
@@ -391,8 +398,25 @@ alerting and the same command continues where it stopped. `--help` has the rest.
 **Run it again to update.** A second run of a finished park fetches only the days
 that have become final since the last one and appends them, so a nightly cron
 keeps the file current. Only final days are written: a run ends at the newest day
-the archive has finished recording and says so when it holds newer days back, so
-no row in the file changes later.
+the archive has finished recording and says so when it holds newer days back.
+Each day is fetched once, as the archive recorded it.
+
+**Fetching a range again.** The archive can occasionally re-record past days,
+for example when a park's feed is repaired. A file never rewrites rows it
+already holds, so to pick up a correction, download the affected days into a
+separate directory and replace those `(entityId, date)` rows where you load the
+data, or start the file again:
+
+```bash
+npx themeparks-backfill "Epcot" --since 2026-06-01 --until 2026-06-30 --out ./refetch
+npx themeparks-backfill "Epcot" --overwrite            # or: the whole file again
+```
+
+**Stopping a run at any point is safe.** The state file is written after every
+page with the size of the file at that moment, and the next run first cuts off
+anything written after it, so no day is ever appended twice. Ctrl-C and SIGTERM
+exit 130 and 143; a killed run needs nothing either. Two runs on the same park
+and `--out` at once are refused.
 
 **`--since` and `--until`** (`YYYY-MM-DD`, both inclusive) pick the days, instead
 of everything your plan reaches. `--since` applies when a file is started: a

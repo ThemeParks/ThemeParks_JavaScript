@@ -18,8 +18,8 @@
  *    (retrievableThrough) and what the archive holds (recordedTo). Asking past
  *    the entitlement is how a long backfill ends in 403s, and the days past
  *    recordedTo are not final: today's row is the day so far, and the archive
- *    records days 2 to 3 behind live data. Stopping there means no row this
- *    writes will change later.
+ *    records days 2 to 3 behind live data. Stopping there means each day is
+ *    written once, as the archive recorded it.
  *
  * 3. It checkpoints. The history budget is hourly, so a spent one can be most
  *    of an hour from resetting. The SDK raises BudgetExhaustedError rather

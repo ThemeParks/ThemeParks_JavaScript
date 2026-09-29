@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+To be released as **8.4.0**, a minor: the additions below are backwards
+compatible at runtime. One is not quite so at the type level: `HistorySpan`
+gains a required field, `finalThrough`, so code that builds a `HistorySpan`
+object by hand (a test double, say) needs to add it. Code that only reads the
+spans `span()` returns is unaffected.
+
 ### Added
 
 - **`themeparks-backfill --since YYYY-MM-DD` and `--until YYYY-MM-DD`.** There
@@ -29,11 +35,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   what it always did; it now also has `opening`, an object of `HistoryOpening`
   keyed by entity id, covering every entity in the response, including one that
   did not change all day. It is readable once the response has arrived: iterate
-  first, or `await changes.load()`. Either way it is one request. The
-  `HistoryChanges` and `HistoryOpening` types are exported.
+  first, or `await changes.load()`. Either way it is one request. It is not
+  enumerable, so spreading or logging the result is safe, and after a failed
+  request it says so. The `HistoryChanges` and `HistoryOpening` types are
+  exported, and the README explains `opening.degraded`.
 
-- **`HistorySpan.finalThrough`**: the newest day whose daily row will not change
-  again, the earlier of `recordedTo` and `retrievableThrough`.
+- **`HistorySpan.finalThrough`**: the newest day the archive has recorded that
+  the key may read, the earlier of `recordedTo` and `retrievableThrough`: the
+  place to stop if you fetch each day once.
+
+- **An interrupted `themeparks-backfill` never appends a day twice.** The state
+  file is written before the first request and after every page, atomically,
+  with the size of the data file at that moment; the next run first cuts the
+  file back to that size. Ctrl-C, SIGTERM (now exit 143, as well as Ctrl-C's 130) and a kill at any point cost at most the page in flight. Two runs on the
+  same park and `--out` at once are refused.
+
+- **`days()` awaits `onPage`.** A hook that returns a promise holds the next page
+  until it settles, so a checkpoint written there is on disk before the next
+  request. The hook's type is widened to return `unknown`, so existing callbacks
+  still compile.
 
 ### Fixed
 
@@ -51,7 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so far, and the archive records days 2 to 3 behind live data, so the last few
   days of every file were still changing when they were written. A run now ends
   at `finalThrough`, says so when it holds days back, and the next run adds them
-  once they are final. Every row in the file is one that will not change.
+  once they are final. Each day is fetched once, as the archive recorded it; the
+  README says how to fetch a range again if the archive later re-records it.
 
   **Files written by 8.3.x are corrected once.** Their state file does not say
   which of their newest days were final, so the first run of this version
@@ -74,6 +95,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which opened the existing file in append mode and wrote the whole archive into
   it a second time under a second header, exit 0. It is refused now, the same
   way.
+
+- **An interrupted nightly extension appended the same days twice.** The state
+  was written only at the end of a run or on an error the command caught, so
+  Ctrl-C, SIGTERM or a kill during an extension left it saying finished through
+  the old day, and the rerun appended those days again. See the checkpointing
+  above.
+
+- **A run that stopped part-way through its first page lost days.** It resumed
+  from the newest day any entity had reached; rows arrive entity by entity, so
+  the entities behind it lost the days in between. Checkpoints make this
+  impossible for new files, and an older state with only that day goes back a
+  whole page (31 days) instead.
+
+- **The state recorded the start asked for, not the first day written.** `start`
+  is now the first day the file covers, after the key's window, and a new
+  `since` field keeps the start that was asked for, so the same `--since` keeps
+  working and a different one before the file is refused.
+
+- **The anonymous-access notice promised 7 days.** Only final days are written,
+  so an anonymous run writes usually 4 or 5 days per park, and the notice now
+  says so.
 
 - **A state file whose data file had been deleted was continued**, producing a
   file that started part-way through its range and was then recorded as

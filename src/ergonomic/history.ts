@@ -118,13 +118,16 @@ export interface HistorySpan {
    */
   retrievableThrough: string | null;
   /**
-   * The newest day whose daily rows will not change again, or null.
+   * The newest day the archive has recorded that this key may read, or null:
+   * the place to stop if you fetch each day once.
    *
    * `retrievableThrough` is usually today, and today's row is the day so far.
    * Recent days can still change after that too: the archive records days 2 to
    * 3 behind live data. `recordedTo` is the newest day the archive holds, so a
-   * day on or before it is final. Store those, and ask for anything later again
-   * once `finalThrough` has moved past it.
+   * day on or before it has been recorded. Store those, and ask for anything
+   * later once `finalThrough` has moved past it. The archive can occasionally
+   * re-record a past day, for example after a park's feed is repaired; fetch
+   * that range again if you need the correction.
    *
    * The earlier of `recordedTo` and `retrievableThrough`, because a key may be
    * entitled to fewer days than the archive holds. Null when either is unknown.
