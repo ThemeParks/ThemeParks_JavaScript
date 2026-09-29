@@ -56,8 +56,8 @@
     "tsx": "^4.7.0",
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.11.0",
-    "typescript": "^5.4.0",
-    "vitest": "^4.1.11",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2",
     "yaml": "^2.5.0"
   }
 }
