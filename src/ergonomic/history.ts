@@ -219,7 +219,15 @@ function openingsOf(envelope: EntityHistory): Record<string, HistoryOpening> {
  * one request.
  */
 export type HistoryChanges = AsyncGenerator<ChangeEntry, void, undefined> & {
-  /** The state at the start of the range, per entity id. Throws before the response. */
+  /**
+   * The state at the start of the range, per entity id. Throws, saying how to
+   * get it, before the response has arrived, and says the request failed after
+   * one that did. Not enumerable, so spreading or logging the result is safe.
+   *
+   * An opening with `degraded: true` is incomplete: the server could not look
+   * far enough back for this response (`degradedReason` says why), so a field
+   * it holds may be missing. Ask again in a minute for the full opening.
+   */
   readonly opening: Record<string, HistoryOpening>;
   /** Make the request now, if it has not been made, and resolve to this object. */
   load(): Promise<HistoryChanges>;
@@ -253,8 +261,12 @@ export interface HistoryPage {
 }
 
 export interface PageOptions {
-  /** Called after every row of a page has been yielded. See {@link HistoryPage}. */
-  onPage?: (page: HistoryPage) => void;
+  /**
+   * Called after every row of a page has been yielded. See {@link HistoryPage}.
+   * It may return a promise: the next page is not requested until it settles,
+   * so a checkpoint written here is on disk before anything else happens.
+   */
+  onPage?: (page: HistoryPage) => unknown;
 }
 
 export type DaysOptions = HistoryQuery & BudgetOptions & PageOptions;
@@ -319,7 +331,10 @@ export class HistoryApi {
       const next = envelope.next;
       // AFTER the rows, never before: a caller checkpointing on this has to be
       // able to trust that everything the page held is already written.
-      options.onPage?.({
+      // AWAITED, so a caller can make its checkpoint durable before the next
+      // page is requested: an interruption then never lands between a page
+      // being written and the record that it was.
+      await options.onPage?.({
         from: envelope.range.from,
         to: envelope.range.to,
         next: next === '' ? null : next,
@@ -354,6 +369,7 @@ export class HistoryApi {
     // flight) cost one request between them.
     let pending: Promise<EntityHistory> | null = null;
     let envelope: EntityHistory | null = null;
+    let failure: unknown = null;
     const fetchOnce = (): Promise<EntityHistory> => {
       pending ??= this.raw.getEntityHistory(this.entityId, toQuery(options)).then(
         (value) => {
@@ -361,7 +377,8 @@ export class HistoryApi {
           return value;
         },
         (error: unknown) => {
-          throw asBudgetError(error, maxWaitMs);
+          failure = asBudgetError(error, maxWaitMs);
+          throw failure;
         },
       );
       return pending;
@@ -373,9 +390,17 @@ export class HistoryApi {
 
     const changes = rows() as HistoryChanges;
     Object.defineProperties(changes, {
+      // NOT ENUMERABLE, so spreading, `Object.keys` or a logger walking the
+      // object never trips the getter before the response has arrived.
       opening: {
-        enumerable: true,
+        enumerable: false,
         get(): Record<string, HistoryOpening> {
+          if (failure !== null) {
+            const why = failure instanceof Error ? failure.message : String(failure);
+            throw new Error(`the request for this history failed, so there is no opening: ${why}`, {
+              cause: failure,
+            });
+          }
           if (envelope === null) {
             throw new Error(
               'the response has not arrived yet: iterate first, or ' +

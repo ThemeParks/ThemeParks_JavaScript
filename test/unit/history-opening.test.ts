@@ -192,6 +192,15 @@ describe('changeRows() exposes opening', () => {
     const changes: HistoryChanges = tp.entity(SPACE_MOUNTAIN).history.changeRows({ date: 'x' });
     await expect(changes.load()).rejects.toThrow();
     await expect(collect(changes)).rejects.toThrow();
+    // Not "has not arrived yet, call load()": load() was called, and failed.
+    expect(() => changes.opening).toThrow(/failed/u);
+  });
+
+  it('can be spread and listed before the response without throwing', () => {
+    const changes = client(RAW).entity(SPACE_MOUNTAIN).history.changeRows({ date: '2026-09-26' });
+    expect(() => ({ ...changes })).not.toThrow();
+    expect(Object.keys(changes)).not.toContain('opening');
+    expect(() => JSON.stringify(changes)).not.toThrow();
   });
 });
 
