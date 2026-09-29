@@ -55,6 +55,7 @@ import {
   renameSync,
   rmSync,
   statSync,
+  truncateSync,
   writeFileSync,
   writeSync,
 } from 'node:fs';
@@ -545,6 +546,12 @@ interface BackfillState {
    * `--since` before that day keep running. Absent from version-1 files.
    */
   since?: string | null;
+  /**
+   * The size of the data file when this state was written. Everything past it
+   * was appended after the checkpoint (a page cut off by an interruption) and is
+   * truncated before a resume, so a resume never appends a day twice.
+   */
+  bytes?: number;
 }
 
 function readState(path: string): BackfillState | null {
@@ -584,8 +591,73 @@ function stateMismatch(state: BackfillState, format: string): string | null {
   return null;
 }
 
+/**
+ * Write the state file ATOMICALLY: a temporary file beside it, then one rename.
+ * A process killed mid-write leaves the old state or the new one, never half a
+ * JSON document that the next run would read as no state at all.
+ */
 function writeState(path: string, state: BackfillState): void {
-  writeFileSync(path, `${JSON.stringify(state, null, 0)}\n`, 'utf8');
+  const scratch = `${path}.tmp`;
+  writeFileSync(scratch, `${JSON.stringify(state, null, 0)}\n`, 'utf8');
+  renameSync(scratch, path);
+}
+
+// ---------------------------------------------------------------------------
+// One run per output file at a time.
+// ---------------------------------------------------------------------------
+
+const heldLocks = new Set<string>();
+
+function isAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    // EPERM: it exists, it is just not ours to signal.
+    return (error as NodeJS.ErrnoException).code === 'EPERM';
+  }
+}
+
+/**
+ * Take the lock beside a park's state file, or return the pid holding it.
+ *
+ * Two runs appending to one file interleave their rows and each records its own
+ * checkpoint, so the file ends up with duplicates and a state that describes
+ * neither. A cron that fires while yesterday's long run is still going is the
+ * ordinary way to get there. The lock holds the owner's pid; one left by a
+ * process that no longer exists (a SIGKILL, a reboot) is taken over.
+ */
+function acquireLock(lockPath: string): number | null {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      writeFileSync(lockPath, `${String(process.pid)}\n`, { flag: 'wx' });
+      heldLocks.add(lockPath);
+      return null;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      let owner = Number.NaN;
+      try {
+        owner = Number(readFileSync(lockPath, 'utf8').trim());
+      } catch {
+        // Gone between the two calls: try again.
+      }
+      if (Number.isInteger(owner) && owner > 0 && isAlive(owner)) return owner;
+      rmSync(lockPath, { force: true });
+    }
+  }
+  return -1;
+}
+
+function releaseLock(lockPath: string): void {
+  if (heldLocks.delete(lockPath)) rmSync(lockPath, { force: true });
+}
+
+/**
+ * Release every lock this process holds. For a signal handler: the state on disk
+ * is already the last checkpoint, so the locks are all that is left to tidy.
+ */
+export function releaseLocks(): void {
+  for (const lockPath of [...heldLocks]) releaseLock(lockPath);
 }
 
 // ---------------------------------------------------------------------------
@@ -722,6 +794,10 @@ export function decide(
     rmSync(statePath, { force: true });
   }
   let state = opts.overwrite ? null : readState(statePath);
+  if (state !== null) {
+    const cut = cutToCheckpoint(outPath, state, opts.format);
+    if (cut !== null) return cut;
+  }
   const hasRows = (): boolean => existsSync(outPath) && statSync(outPath).size > 0;
   let fileHasRows = hasRows();
 
@@ -764,6 +840,39 @@ export function decide(
   }
   if (state === null) return firstRun(outPath, opts, archiveFrom, end);
   return continueFile(outPath, state, opts, archiveFrom, end);
+}
+
+/**
+ * Put the data file back to the size it had at its last checkpoint.
+ *
+ * Rows are appended as they arrive and the checkpoint is written once a page is
+ * complete, so an interruption (Ctrl-C, SIGTERM, a kill, a crash) can leave
+ * part of a page after the last checkpoint. Resuming at the checkpoint's day
+ * fetches that page again, and appending it would duplicate every row already
+ * there. Truncating to the recorded size first makes the resume exact. Null to
+ * proceed, or an exit code when the file is SHORTER than recorded, which means
+ * something else changed it and nothing here can say which days it lost.
+ */
+function cutToCheckpoint(outPath: string, state: BackfillState, format: string): number | null {
+  if (state.complete || typeof state.bytes !== 'number' || !existsSync(outPath)) return null;
+  if (stateMismatch(state, format) !== null) return null;
+  const size = statSync(outPath).size;
+  if (size === state.bytes) return null;
+  if (size < state.bytes) {
+    process.stderr.write(
+      `  ${basename(outPath)} is shorter than when this command last recorded it ` +
+        `(${String(size)} bytes, not ${String(state.bytes)}), so rows it held are gone.\n` +
+        `    --overwrite   download this park again\n` +
+        `    or move both files aside and run again\n`,
+    );
+    return 1;
+  }
+  truncateSync(outPath, state.bytes);
+  process.stderr.write(
+    `  ${basename(outPath)}: removed the rows written after the last checkpoint ` +
+      `(an interrupted page); they are fetched again\n`,
+  );
+  return null;
 }
 
 /** A park with no file yet: from `--since`, or wherever the archive starts. */
@@ -833,6 +942,12 @@ function continueFile(
   const continueAt = state.resumeFrom ?? state.lastDay ?? state.start ?? archiveFrom;
   const refused = rangeFits(outPath, state, opts, archiveFrom, String(continueAt));
   if (refused !== null) return refused;
+  // A resume at `lastDay` refetches a day the file already holds. Only a state
+  // with no byte count can get here (one written before checkpoints recorded
+  // it), so that day's rows are removed first and the resume stays exact.
+  if (state.resumeFrom === null && state.lastDay !== null && typeof state.bytes !== 'number') {
+    trimAfter(outPath, opts.format, daysBefore(state.lastDay, 1));
+  }
   return { ...carried, start: continueAt, extending: false };
 }
 
@@ -1088,6 +1203,32 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
   const statePath = statePathFor(opts.outDir, park.id, opts.format);
   const end = runEnd(span, opts);
 
+  const lockPath = `${statePath}.lock`;
+  const owner = acquireLock(lockPath);
+  if (owner !== null) {
+    process.stderr.write(
+      `  another run is writing ${basename(outPath)}` +
+        `${owner > 0 ? ` (process ${String(owner)})` : ''}. Wait for it to finish, or ` +
+        `stop it, then run again\n`,
+    );
+    return 1;
+  }
+  try {
+    return await runPark(history, park, opts, span, { outPath, statePath, end });
+  } finally {
+    releaseLock(lockPath);
+  }
+}
+
+/** Everything after the lock: decide, stream, checkpoint, record. */
+async function runPark(
+  history: ReturnType<ThemeParks['entity']>['history'],
+  park: Park,
+  opts: RunOptions,
+  span: HistorySpan,
+  paths: { outPath: string; statePath: string; end: string | null },
+): Promise<number> {
+  const { outPath, statePath, end } = paths;
   const decided = decide(outPath, statePath, opts, span.archiveFrom, end);
   if (typeof decided === 'number') return decided;
   let { start } = decided;
@@ -1135,6 +1276,14 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
   handle.on('error', (error: Error) => {
     streamError = error;
   });
+  // Settles once everything written so far has reached the file. A checkpoint
+  // waits on it, so the size it records covers exactly the rows before it.
+  let flushed: Promise<void> = Promise.resolve();
+  const append = (text: string): void => {
+    flushed = new Promise((done) => {
+      handle.write(text, () => done());
+    });
+  };
   // ONE header decision for the whole park. Python built the writer inside the
   // retried closure with `written === 0` in the predicate, and the 403 recovery
   // runs precisely when that is true — so every CSV on every plan short of the
@@ -1143,44 +1292,58 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
     // A UTF-8 BOM, so Excel on Windows does not read the local code page and render
     // `Walt Disney World® Resort` as mojibake. The primary reader of this file is a
     // spreadsheet. Written with the header, so a resume never adds a second.
-    handle.write(`\ufeff${CSV_COLUMNS.join(',')}\n`);
+    append(`\ufeff${CSV_COLUMNS.join(',')}\n`);
   }
 
   let written = 0;
   let lastDay: string | null = null;
-  let resumeFrom: string | null = null;
   let skipped = false;
   let outOfReach = false;
-  // The day this run's request started on, which is where a rerun has to carry
-  // on if the run fails before its first page is finished.
-  let firstDay: string | null = null;
+  // The first day the file covers. Moves to the key's floor when a run that has
+  // written nothing yet is told its key starts later.
+  let fileStart = priorStart ?? start;
+
+  const stateNow = (complete: boolean, resumeFrom: string | null): BackfillState => ({
+    sdk: SDK_NAME,
+    sdkVersion: PACKAGE_VERSION,
+    stateVersion: STATE_VERSION,
+    columns: columnsFingerprint(opts.format),
+    format: opts.format,
+    start: fileStart,
+    end,
+    lastDay: lastDay ?? priorLastDay,
+    resumeFrom,
+    complete,
+    since: since ?? fileStart,
+    bytes: existsSync(outPath) ? statSync(outPath).size : 0,
+  });
 
   /**
-   * Where a rerun should continue, for the state file.
+   * THE CHECKPOINT, written after every complete page and once before the first
+   * request, so the state on disk always says where to carry on. It used to be
+   * written only at the end of a run or on an error this code caught, so a
+   * Ctrl-C, a SIGTERM or a kill mid-download left the state of the run before:
+   * the next run re-fetched every page since and appended it a second time.
    *
-   * The next page's start once a page is done. Before that, with rows written,
-   * null: `lastDay` is the fallback and costs one duplicated day. Before ANY
-   * row, the day this run began on. That last case had nothing recorded, which
-   * was harmless while only a first run could reach it -- a rerun of a file
-   * with no rows starts from the top anyway -- and is not now that a finished
-   * file is carried forward. A rerun interrupted before its first page would
-   * otherwise fall back to the file's start and append the whole range again.
+   * The rows are flushed first and the file's size recorded with them, so the
+   * next run can cut off anything written after this point before resuming.
    */
-  const resumePoint = (): string | null => {
-    if (resumeFrom !== null) return resumeFrom;
-    if (lastDay !== null) return null;
-    return firstDay;
+  const checkpoint = async (resumeFrom: string | null): Promise<void> => {
+    await flushed;
+    if (streamError) throw streamError;
+    writeState(statePath, stateNow(false, resumeFrom));
   };
 
   const stream = async (from: string | null): Promise<void> => {
-    firstDay = from;
     // `exactOptionalPropertyTypes` means an explicit undefined is not the same
     // as an absent key, so the query is built rather than spread with nulls.
-    const query: { from?: string; to?: string; onPage: (page: HistoryPage) => void } = {
-      // The checkpoint. Fires once a page's rows are all written, carrying the
-      // day the NEXT page starts on, so a resume asks for nothing twice.
-      onPage: (page) => {
-        resumeFrom = page.next === null ? null : nextPageFrom(page.next);
+    const query: { from?: string; to?: string; onPage: (page: HistoryPage) => Promise<void> } = {
+      // Fires once a page's rows are all written, carrying the day the NEXT page
+      // starts on, and the next page is not requested until it has settled. The
+      // last page has no checkpoint: the run records itself complete right after.
+      onPage: async (page) => {
+        const nextFrom = page.next === null ? null : nextPageFrom(page.next);
+        if (nextFrom !== null) await checkpoint(nextFrom);
       },
     };
     if (from !== null) query.from = from;
@@ -1190,7 +1353,7 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
       // this the loop keeps "writing" into a broken stream for the rest of the
       // archive and only the flush would notice.
       if (streamError) throw streamError;
-      handle.write(opts.format === 'csv' ? `${csvLine(park, entry)}\n` : ndjsonLine(park, entry));
+      append(opts.format === 'csv' ? `${csvLine(park, entry)}\n` : ndjsonLine(park, entry));
       written += 1;
       const day = (entry.row as { date?: string }).date ?? null;
       // MAX, not last-seen. Entities arrive name-ordered with independent day
@@ -1214,21 +1377,9 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
    */
   const finish = (): Promise<void> => flushAndClose(handle, () => streamError);
 
-  const record = (complete: boolean): void => {
-    writeState(statePath, {
-      sdk: SDK_NAME,
-      sdkVersion: PACKAGE_VERSION,
-      stateVersion: STATE_VERSION,
-      columns: columnsFingerprint(opts.format),
-      format: opts.format,
-      start: priorStart ?? start,
-      end,
-      lastDay: lastDay ?? priorLastDay,
-      resumeFrom: complete ? null : resumePoint(),
-      complete,
-      since: since ?? priorStart ?? start,
-    });
-  };
+  // Before the first request: an extending run is no longer complete from here
+  // on, and a fresh one has a state to resume from even if it dies at once.
+  await checkpoint(start);
 
   try {
     try {
@@ -1243,7 +1394,7 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
       // state file cannot describe, so the file would claim days it does not
       // hold. It happens when a cron has not run for longer than the key's
       // window, or the key lost its plan. Refused, with the file left alone.
-      if (resumed) {
+      if (resumed && priorLastDay !== null) {
         if (start === null || floor <= start) throw error;
         process.stderr.write(
           `  this key reaches back to ${floor}, but ${basename(outPath)} continues from ` +
@@ -1258,6 +1409,7 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
           `  this key reaches back to ${floor}, not ${String(start)} — starting there\n`,
         );
         start = floor;
+        fileStart = floor;
         if (isEmptyWindow(floor, end)) {
           process.stderr.write(
             `  nothing in your window: this park's data ends ${String(end)} — skipping\n`,
@@ -1270,17 +1422,18 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
     }
   } catch (error) {
     await finish();
+    // The state on disk is the last checkpoint, which is exactly where a rerun
+    // should carry on; nothing is recorded here.
     if (error instanceof BudgetExhaustedError) {
-      record(false);
-      if (written === 0 && !resumed) rmSync(outPath, { force: true });
+      if (written === 0 && !resumed) {
+        rmSync(outPath, { force: true });
+        rmSync(statePath, { force: true });
+      }
       process.stderr.write(
         `  budget spent after ${String(written)} rows; rerun the same command to continue\n`,
       );
       return EX_TEMPFAIL;
     }
-    // Any other failure still records where it got to, or the next run starts
-    // over and appends a second partial copy.
-    if (lastDay !== null) record(false);
     if (written === 0 && resumed) {
       // An earlier run's rows are real and are not ours to remove.
       process.stderr.write(`  the rows already downloaded are kept\n`);
@@ -1292,7 +1445,10 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
     // destination the customer counts six files and never sees which one is
     // empty. Written rows stay: they are real, and the state file beside them
     // says where to carry on.
-    if (written === 0) rmSync(outPath, { force: true });
+    if (written === 0) {
+      rmSync(outPath, { force: true });
+      rmSync(statePath, { force: true });
+    }
     throw error;
   }
 
@@ -1302,15 +1458,15 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
   if (outOfReach) return 1;
   if (skipped && written === 0) {
     if (resumed) {
-      // Same rule: keep the file, record where it got to, and say it did not finish.
-      record(false);
+      // Same rule: keep the file, and say it did not finish. The checkpoint on
+      // disk still says where it would carry on from.
       return 1;
     }
     rmSync(outPath, { force: true });
     rmSync(statePath, { force: true });
     return 0;
   }
-  record(true);
+  writeState(statePath, stateNow(true, null));
   process.stderr.write(`  done: ${String(written)} rows -> ${outPath}\n`);
   return 0;
 }

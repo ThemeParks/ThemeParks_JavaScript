@@ -29,7 +29,9 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
+  truncateSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
@@ -44,6 +46,7 @@ import {
   csvLine,
   main,
   ndjsonLine,
+  releaseLocks,
   statePathFor,
   trimAfter,
 } from '../../src/backfill';
@@ -94,6 +97,15 @@ class Archive implements Pick<HistoryApi, 'span' | 'days'> {
   calls: [string, string][] = [];
   /** Throw BudgetExhaustedError on the Nth page request (1-based), or never. */
   budgetOnPage: number | null = null;
+  /**
+   * Stop dead on the Nth page (1-based) after this many rows, never returning:
+   * a process killed mid-page, as far as anything on disk can tell.
+   */
+  hangOnPage: number | null = null;
+  hangAfterRows = 0;
+  /** Resolves once the stub has hung. */
+  hung: Promise<void>;
+  private signalHung: () => void = () => undefined;
   pagesServed = 0;
   names: Record<string, string> = {};
 
@@ -103,7 +115,20 @@ class Archive implements Pick<HistoryApi, 'span' | 'days'> {
     public through = '2026-09-28',
     public floor: string | null = null,
     public entities: string[] = ['ent-a', 'ent-b'],
-  ) {}
+  ) {
+    this.hung = new Promise((resolve) => {
+      this.signalHung = resolve;
+    });
+  }
+
+  /** Hang on the Nth page served from now, after `rows` rows of it. */
+  armHang(pagesFromNow: number, rows: number): void {
+    this.hangOnPage = this.pagesServed + pagesFromNow;
+    this.hangAfterRows = rows;
+    this.hung = new Promise((resolve) => {
+      this.signalHung = resolve;
+    });
+  }
 
   /** Time passes: the archive and today both move on. */
   advance(days: number): void {
@@ -138,8 +163,14 @@ class Archive implements Pick<HistoryApi, 'span' | 'days'> {
         });
       }
       const pageEnd = minDay(addDays(pageStart, PAGE_DAYS - 1), last);
+      let rowsThisPage = 0;
       for (const entity of this.entities) {
         for (let day = pageStart; day <= pageEnd; day = addDays(day, 1)) {
+          if (this.hangOnPage === this.pagesServed && rowsThisPage === this.hangAfterRows) {
+            this.signalHung();
+            await new Promise(() => undefined);
+          }
+          rowsThisPage += 1;
           yield await Promise.resolve(this.entry(entity, day));
         }
       }
@@ -148,7 +179,7 @@ class Archive implements Pick<HistoryApi, 'span' | 'days'> {
         following <= last
           ? `https://api.themeparks.wiki/v1/entity/p/history/daily?from=${following}&to=${last}`
           : null;
-      options.onPage?.({ from: pageStart, to: pageEnd, next });
+      await options.onPage?.({ from: pageStart, to: pageEnd, next }); // as days() does
       pageStart = following;
     }
   }
@@ -421,7 +452,11 @@ describe('a rerun adds new days', () => {
     expect(readFileSync(dataPath())).toEqual(before);
     expect(stderr()).toContain('gap');
     expect(stderr()).toContain('--overwrite');
-    expect(state()).toMatchObject({ end: '2026-09-26', complete: true });
+    // The run recorded itself unfinished before its first request, so the next
+    // run meets the same refusal rather than a file that looks complete.
+    expect(state()).toMatchObject({ complete: false, resumeFrom: '2026-09-27' });
+    expect(await run(archive)).toBe(1);
+    expect(readFileSync(dataPath())).toEqual(before);
   });
 });
 
@@ -863,6 +898,160 @@ describe('a finished file written to another contract is refused', () => {
     expect(archive.calls).toEqual([]);
     expect(readFileSync(dataPath('csv'), 'utf8')).toBe('old,header\n1,2\n');
     expect(stderr()).toContain('column layout changed');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Interrupted runs: Ctrl-C, SIGTERM, a kill. Nothing gets to clean up.
+// ---------------------------------------------------------------------------
+
+/**
+ * Start a run, let it hang mid-page, and abandon it as a killed process would
+ * be abandoned: whatever reached the file stays there, and the only other thing
+ * that happens is the signal handler releasing the locks.
+ */
+async function killMidPage(
+  archive: Archive,
+  pagesFromNow: number,
+  rows: number,
+  format: 'ndjson' | 'csv' = 'ndjson',
+): Promise<void> {
+  archive.armHang(pagesFromNow, rows);
+  void run(archive, format);
+  await archive.hung;
+  await new Promise((r) => setTimeout(r, 50)); // what was written reaches the file
+  releaseLocks();
+  archive.hangOnPage = null;
+}
+
+function contiguous(written: OutRow[], from: string, to: string): void {
+  const days = new Set(written.map((r) => r.date));
+  const expected = (Date.parse(to) - Date.parse(from)) / 86_400_000 + 1;
+  expect(days.size, 'a gap or an overlap').toBe(expected);
+  expect(minDate(written)).toBe(from);
+  expect(maxDate(written)).toBe(to);
+}
+
+describe('a run killed part-way through', () => {
+  it.each(['ndjson', 'csv'] as const)(
+    'resumes mid-archive without appending a row twice (%s)',
+    async (format) => {
+      const archive = new Archive();
+      await killMidPage(archive, 3, 10, format);
+      const saved = state(format);
+      // Pages one and two are checkpointed; page three was cut off.
+      expect(saved).toMatchObject({ complete: false, resumeFrom: '2026-08-02' });
+      expect(statSync(dataPath(format)).size).toBeGreaterThan(saved.bytes as number);
+
+      expect(await run(archive, format)).toBe(0);
+      expect(stderr()).toContain('removed the rows written after the last checkpoint');
+      expectEveryRowFinalAndUnique(rows(format));
+      contiguous(rows(format), '2026-06-01', '2026-09-26');
+      if (format === 'csv') {
+        expect(readFileSync(dataPath('csv'), 'utf8').split('parkId,')).toHaveLength(2);
+      }
+    },
+  );
+
+  it('records an extending run as unfinished before it asks for anything', async () => {
+    const archive = new Archive();
+    await run(archive);
+    archive.advance(40);
+    await killMidPage(archive, 1, 5);
+    expect(state()).toMatchObject({ complete: false, resumeFrom: '2026-09-27' });
+    expect(await run(archive)).toBe(0);
+    expectEveryRowFinalAndUnique(rows());
+    contiguous(rows(), '2026-06-01', '2026-11-05');
+  });
+
+  it('leaves a state to resume from when killed before its first row', async () => {
+    const archive = new Archive();
+    await killMidPage(archive, 1, 0);
+    expect(state()).toMatchObject({ complete: false, resumeFrom: '2026-06-01', bytes: 0 });
+    expect(await run(archive)).toBe(0);
+    contiguous(rows(), '2026-06-01', '2026-09-26');
+  });
+
+  it("moves the file's start to the key's floor when killed before its first row there", async () => {
+    const archive = new Archive();
+    archive.floor = '2026-08-01';
+    await killMidPage(archive, 1, 0);
+    expect(await run(archive)).toBe(0);
+    expect(state().start).toBe('2026-08-01');
+    contiguous(rows(), '2026-08-01', '2026-09-26');
+  });
+
+  it('refuses a file shorter than its checkpoint says', async () => {
+    const archive = new Archive();
+    await killMidPage(archive, 3, 10);
+    truncateSync(dataPath(), (state().bytes as number) - 10);
+    expect(await run(archive)).toBe(1);
+    expect(stderr()).toContain('shorter than when this command last recorded it');
+  });
+
+  it('drops the day a state with no byte count would resume on, before refetching it', async () => {
+    // A state from before checkpoints recorded the file's size, interrupted in
+    // its first page: it resumes on `lastDay`, which the file already holds.
+    const archive = new Archive('2026-06-01', '2026-07-10', '2026-07-10');
+    await writeAs83('ndjson', archive);
+    writeFileSync(
+      statePathFor(dir, 'p', 'ndjson'),
+      JSON.stringify({
+        sdk: 'js',
+        sdkVersion: '8.4.0',
+        stateVersion: STATE_VERSION,
+        columns: '',
+        format: 'ndjson',
+        start: '2026-06-01',
+        end: '2026-09-26',
+        lastDay: '2026-07-10',
+        resumeFrom: null,
+        complete: false,
+      }),
+    );
+    const later = new Archive();
+    expect(await run(later)).toBe(0);
+    expect(later.calls).toEqual([['2026-07-10', '2026-09-26']]);
+    expectEveryRowFinalAndUnique(rows());
+    contiguous(rows(), '2026-06-01', '2026-09-26');
+  });
+
+  it('writes the state file whole, leaving no scratch file behind', async () => {
+    const archive = new Archive();
+    await run(archive);
+    expect(readdirSync(dir).filter((f) => f.endsWith('.tmp') || f.endsWith('.lock'))).toEqual([]);
+    expect(() => state()).not.toThrow();
+  });
+});
+
+describe('one run per output file', () => {
+  it('refuses a second run while the first is still writing', async () => {
+    const first = new Archive();
+    first.armHang(2, 3);
+    void run(first);
+    await first.hung;
+    const second = new Archive();
+    expect(await run(second)).toBe(1);
+    expect(stderr()).toContain('another run is writing p.ndjson');
+    expect(second.calls).toEqual([]);
+    releaseLocks();
+  });
+
+  it('takes over a lock left by a process that is gone', async () => {
+    writeFileSync(`${statePathFor(dir, 'p', 'ndjson')}.lock`, '2147483646\n');
+    const archive = new Archive();
+    expect(await run(archive)).toBe(0);
+    expect(existsSync(`${statePathFor(dir, 'p', 'ndjson')}.lock`)).toBe(false);
+  });
+
+  it('does not lock one format out with the other', async () => {
+    const archive = new Archive();
+    archive.armHang(2, 3);
+    void run(archive, 'ndjson');
+    await archive.hung;
+    archive.hangOnPage = null;
+    expect(await run(new Archive(), 'csv')).toBe(0);
+    releaseLocks();
   });
 });
 

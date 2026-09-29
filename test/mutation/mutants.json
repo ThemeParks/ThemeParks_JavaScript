@@ -60,8 +60,8 @@
     {
       "name": "the checkpoint comes from the newest row",
       "file": "src/backfill.ts",
-      "find": "        resumeFrom = page.next === null ? null : nextPageFrom(page.next);",
-      "replace": "        resumeFrom = lastDay;",
+      "find": "        const nextFrom = page.next === null ? null : nextPageFrom(page.next);",
+      "replace": "        const nextFrom = lastDay;",
       "why": "An entity that stopped reporting has no rows for the tail days of its page, so resuming there re-downloads days already written."
     },
     {
@@ -74,8 +74,8 @@
     {
       "name": "the CSV loses its BOM",
       "file": "src/backfill.ts",
-      "find": "    handle.write(`\\ufeff${CSV_COLUMNS.join(',')}\\n`);",
-      "replace": "    handle.write(`${CSV_COLUMNS.join(',')}\\n`);",
+      "find": "    append(`\\ufeff${CSV_COLUMNS.join(',')}\\n`);",
+      "replace": "    append(`${CSV_COLUMNS.join(',')}\\n`);",
       "why": "Excel on Windows reads the local code page and mangles every registered mark and accent."
     },
     {
@@ -137,8 +137,8 @@
     {
       "name": "the page hook fires before its rows",
       "file": "src/ergonomic/history.ts",
-      "find": "      yield* dailyEntries(envelope);\n      const next = envelope.next;\n      // AFTER the rows, never before: a caller checkpointing on this has to be\n      // able to trust that everything the page held is already written.\n      options.onPage?.(",
-      "replace": "      const next = envelope.next;\n      options.onPage?.(",
+      "find": "      yield* dailyEntries(envelope);\n      const next = envelope.next;",
+      "replace": "      const next = envelope.next;",
       "why": "A consumer that died mid-page would record a checkpoint past rows it never wrote. Losing rows is worse than duplicating them."
     },
     {
@@ -226,11 +226,11 @@
       "why": "Continuing writes a file that starts part-way through its range and records it as complete."
     },
     {
-      "name": "a rerun interrupted before its first page records no resume point",
+      "name": "no checkpoint before the first request",
       "file": "src/backfill.ts",
-      "find": "return firstDay;",
-      "replace": "return null;",
-      "why": "The next run fell back to the file's start and appended the whole range again."
+      "find": "  await checkpoint(start);\n",
+      "replace": "",
+      "why": "A run killed before its first page left no state, or an extending run's state still said complete; the next run started over or skipped the days."
     },
     {
       "name": "an 8.3 file keeps its partial tail",
@@ -256,7 +256,7 @@
     {
       "name": "a continued file jumps forward to the key's floor",
       "file": "src/backfill.ts",
-      "find": "      if (resumed) {",
+      "find": "      if (resumed && priorLastDay !== null) {",
       "replace": "      if (false) {",
       "why": "Carrying on from the key's first day instead of the file's next day leaves a gap the file then claims not to have."
     },
@@ -280,6 +280,34 @@
       "find": "return a < b ? a : b;",
       "replace": "return a > b ? a : b;",
       "why": "The later day is retrievableThrough on most keys: today, whose row is not final."
+    },
+    {
+      "name": "onPage is not awaited",
+      "file": "src/ergonomic/history.ts",
+      "find": "      await options.onPage?.({",
+      "replace": "      void options.onPage?.({",
+      "why": "The next page was requested while the checkpoint was still being written, so a kill in between recorded the wrong page."
+    },
+    {
+      "name": "a resume does not cut back to the checkpoint",
+      "file": "src/backfill.ts",
+      "find": "  truncateSync(outPath, state.bytes);",
+      "replace": "",
+      "why": "Rows written after the last checkpoint by an interrupted page were kept, and the resume appended the same page again."
+    },
+    {
+      "name": "a checkpoint does not wait for the rows",
+      "file": "src/backfill.ts",
+      "find": "    await flushed;\n",
+      "replace": "",
+      "why": "The size recorded would not cover the rows before it, and the resume would cut some of them off."
+    },
+    {
+      "name": "overlapping runs are not locked out",
+      "file": "src/backfill.ts",
+      "find": "  if (owner !== null) {",
+      "replace": "  if (false) {",
+      "why": "Two runs appending to one file interleave rows and each records its own checkpoint."
     }
   ]
 }

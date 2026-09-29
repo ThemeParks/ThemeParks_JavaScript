@@ -920,6 +920,41 @@ describe('a failed write is never reported as success', () => {
       );
     }
   });
+
+  it('an unwritable data file in a writable directory fails the park cleanly', async () => {
+    // Node hands `end`'s callback the stream's error as `cb(err)`; `finish()` took
+    // no arguments and called `done()` regardless, so a failed stream resolved,
+    // `record(true)` ran, and the command printed `done: N rows` and exited 0 with
+    // the file truncated. On ENOSPC mid-download that is a short file marked
+    // complete, which no rerun would ever continue.
+    const page = await loadFixture('mk_park_daily_page2.json');
+    const coverage = await loadFixture('mk_history_coverage.json');
+    const fetchFn = vi.fn((input: unknown) => {
+      const url = String(input);
+      const body = url.includes('/history/coverage')
+        ? coverage
+        : url.includes('/history/daily')
+          ? page
+          : DESTINATIONS;
+      return Promise.resolve(
+        new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } }),
+      );
+    });
+    // The directory takes the lock and the state; only the data file refuses.
+    // The stream's open fails asynchronously, so without an 'error' listener
+    // this is an uncaught exception rather than a failed park.
+    writeFileSync(join(dir, `${MK}.ndjson`), '');
+    chmodSync(join(dir, `${MK}.ndjson`), 0o400);
+    const code = await main([MK, '--out', dir, '--api-key', 'k'], { fetch: fetchFn });
+    expect(code).not.toBe(0);
+    // And no state file claiming the park finished.
+    const state = statePathFor(dir, MK, 'ndjson');
+    if (existsSync(state)) {
+      expect((JSON.parse(readFileSync(state, 'utf8')) as { complete: boolean }).complete).toBe(
+        false,
+      );
+    }
+  });
 });
 
 describe('an earlier run’s rows are never deleted', () => {
