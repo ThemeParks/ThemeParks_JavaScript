@@ -540,10 +540,12 @@ interface BackfillState {
   complete: boolean;
   /**
    * The first day the file was ASKED to start from: `--since`, or where the
-   * archive starts, whichever is later. Not the same as `start` on a plan
-   * short of the full archive, where the request is clamped up to the first
-   * day the key may read. It is what lets a nightly cron with a fixed
-   * `--since` before that day keep running. Absent from version-1 files.
+   * archive starts, whichever is later. `start` is the first day the file
+   * actually covers, after the key's floor; on a plan short of the full archive
+   * the two differ, and this is what lets a nightly cron with a fixed `--since`
+   * before that floor keep running. Absent from version-1 files, which are
+   * judged by `start` alone. The same field, meaning the same thing, as the
+   * Python SDK's.
    */
   since?: string | null;
   /**
@@ -551,7 +553,7 @@ interface BackfillState {
    * was appended after the checkpoint (a page cut off by an interruption) and is
    * truncated before a resume, so a resume never appends a day twice.
    */
-  bytes?: number;
+  size?: number;
 }
 
 function readState(path: string): BackfillState | null {
@@ -735,12 +737,14 @@ function refuse(outPath: string, why: string): number {
  * leave a gap the state file could not describe. Both are refused rather than
  * quietly ignored, which would hand back a file that is not what was asked for.
  *
- * A `--since` inside the file is fine and common: a cron line with a fixed
- * `--since` runs it every night, and one computed as "30 days ago" moves
- * forward every night. "Before the file" is judged against what the file was
- * ASKED to start from, not where it does start: on a plan short of the full
- * archive the first request is clamped up to the key's first day, and a fixed
- * `--since` before that day has to keep working the next night.
+ * THE SAME `--since` IS ALWAYS ACCEPTED, even when it is before the file's
+ * first day. On a plan short of the full archive, `--since 2025-01-01` starts
+ * the file at the first day the key can read, and a cron line repeating it every
+ * night must keep working. So a `--since` is judged against the first day
+ * WRITTEN, except that the one the file was asked to start from (`since` in the
+ * state) is always fine. A `--since` inside the file is fine and common too: one
+ * computed as "30 days ago" moves forward every night. Before the archive starts
+ * is the same as its start. The rule and the wording match the Python SDK.
  */
 function rangeFits(
   outPath: string,
@@ -752,12 +756,12 @@ function rangeFits(
   const since = opts.since != null ? later(opts.since, archiveFrom) : null;
   const until = opts.until ?? null;
   const fileStart = state.start;
-  const askedFrom = state.since ?? fileStart;
-  if (since !== null && askedFrom !== null && since < askedFrom) {
+  const asked = state.since ?? fileStart;
+  if (since !== null && fileStart !== null && since < fileStart && since !== asked) {
     return refuse(
       outPath,
-      `it was started from ${String(fileStart)}, and --since ${String(opts.since)} would ` +
-        `need days before that. Appending cannot add them`,
+      `it was started from ${fileStart}, and --since ${String(opts.since)} would need days ` +
+        `before that. Appending cannot add them`,
     );
   }
   if (until !== null && fileStart !== null && until < fileStart) {
@@ -794,10 +798,6 @@ export function decide(
     rmSync(statePath, { force: true });
   }
   let state = opts.overwrite ? null : readState(statePath);
-  if (state !== null) {
-    const cut = cutToCheckpoint(outPath, state, opts.format);
-    if (cut !== null) return cut;
-  }
   const hasRows = (): boolean => existsSync(outPath) && statSync(outPath).size > 0;
   let fileHasRows = hasRows();
 
@@ -838,41 +838,102 @@ export function decide(
     );
     return 1;
   }
+  if (state !== null) {
+    const checked = backToCheckpoint(outPath, statePath, state, opts.format);
+    if (typeof checked === 'number') return checked;
+    state = checked;
+  }
   if (state === null) return firstRun(outPath, opts, archiveFrom, end);
   return continueFile(outPath, state, opts, archiveFrom, end);
 }
 
+/** The most park-local days one page of the park daily endpoint covers. */
+const PAGE_DAYS = 31;
+
 /**
- * Put the data file back to the size it had at its last checkpoint.
+ * Cut the file back to what the state vouches for: the checkpoint's `size`.
  *
- * Rows are appended as they arrive and the checkpoint is written once a page is
- * complete, so an interruption (Ctrl-C, SIGTERM, a kill, a crash) can leave
- * part of a page after the last checkpoint. Resuming at the checkpoint's day
- * fetches that page again, and appending it would duplicate every row already
- * there. Truncating to the recorded size first makes the resume exact. Null to
- * proceed, or an exit code when the file is SHORTER than recorded, which means
- * something else changed it and nothing here can say which days it lost.
+ * THIS IS WHAT MAKES A RERUN IDEMPOTENT. The state used to be written only at
+ * the end of a run or on an error this code caught, so Ctrl-C, SIGTERM or a kill
+ * during a nightly extension left `complete: true` with the old end, and the
+ * rerun appended the same days again. The state is now written after every
+ * page with the file's size at that moment, so whatever is past that size was
+ * written after the last checkpoint (half a page, or a torn line) and is
+ * discarded here, then fetched again.
+ *
+ * A file SHORTER than its checkpoint was changed by something else, and
+ * appending would leave a hole the state claims is filled, so it is refused.
+ *
+ * A state with no `size` predates it. Its file is cut back by date instead, to
+ * the day it continues from, which reads the file once and then records a size.
+ * Returns the state to go on with, null when nothing is left in the file (a
+ * first run), or an exit code. The same rule, and the same words, as the
+ * Python SDK.
  */
-function cutToCheckpoint(outPath: string, state: BackfillState, format: string): number | null {
-  if (state.complete || typeof state.bytes !== 'number' || !existsSync(outPath)) return null;
-  if (stateMismatch(state, format) !== null) return null;
-  const size = statSync(outPath).size;
-  if (size === state.bytes) return null;
-  if (size < state.bytes) {
-    process.stderr.write(
-      `  ${basename(outPath)} is shorter than when this command last recorded it ` +
-        `(${String(size)} bytes, not ${String(state.bytes)}), so rows it held are gone.\n` +
-        `    --overwrite   download this park again\n` +
-        `    or move both files aside and run again\n`,
-    );
-    return 1;
+function backToCheckpoint(
+  outPath: string,
+  statePath: string,
+  state: BackfillState,
+  format: string,
+): BackfillState | null | number {
+  const actual = statSync(outPath).size;
+  const size = state.size;
+  if (typeof size !== 'number') {
+    const keepThrough = legacyKeepThrough(state);
+    if (keepThrough !== null && trimAfter(outPath, format, keepThrough) === 0) {
+      rmSync(outPath, { force: true });
+      rmSync(statePath, { force: true });
+      return null;
+    }
+    const next: BackfillState = { ...state };
+    if (keepThrough !== null && !state.complete) next.resumeFrom = nextDay(keepThrough);
+    next.size = statSync(outPath).size;
+    writeState(statePath, next);
+    return next;
   }
-  truncateSync(outPath, state.bytes);
-  process.stderr.write(
-    `  ${basename(outPath)}: removed the rows written after the last checkpoint ` +
-      `(an interrupted page); they are fetched again\n`,
-  );
-  return null;
+  if (actual < size) {
+    return refuse(
+      outPath,
+      `it is ${String(actual)} bytes, shorter than the ${String(size)} its state file ` +
+        `records, so something other than this command changed it`,
+    );
+  }
+  if (actual > size) {
+    process.stderr.write(
+      `  discarding the last ${String(actual - size)} bytes of ${basename(outPath)}: written ` +
+        `after the last checkpoint, and fetched again now\n`,
+    );
+    truncateSync(outPath, size);
+  }
+  if (size === 0) {
+    // Nothing survived the cut: this is a first run, from the range asked.
+    rmSync(statePath, { force: true });
+    return null;
+  }
+  return state;
+}
+
+/**
+ * For a state without `size`: the newest day its file can be trusted to hold.
+ *
+ * A finished file holds every day through `end`. An unfinished one holds every
+ * day before `resumeFrom`, the page boundary; rows from that day on were written
+ * after it, by a run that was then killed. Without a boundary there is only
+ * `lastDay`, the newest day ANY entity reached, and rows arrive entity by entity,
+ * so another entity may have stopped days earlier. The page that run was on
+ * began at most 30 days before `lastDay`, so that is where it is safe to go back
+ * to. Resuming at `lastDay` itself lost the later entities' days for good.
+ */
+function legacyKeepThrough(state: BackfillState): string | null {
+  if (state.complete) return state.end;
+  if (state.resumeFrom !== null) return daysBefore(state.resumeFrom, 1);
+  const floor = state.start !== null ? daysBefore(state.start, 1) : null;
+  if (state.lastDay !== null) {
+    // No earlier than the file's own first day: nothing before it exists.
+    const back = daysBefore(state.lastDay, PAGE_DAYS);
+    return floor === null || back >= floor ? back : floor;
+  }
+  return floor;
 }
 
 /** A park with no file yet: from `--since`, or wherever the archive starts. */
@@ -942,11 +1003,14 @@ function continueFile(
   const continueAt = state.resumeFrom ?? state.lastDay ?? state.start ?? archiveFrom;
   const refused = rangeFits(outPath, state, opts, archiveFrom, String(continueAt));
   if (refused !== null) return refused;
-  // A resume at `lastDay` refetches a day the file already holds. Only a state
-  // with no byte count can get here (one written before checkpoints recorded
-  // it), so that day's rows are removed first and the resume stays exact.
-  if (state.resumeFrom === null && state.lastDay !== null && typeof state.bytes !== 'number') {
-    trimAfter(outPath, opts.format, daysBefore(state.lastDay, 1));
+  if (continueAt !== null && continueAt > end && opts.until != null && end === opts.until) {
+    // Not the key's window closing: the file already holds every day this
+    // --until asks for, and carries on from after it on a run without one.
+    process.stderr.write(
+      `  nothing to fetch into ${basename(outPath)}: it already holds the days through ` +
+        `--until ${opts.until}, and continues from ${continueAt}\n`,
+    );
+    return 0;
   }
   return { ...carried, start: continueAt, extending: false };
 }
@@ -994,15 +1058,29 @@ function upgradeV1(
   const upgraded: BackfillState = { ...state, stateVersion: STATE_VERSION };
   if (state.end === null) return upgraded;
   const keepThrough = daysBefore(state.end, V1_UNSETTLED_DAYS);
+  const name = basename(outPath);
   if (state.start !== null && keepThrough < state.start) {
+    process.stderr.write(
+      `  ${name} was written by 8.3, and every day in it is within ${String(V1_UNSETTLED_DAYS)} ` +
+        `days of that run's end, so none of it is known to be final: downloading it again\n`,
+    );
     rmSync(outPath, { force: true });
     rmSync(statePath, { force: true });
     return null;
   }
   const lastDay = state.lastDay;
   if (lastDay === null || lastDay > keepThrough) {
+    process.stderr.write(
+      `  ${name} was written by 8.3: removing its rows after ${keepThrough}, which may be ` +
+        `partial days, and fetching those days again\n`,
+    );
     trimAfter(outPath, format, keepThrough);
     upgraded.lastDay = lastDay !== null ? keepThrough : null;
+  } else {
+    process.stderr.write(
+      `  ${name} was written by 8.3; its newest row is older than any partial day, so ` +
+        `only its state file is updated\n`,
+    );
   }
   if (state.complete) {
     upgraded.end = keepThrough;
@@ -1012,6 +1090,8 @@ function upgradeV1(
       upgraded.resumeFrom = nextDay(keepThrough);
     }
   }
+  // The size now, so the checkpoint cut does not read the file a second time.
+  upgraded.size = statSync(outPath).size;
   writeState(statePath, upgraded);
   return upgraded;
 }
@@ -1060,11 +1140,16 @@ function csvCells(record: string): string[] {
  * written back, so quoting is untouched by construction. A CSV record ends at a
  * newline outside quotes; `csvLine` quotes every cell holding a CR or LF, so a
  * name with a line break in it stays one record.
+ *
+ * Returns how many rows were kept, counting any it could not read and not
+ * counting the CSV header.
  */
-export function trimAfter(outPath: string, format: string, keepThrough: string): void {
+export function trimAfter(outPath: string, format: string, keepThrough: string): number {
   const scratch = `${outPath}.trimming`;
   const input = openSync(outPath, 'r');
   const output = openSync(scratch, 'w');
+  let kept = 0;
+  let done = false;
   try {
     const decoder = new StringDecoder('utf8');
     const chunk = Buffer.alloc(1 << 20);
@@ -1104,14 +1189,22 @@ export function trimAfter(outPath: string, format: string, keepThrough: string):
         if (format === 'csv' && c === '"') quoted = !quoted;
         else if (c === '\n' && !(format === 'csv' && quoted)) {
           const record = pending.slice(from, i + 1);
-          if (keep(record)) writeSync(output, record);
+          const wasHeader = format === 'csv' && header;
+          if (keep(record)) {
+            writeSync(output, record);
+            if (!wasHeader) kept += 1;
+          }
           from = i + 1;
         }
       }
       pending = pending.slice(from);
       scanned = pending.length;
       if (final && pending !== '') {
-        if (keep(pending)) writeSync(output, pending);
+        const wasHeader = format === 'csv' && header;
+        if (keep(pending)) {
+          writeSync(output, pending);
+          if (!wasHeader) kept += 1;
+        }
         pending = '';
       }
     };
@@ -1124,11 +1217,15 @@ export function trimAfter(outPath: string, format: string, keepThrough: string):
     }
     pending += decoder.end();
     drain(true);
+    done = true;
   } finally {
     closeSync(input);
     closeSync(output);
+    // The half-written copy is removed, and the original left as it was.
+    if (!done) rmSync(scratch, { force: true });
   }
   renameSync(scratch, outPath);
+  return kept;
 }
 
 /** The minimum of a writable stream this module needs, so a test can stand in. */
@@ -1207,9 +1304,8 @@ export async function backfillPark(tp: ThemeParks, park: Park, opts: RunOptions)
   const owner = acquireLock(lockPath);
   if (owner !== null) {
     process.stderr.write(
-      `  another run is writing ${basename(outPath)}` +
-        `${owner > 0 ? ` (process ${String(owner)})` : ''}. Wait for it to finish, or ` +
-        `stop it, then run again\n`,
+      `${park.id}: another themeparks-backfill is writing this park into ${opts.outDir} ` +
+        `right now. Two at once would each append the same days; wait for it to finish\n`,
     );
     return 1;
   }
@@ -1314,8 +1410,8 @@ async function runPark(
     lastDay: lastDay ?? priorLastDay,
     resumeFrom,
     complete,
-    since: since ?? fileStart,
-    bytes: existsSync(outPath) ? statSync(outPath).size : 0,
+    since,
+    size: existsSync(outPath) ? statSync(outPath).size : 0,
   });
 
   /**
@@ -1623,8 +1719,10 @@ export async function main(
   // access exists is worse than either.
   if (apiKey == null && !listing) {
     process.stderr.write(
-      'no API key: reading the 7 days anonymous access allows.\n' +
-        '  a free key reads 30 days, and the paid tiers reach further\n' +
+      'no API key: reading the 7 days anonymous access allows. Only final days\n' +
+        '  are written, and the newest 2 to 3 are still being recorded, so that\n' +
+        '  is usually 4 or 5 days per park.\n' +
+        '  a free key reads 30 days, Pro 400, Business the whole archive\n' +
         '  set THEMEPARKS_API_KEY, or pass --api-key\n' +
         '  keys: https://www.themeparks.wiki/profile\n\n',
     );
@@ -1745,7 +1843,8 @@ export async function main(
   const anonymousNotice = (): void => {
     if (apiKey != null) return;
     process.stderr.write(
-      `\nthat was ANONYMOUS ACCESS: the last 7 days only.\n` +
+      `\nthat was ANONYMOUS ACCESS: the final days among the last 7 days only,\n` +
+        `  usually 4 or 5 per park.\n` +
         `  a free key reads 30 days, Pro 400, Business the whole archive\n` +
         `  set THEMEPARKS_API_KEY and run the same command again\n` +
         `  keys: https://www.themeparks.wiki/profile\n`,

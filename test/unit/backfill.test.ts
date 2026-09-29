@@ -512,9 +512,10 @@ describe('decide', () => {
     });
   });
 
-  it('falls back to lastDay for a state file written before resumeFrom existed', () => {
-    // One duplicated day beats starting from the top and appending a second
-    // copy of the whole archive.
+  it('goes back a page from lastDay for a state with no resumeFrom and no size', () => {
+    // Rows arrive entity by entity, so `lastDay` (the newest day ANY entity
+    // reached) can be past days another entity never got to. A page is at most
+    // 31 days, so going back that far loses nothing and duplicates nothing.
     writeFileSync(out, '{"a":1}\n');
     stateFile(dir, {
       start: '2021-07-03',
@@ -523,7 +524,7 @@ describe('decide', () => {
       complete: false,
     });
     expect(decide(out, state, opts(), '2021-07-03', '2026-09-23')).toMatchObject({
-      start: '2026-08-30',
+      start: '2026-07-31',
       hasRows: true,
     });
   });
@@ -1377,6 +1378,8 @@ describe('an anonymous run says so when it finishes', () => {
     expect(text).toContain('ANONYMOUS ACCESS');
     // Both ends: before, so it can be acted on, and after, so it is read.
     expect(text.split('7 days').length - 1).toBeGreaterThanOrEqual(2);
+    // And does not promise seven days of rows: the newest days are held back.
+    expect(text).toContain('usually 4 or 5');
     expect(text.trimEnd().endsWith('keys: https://www.themeparks.wiki/profile')).toBe(true);
   });
 

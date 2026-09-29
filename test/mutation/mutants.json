@@ -179,8 +179,8 @@
     {
       "name": "an earlier --since than the file is accepted",
       "file": "src/backfill.ts",
-      "find": "if (since !== null && askedFrom !== null && since < askedFrom) {",
-      "replace": "if (false) {",
+      "find": "  if (since !== null && fileStart !== null && since < fileStart && since !== asked) {",
+      "replace": "  if (false) {",
       "why": "Appending cannot add days before the file's first one, so accepting it hands back a file that is not what was asked for."
     },
     {
@@ -193,8 +193,8 @@
     {
       "name": "a fixed --since before the key's floor is refused the next night",
       "file": "src/backfill.ts",
-      "find": "const askedFrom = state.since ?? fileStart;",
-      "replace": "const askedFrom = fileStart;",
+      "find": "since < fileStart && since !== asked) {",
+      "replace": "since < fileStart) {",
       "why": "On a plan short of the archive the file starts at the key's first day, so judging --since against that refused the same cron line the next night."
     },
     {
@@ -249,8 +249,8 @@
     {
       "name": "an anonymous 8.3 file is trimmed to nothing",
       "file": "src/backfill.ts",
-      "find": "keepThrough < state.start) {",
-      "replace": "keepThrough < '') {",
+      "find": "  if (state.start !== null && keepThrough < state.start) {",
+      "replace": "  if (false) {",
       "why": "A file wholly inside the cut would be emptied and continued from a day the key can no longer read."
     },
     {
@@ -291,7 +291,7 @@
     {
       "name": "a resume does not cut back to the checkpoint",
       "file": "src/backfill.ts",
-      "find": "  truncateSync(outPath, state.bytes);",
+      "find": "    truncateSync(outPath, size);",
       "replace": "",
       "why": "Rows written after the last checkpoint by an interrupted page were kept, and the resume appended the same page again."
     },
@@ -308,6 +308,27 @@
       "find": "  if (owner !== null) {",
       "replace": "  if (false) {",
       "why": "Two runs appending to one file interleave rows and each records its own checkpoint."
+    },
+    {
+      "name": "an 8.3 file starting on the cut is downloaded again",
+      "file": "src/backfill.ts",
+      "find": "keepThrough < state.start) {",
+      "replace": "keepThrough <= state.start) {",
+      "why": "A file that starts on the last kept day has a day that is final; restarting refetched the whole file."
+    },
+    {
+      "name": "a run that adds no rows forgets the file's newest day",
+      "file": "src/backfill.ts",
+      "find": "    lastDay: lastDay ?? priorLastDay,",
+      "replace": "    lastDay,",
+      "why": "A seasonal park closed for the new days recorded lastDay null, so the state no longer said what the file holds."
+    },
+    {
+      "name": "a sizeless state resumes at lastDay",
+      "file": "src/backfill.ts",
+      "find": "    const back = daysBefore(state.lastDay, PAGE_DAYS);",
+      "replace": "    const back = daysBefore(state.lastDay, 1);",
+      "why": "lastDay is the newest day ANY entity reached; resuming there lost the days later entities had not reached."
     }
   ]
 }

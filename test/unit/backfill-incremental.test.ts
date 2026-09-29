@@ -364,6 +364,27 @@ describe('a rerun adds new days', () => {
     expect(stderr()).toContain('(new days)');
   });
 
+  it('keeps the newest day in the file when a run adds no rows', async () => {
+    // A seasonal park closed for the new days: nothing is written, and the state
+    // must still say which day the file's newest row is.
+    const archive = new Archive();
+    await run(archive);
+    archive.entities = [];
+    archive.advance(3);
+    expect(await run(archive)).toBe(0);
+    expect(state()).toMatchObject({ lastDay: '2026-09-26', end: '2026-09-29', complete: true });
+  });
+
+  it('an --until the file already holds, on an unfinished file, says so', async () => {
+    const archive = new Archive();
+    archive.budgetOnPage = 3;
+    expect(await run(archive)).toBe(EX_TEMPFAIL);
+    archive.budgetOnPage = null;
+    expect(await run(archive, 'ndjson', { until: '2026-07-01' })).toBe(0);
+    expect(stderr()).toContain('already holds the days through --until 2026-07-01');
+    expect(stderr()).not.toContain('Your plan no longer reaches');
+  });
+
   it('keeps the original start and moves the end', async () => {
     const archive = new Archive();
     await run(archive);
@@ -596,7 +617,35 @@ describe('--since and --until', () => {
     archive.floor = '2026-08-28';
     await run(archive, 'ndjson', { since: '2025-01-01' });
     expect(await run(archive, 'ndjson', { since: '2024-01-01' })).toBe(1);
+    // Names the day the file really starts on.
+    expect(stderr()).toContain(
+      'it was started from 2026-08-28, and --since 2024-01-01 would need days before that',
+    );
     expect(stderr()).toContain('--overwrite');
+  });
+
+  it('records start as the first day covered and since as what was asked', async () => {
+    // Agreed with the Python SDK: `start` is where the file really begins,
+    // after the key's floor; `since` is the start it was asked for.
+    const limited = new Archive('2021-07-03');
+    limited.floor = '2026-08-28';
+    await run(limited, 'ndjson', { since: '2025-01-01' });
+    expect(state()).toMatchObject({ start: '2026-08-28', since: '2025-01-01' });
+    await run(new Archive('2021-07-03'), 'csv');
+    expect(state('csv')).toMatchObject({ start: '2021-07-03', since: '2021-07-03' });
+  });
+
+  it('refuses a --since between the one asked for and the first day written', async () => {
+    // The same rule as the Python SDK: only the --since the file was asked to
+    // start from is accepted before its first day. Any other would ask for days
+    // the file does not hold and a rerun cannot add.
+    const limited = new Archive('2021-07-03');
+    limited.floor = '2026-08-28';
+    await run(limited, 'ndjson', { since: '2025-01-01' });
+    expect(await run(limited, 'ndjson', { since: '2026-01-01' })).toBe(1);
+    expect(stderr()).toContain(
+      'it was started from 2026-08-28, and --since 2026-01-01 would need days before that',
+    );
   });
 });
 
@@ -846,20 +895,42 @@ describe('a file 8.3 wrote is corrected once, not frozen', () => {
     expect(archive.calls).toEqual([['2026-07-01', '2026-09-26']]);
   });
 
-  it('starts again an anonymous 8.3 file that lies wholly inside the cut', async () => {
-    // Anonymous access reads 7 days, so every row such a file holds is within
-    // seven days of its end. Trimming would leave it empty, continuing from a day
-    // the key can no longer read; it is fetched again instead, all final.
-    const anonymous = new Archive('2026-09-22');
-    await writeAs83('ndjson', anonymous);
-    v1State('ndjson', { start: '2026-09-22' });
-    // Two days later, the key's 7-day window has moved on past the file's start.
-    const archive = new Archive('2026-06-01', '2026-09-28', '2026-09-30', '2026-09-24');
+  it.each(['ndjson', 'csv'] as const)(
+    'starts again an anonymous 8.3 file that lies wholly inside the cut (%s)',
+    async (format) => {
+      // Anonymous access reads 7 days, so every row such a file holds is within
+      // seven days of its end. Trimming would leave it empty, continuing from a day
+      // the key can no longer read; it is fetched again instead, all final.
+      const anonymous = new Archive('2026-09-22');
+      await writeAs83(format, anonymous);
+      v1State(format, { start: '2026-09-22' });
+      // Two days later, the key's 7-day window has moved on past the file's start.
+      const archive = new Archive('2026-06-01', '2026-09-28', '2026-09-30', '2026-09-24');
+      expect(await run(archive, format)).toBe(0);
+      expect(archive.calls.at(-1)).toEqual(['2026-09-24', '2026-09-28']);
+      expect(minDate(rows(format))).toBe('2026-09-24');
+      expectEveryRowFinalAndUnique(rows(format));
+      expect(state(format)).toMatchObject({ stateVersion: STATE_VERSION, end: '2026-09-28' });
+    },
+  );
+
+  it('trims, not restarts, a file whose first day is exactly the cut', async () => {
+    // The boundary: a file starting ON the last kept day keeps that day.
+    const archive = new Archive('2026-09-21');
+    await writeAs83('ndjson', archive);
+    v1State('ndjson', { start: '2026-09-21' });
     expect(await run(archive)).toBe(0);
-    expect(archive.calls.at(-1)).toEqual(['2026-09-24', '2026-09-28']);
-    expect(minDate(rows())).toBe('2026-09-24');
-    expectEveryRowFinalAndUnique(rows());
-    expect(state()).toMatchObject({ stateVersion: STATE_VERSION, end: '2026-09-28' });
+    expect(archive.calls).toEqual([['2026-09-22', '2026-09-26']]);
+    expect(stderr()).toContain('removing its rows after 2026-09-21');
+    contiguous(rows(), '2026-09-21', '2026-09-26');
+  });
+
+  it('says what it did to an 8.3 file', async () => {
+    const archive = new Archive('2026-06-01', '2026-07-31', '2026-07-31');
+    await writeAs83('ndjson', archive);
+    v1State('ndjson', { end: '2026-09-28', lastDay: '2026-07-31' });
+    await run(archive);
+    expect(stderr()).toContain('only its state file is updated');
   });
 
   it('still refuses an old state file from the other SDK', async () => {
@@ -941,10 +1012,12 @@ describe('a run killed part-way through', () => {
       const saved = state(format);
       // Pages one and two are checkpointed; page three was cut off.
       expect(saved).toMatchObject({ complete: false, resumeFrom: '2026-08-02' });
-      expect(statSync(dataPath(format)).size).toBeGreaterThan(saved.bytes as number);
+      expect(statSync(dataPath(format)).size).toBeGreaterThan(saved.size as number);
 
       expect(await run(archive, format)).toBe(0);
-      expect(stderr()).toContain('removed the rows written after the last checkpoint');
+      expect(stderr()).toMatch(
+        /discarding the last \d+ bytes of p\.\w+: written after the last checkpoint, and fetched again now/u,
+      );
       expectEveryRowFinalAndUnique(rows(format));
       contiguous(rows(format), '2026-06-01', '2026-09-26');
       if (format === 'csv') {
@@ -967,7 +1040,7 @@ describe('a run killed part-way through', () => {
   it('leaves a state to resume from when killed before its first row', async () => {
     const archive = new Archive();
     await killMidPage(archive, 1, 0);
-    expect(state()).toMatchObject({ complete: false, resumeFrom: '2026-06-01', bytes: 0 });
+    expect(state()).toMatchObject({ complete: false, resumeFrom: '2026-06-01', size: 0 });
     expect(await run(archive)).toBe(0);
     contiguous(rows(), '2026-06-01', '2026-09-26');
   });
@@ -984,16 +1057,27 @@ describe('a run killed part-way through', () => {
   it('refuses a file shorter than its checkpoint says', async () => {
     const archive = new Archive();
     await killMidPage(archive, 3, 10);
-    truncateSync(dataPath(), (state().bytes as number) - 10);
+    truncateSync(dataPath(), (state().size as number) - 10);
     expect(await run(archive)).toBe(1);
-    expect(stderr()).toContain('shorter than when this command last recorded it');
+    expect(stderr()).toContain(
+      'its state file records, so something other than this command changed it',
+    );
   });
 
-  it('drops the day a state with no byte count would resume on, before refetching it', async () => {
+  it('cuts a sizeless state back a whole page before its last day, then resumes', async () => {
     // A state from before checkpoints recorded the file's size, interrupted in
-    // its first page: it resumes on `lastDay`, which the file already holds.
+    // its first page. `lastDay` is the newest day ANY entity reached; rows go
+    // entity by entity, so another entity may have stopped earlier. Resuming at
+    // `lastDay` lost those days; going back a page (31 days) cannot.
     const archive = new Archive('2026-06-01', '2026-07-10', '2026-07-10');
     await writeAs83('ndjson', archive);
+    // The second entity got no further than 2026-06-20 before the kill.
+    const text = readFileSync(dataPath(), 'utf8')
+      .split('\n')
+      .filter((l) => l === '' || !(l.includes('"ent-b"') && l.includes('"date":"2026-06-2')))
+      .filter((l) => l === '' || !(l.includes('"ent-b"') && /"date":"2026-0(6-3|7)/u.test(l)))
+      .join('\n');
+    writeFileSync(dataPath(), text);
     writeFileSync(
       statePathFor(dir, 'p', 'ndjson'),
       JSON.stringify({
@@ -1011,9 +1095,11 @@ describe('a run killed part-way through', () => {
     );
     const later = new Archive();
     expect(await run(later)).toBe(0);
-    expect(later.calls).toEqual([['2026-07-10', '2026-09-26']]);
+    expect(later.calls).toEqual([['2026-06-10', '2026-09-26']]);
     expectEveryRowFinalAndUnique(rows());
     contiguous(rows(), '2026-06-01', '2026-09-26');
+    // Both entities have every day, including the ones ent-b had not reached.
+    expect(rows().filter((r) => r.entityId === 'ent-b')).toHaveLength(118);
   });
 
   it('writes the state file whole, leaving no scratch file behind', async () => {
@@ -1032,7 +1118,9 @@ describe('one run per output file', () => {
     await first.hung;
     const second = new Archive();
     expect(await run(second)).toBe(1);
-    expect(stderr()).toContain('another run is writing p.ndjson');
+    expect(stderr()).toContain(
+      `p: another themeparks-backfill is writing this park into ${dir} right now`,
+    );
     expect(second.calls).toEqual([]);
     releaseLocks();
   });
