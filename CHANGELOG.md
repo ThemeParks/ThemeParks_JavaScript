@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [8.4.0] - 2026-09-29
 
-To be released as **8.4.0**, a minor: the additions below are backwards
+A minor release: the additions below are backwards
 compatible at runtime. One is not quite so at the type level: `HistorySpan`
 gains a required field, `finalThrough`, so code that builds a `HistorySpan`
 object by hand (a test double, say) needs to add it. Code that only reads the
