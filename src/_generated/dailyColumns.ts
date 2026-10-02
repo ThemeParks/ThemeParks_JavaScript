@@ -23,6 +23,8 @@ export const DAILY_COLUMNS = [
   'singleRiderMax',
   'extremeWaitsStandby',
   'extremeWaitsSingleRider',
+  'implausibleWaitsStandby',
+  'implausibleWaitsSingleRider',
   'showCount',
   'inParkHoursScheduledMinutes',
   'inParkHoursOperatingMinutes',
@@ -40,5 +42,7 @@ export const DAILY_COLUMNS = [
   'inParkHoursSingleRiderMax',
   'inParkHoursExtremeWaitsStandby',
   'inParkHoursExtremeWaitsSingleRider',
+  'inParkHoursImplausibleWaitsStandby',
+  'inParkHoursImplausibleWaitsSingleRider',
   'changes',
 ] as const;
