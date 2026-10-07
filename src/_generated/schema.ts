@@ -124,8 +124,9 @@ export interface paths {
          *     A run lasts from a change to OPERATING until the next change to CLOSED or REFURBISHMENT, DOWN periods included. A row is counted like this:
          *
          *     - Outside the park's published hours, an OPERATING status counts as `unknownMinutes`, not `operatingMinutes`, after 4 hours or more unconfirmed. On a day with published hours, only a status change confirms it; a status carried over midnight is unconfirmed. On other days, any change but `showtimes` confirms it, across midnight.
+         *     - From 2026-10-08, also in published hours and for DOWN, after 24 hours absent from the park's feed (exceptions in the history notes).
          *     - A wait counts only while the entity is OPERATING and on the day it was posted. The wait showing when a ride opens counts if it last changed within 24 hours.
-         *     - `extremeWaits` counts readings of 480 minutes or more, usually feed errors. Nothing is left out: those readings stay in the statistics, and `extremeWaits` flags them.
+         *     - `extremeWaits` counts readings of 480 minutes or more. `implausibleWaits` counts readings above the destination's plausibility ceiling (600 minutes or lower, see the history notes), which are left out of the statistics; the rest stay in. Wait values above 1440 minutes (24 hours) are feed errors and are omitted.
          *     - `firstOperatingAt` is null when the entity did not change to OPERATING that day; it may still have operated, carried over from the day before.
          *     - `lastClosedAt` is when the last run that started that day closed, which can be after midnight. The next day's row does not repeat it.
          *     - `inParkHours` repeats the numbers for the park's published hours, when it published any.
@@ -452,6 +453,8 @@ export interface components {
             kinds: {
                 [key: string]: components["schemas"]["HistoryCoverageKindSpan"];
             };
+            /** @description Known archive gaps overlapping what this entity has recorded. Empty when none apply. */
+            knownGaps: components["schemas"]["HistoryKnownGap"][];
         };
         /** @description One live-data field's recorded span for an entity, both ends inclusive. */
         HistoryCoverageKindSpan: {
@@ -482,11 +485,18 @@ export interface components {
             /** @description Always null for a single entity. */
             next: string | null;
         };
-        /** @description How many wait readings of 480 minutes or more the day's statistics include. Such readings are usually feed errors (values like 999); they are counted here as a flag and stay in every statistic. Counted per reading while OPERATING. Present only when there were some, and then with both counts. */
+        /** @description How many wait readings of 480 minutes or more the day had. Such readings are usually feed errors (values like 999); they are counted here as a flag. Those at or below the destination's plausibility ceiling stay in every statistic; those above it are left out and also counted in implausibleWaits. Wait values above 1440 minutes (24 hours) are feed errors and are omitted. Counted per reading while OPERATING. Present only when there were some, and then with both counts. */
         HistoryDailyExtremeWaits: {
-            /** @description Standby readings of 480 minutes or more included in the day's standby statistics. */
+            /** @description Standby readings of 480 minutes or more. */
             standby: number;
-            /** @description Single-rider readings of 480 minutes or more included in the day's single-rider statistics. */
+            /** @description Single-rider readings of 480 minutes or more. */
+            singleRider: number;
+        };
+        /** @description How many wait readings above the destination's plausibility ceiling the day had: 600 minutes, or 300 at destinations whose longest genuine waits are far shorter (listed in the history notes). Such a reading is a value the park's feed or app shows that cannot be a real queue (a placeholder like 999, or an unlabelled code); the live API still reports it as the park published it, and the raw history keeps it, but the day's statistics leave it out as if no wait were showing. Counted per reading while OPERATING. Present only when there were some, and then with both counts. */
+        HistoryDailyImplausibleWaits: {
+            /** @description Standby readings above the destination's plausibility ceiling, left out of the day's standby statistics. */
+            standby: number;
+            /** @description Single-rider readings above the destination's plausibility ceiling, left out of the day's single-rider statistics. */
             singleRider: number;
         };
         /** @description The day's numbers limited to the park's published hours. Present only when the park published hours that day. */
@@ -502,8 +512,9 @@ export interface components {
             standby?: components["schemas"]["HistoryDailyStats"];
             singleRider?: components["schemas"]["HistoryDailyStats"];
             extremeWaits?: components["schemas"]["HistoryDailyExtremeWaits"];
+            implausibleWaits?: components["schemas"]["HistoryDailyImplausibleWaits"];
         };
-        /** @description One day of an entity's history. standby, singleRider, extremeWaits, showCount and inParkHours are absent when there is nothing to report; a standby block needs a valid wait showing for at least one whole minute. A row without unknownMinutes was counted under earlier rules, and also lacks extremeWaits and inParkHours. */
+        /** @description One day of an entity's history. standby, singleRider, extremeWaits, implausibleWaits, showCount and inParkHours are absent when there is nothing to report; a standby block needs a valid wait showing for at least one whole minute. A row without unknownMinutes was counted under earlier rules, and also lacks extremeWaits, implausibleWaits and inParkHours. */
         HistoryDailyRow: {
             /**
              * Format: date
@@ -529,13 +540,14 @@ export interface components {
             standby?: components["schemas"]["HistoryDailyStats"];
             singleRider?: components["schemas"]["HistoryDailyStats"];
             extremeWaits?: components["schemas"]["HistoryDailyExtremeWaits"];
+            implausibleWaits?: components["schemas"]["HistoryDailyImplausibleWaits"];
             /** @description Distinct performance start times whose park-local day is this day. Present only for entities that published showtimes on the day. */
             showCount?: number;
             inParkHours?: components["schemas"]["HistoryDailyInParkHours"];
             /** @description How many times any field changed this day. */
             changes: number;
         };
-        /** @description Wait statistics for the day. p50, mean and p90 are weighted by how many minutes each wait was showing; min and max are the extremes of every value posted. Only minutes where the entity was OPERATING (not unknown) and the wait was valid count. A wait is valid during the run and on the day it was posted; the wait showing when a ride opens counts from the opening if it last changed within 24 hours; a wait carried over midnight does not count until it changes. Nothing the park reported is excluded: a reading of 480 minutes or more stays in these statistics and is counted in the row's `extremeWaits`. Absent when no minute counted. */
+        /** @description Wait statistics for the day. p50, mean and p90 are weighted by how many minutes each wait was showing; min and max are the extremes of every value posted. Only minutes where the entity was OPERATING (not unknown) and the wait was valid count. A wait is valid during the run and on the day it was posted; the wait showing when a ride opens counts from the opening if it last changed within 24 hours; a wait carried over midnight does not count until it changes. Wait values above 1440 minutes (24 hours) are feed errors and are omitted. So is a reading above the destination's plausibility ceiling (600 minutes, or 300 at the destinations the history notes list), which is counted in the row's `implausibleWaits` instead. Otherwise, a reading of 480 minutes or more stays in these statistics and is counted in the row's `extremeWaits`. Absent when no minute counted. */
         HistoryDailyStats: {
             /** @description Lowest wait posted during the counted minutes, including one that showed for under a minute. */
             min: number;
@@ -545,7 +557,7 @@ export interface components {
             mean: number;
             /** @description 90th-percentile wait, weighted by minutes. */
             p90: number;
-            /** @description Highest wait posted during the counted minutes, including a brief spike. It can be a feed error: the row's extremeWaits counts readings of 480 minutes or more. */
+            /** @description Highest wait posted during the counted minutes, including a brief spike. It can be a feed error: the row's extremeWaits counts readings of 480 minutes or more. It never exceeds the destination's plausibility ceiling (see implausibleWaits). */
             max: number;
         };
         /** @description One entity's history. For a PARK the same call returns HistoryParkRawEnvelope instead. */
@@ -632,6 +644,31 @@ export interface components {
                 earliestAllowedDate: string;
             };
         };
+        /** @description A window where nothing was observed for this entity's destination and nothing can be recovered. /history has no rows inside it and /history/daily counts its minutes as unknown. Rows either side are real. */
+        HistoryKnownGap: {
+            /**
+             * Format: date-time
+             * @description First instant with no data (UTC, inclusive).
+             */
+            from: string;
+            /**
+             * Format: date-time
+             * @description First instant with data again (UTC, exclusive).
+             */
+            to: string;
+            /**
+             * Format: date
+             * @description First park-local day the gap touches, partly or wholly.
+             */
+            firstDay: string;
+            /**
+             * Format: date
+             * @description Last park-local day the gap touches, partly or wholly.
+             */
+            lastDay: string;
+            /** @description Why the data is missing, in one sentence. */
+            reason: string;
+        };
         /** @description The `opening` object: the complete state at the start of the range, in the same shape as a row. A field is present only if the entity has it. An unknown value is its empty form (standby `{"waitTime": null}`, showtimes `[]`); an unknown status is null. */
         HistoryOpening: {
             /**
@@ -674,7 +711,7 @@ export interface components {
             /** @description Entities with under a calendar year, usually something that opened recently. */
             underOneYear: number;
         };
-        /** @description What history we hold across a whole PARK, returned by /history/coverage when the entity is a PARK. Its names map to the single-entity document: `fields` is `kinds`, and each `from` and `newest` is a `first` and `last`. It reports depth and breadth; it does not find missing days. */
+        /** @description What history we hold across a whole PARK, returned by /history/coverage when the entity is a PARK. Its names map to the single-entity document: `fields` is `kinds`, and each `from` and `newest` is a `first` and `last`. It reports depth and breadth, and `knownGaps` lists the verified windows where nothing was observed; it does not search for other missing days. */
         HistoryParkCoverageDocument: {
             id: string;
             name: string;
@@ -690,6 +727,8 @@ export interface components {
             };
             /** @description Every entity of the park history is held for. */
             entities: components["schemas"]["HistoryParkCoverageEntity"][];
+            /** @description Known archive gaps overlapping what this park has recorded. Empty when none apply. */
+            knownGaps: components["schemas"]["HistoryKnownGap"][];
         };
         /** @description One entity we hold history for. Entities with none (often parades, shows and lands) are absent. */
         HistoryParkCoverageEntity: {
