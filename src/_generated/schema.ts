@@ -124,8 +124,9 @@ export interface paths {
          *     A run lasts from a change to OPERATING until the next change to CLOSED or REFURBISHMENT, DOWN periods included. A row is counted like this:
          *
          *     - Outside the park's published hours, an OPERATING status counts as `unknownMinutes`, not `operatingMinutes`, after 4 hours or more unconfirmed. On a day with published hours, only a status change confirms it; a status carried over midnight is unconfirmed. On other days, any change but `showtimes` confirms it, across midnight.
+         *     - From 2026-10-08, also in published hours and for DOWN, after 24 hours absent from the park's feed (exceptions in the history notes).
          *     - A wait counts only while the entity is OPERATING and on the day it was posted. The wait showing when a ride opens counts if it last changed within 24 hours.
-         *     - `extremeWaits` counts readings of 480 minutes or more, usually feed errors. Nothing is left out: those readings stay in the statistics, and `extremeWaits` flags them.
+         *     - `extremeWaits` counts readings of 480 minutes or more. `implausibleWaits` counts readings above the destination's plausibility ceiling (600 minutes or lower, see the history notes), which are left out of the statistics; the rest stay in. Wait values above 1440 minutes (24 hours) are feed errors and are omitted.
          *     - `firstOperatingAt` is null when the entity did not change to OPERATING that day; it may still have operated, carried over from the day before.
          *     - `lastClosedAt` is when the last run that started that day closed, which can be after midnight. The next day's row does not repeat it.
          *     - `inParkHours` repeats the numbers for the park's published hours, when it published any.
@@ -226,10 +227,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search by name
+         * @description Finds destinations, parks, rides, shows, restaurants and hotels by name. Matching ignores case, accents, apostrophes and punctuation and forgives small typos, so `spce mountin` finds Space Mountain. Results come best first; `match` says how each one matched, `entityType` and `attractionType` say what it is (a ride, a show, a meet-and-greet), and `park` and `destination` say where it is (`destination` also carries its `country` and `region`), because many rides share a name. Narrow with `types`, `parkId` or `destinationId`; `hasMore` says whether more matched than were returned. Take an `id` from a result and call GET /v1/entity/{id}/live for what it is doing now. Put a park, resort or place in the term to narrow it (`dumbo magic kingdom`, `tornado six flags`, `space mountain florida`, `carousel in minnesota`), ask it the way you would say it (`wait time for space mountain`), or use `wdw`, `dlr`, `dlp` and `tdr` for the four Disney resorts. The term needs at least 3 letters or digits (2 for Chinese, Japanese and Korean), at most 6 words not counting filler such as `the`, `for` and `wait`, and no other parameters are accepted. Cached for up to an hour; a new entity can take that long to appear. Send the term trimmed and in lower case, with only the parameters you need, so that identical searches share a cache entry.
+         */
+        get: operations["searchByName"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description Kind of attraction: a ride, a show, a means of transport, a parade, a meet-and-greet, or something else. UNKNOWN when the park does not say.
+         * @enum {string}
+         */
+        AttractionType: "UNKNOWN" | "RIDE" | "SHOW" | "TRANSPORT" | "PARADE" | "MEET_AND_GREET" | "OTHER";
         /** @description 401: this endpoint needs an API key (X-API-Key header) or a session token, and none was sent or the one sent was not accepted. A revoked, mistyped or truncated key answers this too. */
         AuthenticationRequired: {
             /**
@@ -452,6 +478,8 @@ export interface components {
             kinds: {
                 [key: string]: components["schemas"]["HistoryCoverageKindSpan"];
             };
+            /** @description Known archive gaps overlapping what this entity has recorded. Empty when none apply. */
+            knownGaps: components["schemas"]["HistoryKnownGap"][];
         };
         /** @description One live-data field's recorded span for an entity, both ends inclusive. */
         HistoryCoverageKindSpan: {
@@ -482,11 +510,18 @@ export interface components {
             /** @description Always null for a single entity. */
             next: string | null;
         };
-        /** @description How many wait readings of 480 minutes or more the day's statistics include. Such readings are usually feed errors (values like 999); they are counted here as a flag and stay in every statistic. Counted per reading while OPERATING. Present only when there were some, and then with both counts. */
+        /** @description How many wait readings of 480 minutes or more the day had. Such readings are usually feed errors (values like 999); they are counted here as a flag. Those at or below the destination's plausibility ceiling stay in every statistic; those above it are left out and also counted in implausibleWaits. Wait values above 1440 minutes (24 hours) are feed errors and are omitted. Counted per reading while OPERATING. Present only when there were some, and then with both counts. */
         HistoryDailyExtremeWaits: {
-            /** @description Standby readings of 480 minutes or more included in the day's standby statistics. */
+            /** @description Standby readings of 480 minutes or more. */
             standby: number;
-            /** @description Single-rider readings of 480 minutes or more included in the day's single-rider statistics. */
+            /** @description Single-rider readings of 480 minutes or more. */
+            singleRider: number;
+        };
+        /** @description How many wait readings above the destination's plausibility ceiling the day had: 600 minutes, or 300 at destinations whose longest genuine waits are far shorter (listed in the history notes). Such a reading is a value the park's feed or app shows that cannot be a real queue (a placeholder like 999, or an unlabelled code); the live API still reports it as the park published it, and the raw history keeps it, but the day's statistics leave it out as if no wait were showing. Counted per reading while OPERATING. Present only when there were some, and then with both counts. */
+        HistoryDailyImplausibleWaits: {
+            /** @description Standby readings above the destination's plausibility ceiling, left out of the day's standby statistics. */
+            standby: number;
+            /** @description Single-rider readings above the destination's plausibility ceiling, left out of the day's single-rider statistics. */
             singleRider: number;
         };
         /** @description The day's numbers limited to the park's published hours. Present only when the park published hours that day. */
@@ -502,8 +537,9 @@ export interface components {
             standby?: components["schemas"]["HistoryDailyStats"];
             singleRider?: components["schemas"]["HistoryDailyStats"];
             extremeWaits?: components["schemas"]["HistoryDailyExtremeWaits"];
+            implausibleWaits?: components["schemas"]["HistoryDailyImplausibleWaits"];
         };
-        /** @description One day of an entity's history. standby, singleRider, extremeWaits, showCount and inParkHours are absent when there is nothing to report; a standby block needs a valid wait showing for at least one whole minute. A row without unknownMinutes was counted under earlier rules, and also lacks extremeWaits and inParkHours. */
+        /** @description One day of an entity's history. standby, singleRider, extremeWaits, implausibleWaits, showCount and inParkHours are absent when there is nothing to report; a standby block needs a valid wait showing for at least one whole minute. A row without unknownMinutes was counted under earlier rules, and also lacks extremeWaits, implausibleWaits and inParkHours. */
         HistoryDailyRow: {
             /**
              * Format: date
@@ -529,13 +565,14 @@ export interface components {
             standby?: components["schemas"]["HistoryDailyStats"];
             singleRider?: components["schemas"]["HistoryDailyStats"];
             extremeWaits?: components["schemas"]["HistoryDailyExtremeWaits"];
+            implausibleWaits?: components["schemas"]["HistoryDailyImplausibleWaits"];
             /** @description Distinct performance start times whose park-local day is this day. Present only for entities that published showtimes on the day. */
             showCount?: number;
             inParkHours?: components["schemas"]["HistoryDailyInParkHours"];
             /** @description How many times any field changed this day. */
             changes: number;
         };
-        /** @description Wait statistics for the day. p50, mean and p90 are weighted by how many minutes each wait was showing; min and max are the extremes of every value posted. Only minutes where the entity was OPERATING (not unknown) and the wait was valid count. A wait is valid during the run and on the day it was posted; the wait showing when a ride opens counts from the opening if it last changed within 24 hours; a wait carried over midnight does not count until it changes. Nothing the park reported is excluded: a reading of 480 minutes or more stays in these statistics and is counted in the row's `extremeWaits`. Absent when no minute counted. */
+        /** @description Wait statistics for the day. p50, mean and p90 are weighted by how many minutes each wait was showing; min and max are the extremes of every value posted. Only minutes where the entity was OPERATING (not unknown) and the wait was valid count. A wait is valid during the run and on the day it was posted; the wait showing when a ride opens counts from the opening if it last changed within 24 hours; a wait carried over midnight does not count until it changes. Wait values above 1440 minutes (24 hours) are feed errors and are omitted. So is a reading above the destination's plausibility ceiling (600 minutes, or 300 at the destinations the history notes list), which is counted in the row's `implausibleWaits` instead. Otherwise, a reading of 480 minutes or more stays in these statistics and is counted in the row's `extremeWaits`. Absent when no minute counted. */
         HistoryDailyStats: {
             /** @description Lowest wait posted during the counted minutes, including one that showed for under a minute. */
             min: number;
@@ -545,7 +582,7 @@ export interface components {
             mean: number;
             /** @description 90th-percentile wait, weighted by minutes. */
             p90: number;
-            /** @description Highest wait posted during the counted minutes, including a brief spike. It can be a feed error: the row's extremeWaits counts readings of 480 minutes or more. */
+            /** @description Highest wait posted during the counted minutes, including a brief spike. It can be a feed error: the row's extremeWaits counts readings of 480 minutes or more. It never exceeds the destination's plausibility ceiling (see implausibleWaits). */
             max: number;
         };
         /** @description One entity's history. For a PARK the same call returns HistoryParkRawEnvelope instead. */
@@ -632,6 +669,31 @@ export interface components {
                 earliestAllowedDate: string;
             };
         };
+        /** @description A window where nothing was observed for this entity's destination and nothing can be recovered. /history has no rows inside it and /history/daily counts its minutes as unknown. Rows either side are real. */
+        HistoryKnownGap: {
+            /**
+             * Format: date-time
+             * @description First instant with no data (UTC, inclusive).
+             */
+            from: string;
+            /**
+             * Format: date-time
+             * @description First instant with data again (UTC, exclusive).
+             */
+            to: string;
+            /**
+             * Format: date
+             * @description First park-local day the gap touches, partly or wholly.
+             */
+            firstDay: string;
+            /**
+             * Format: date
+             * @description Last park-local day the gap touches, partly or wholly.
+             */
+            lastDay: string;
+            /** @description Why the data is missing, in one sentence. */
+            reason: string;
+        };
         /** @description The `opening` object: the complete state at the start of the range, in the same shape as a row. A field is present only if the entity has it. An unknown value is its empty form (standby `{"waitTime": null}`, showtimes `[]`); an unknown status is null. */
         HistoryOpening: {
             /**
@@ -674,7 +736,7 @@ export interface components {
             /** @description Entities with under a calendar year, usually something that opened recently. */
             underOneYear: number;
         };
-        /** @description What history we hold across a whole PARK, returned by /history/coverage when the entity is a PARK. Its names map to the single-entity document: `fields` is `kinds`, and each `from` and `newest` is a `first` and `last`. It reports depth and breadth; it does not find missing days. */
+        /** @description What history we hold across a whole PARK, returned by /history/coverage when the entity is a PARK. Its names map to the single-entity document: `fields` is `kinds`, and each `from` and `newest` is a `first` and `last`. It reports depth and breadth, and `knownGaps` lists the verified windows where nothing was observed; it does not search for other missing days. */
         HistoryParkCoverageDocument: {
             id: string;
             name: string;
@@ -690,6 +752,8 @@ export interface components {
             };
             /** @description Every entity of the park history is held for. */
             entities: components["schemas"]["HistoryParkCoverageEntity"][];
+            /** @description Known archive gaps overlapping what this park has recorded. Empty when none apply. */
+            knownGaps: components["schemas"]["HistoryKnownGap"][];
         };
         /** @description One entity we hold history for. Entities with none (often parades, shows and lands) are absent. */
         HistoryParkCoverageEntity: {
@@ -985,6 +1049,92 @@ export interface components {
          * @enum {string}
          */
         SchedulePriceType: "ADMISSION" | "PACKAGE" | "ATTRACTION";
+        /** @description 400: the search term or a parameter was refused before any search ran: `q` missing, shorter than 3 letters or digits (2 for Chinese, Japanese and Korean), over 100 characters or over the word limit; `types` not a comma-separated list of entity types; `limit` outside 1 to 25; `parkId` or `destinationId` not a UUID; or a parameter the endpoint does not take. Fix the request: retrying it unchanged gets the same answer. */
+        SearchInvalidQuery: {
+            /**
+             * @description Always false.
+             * @enum {boolean}
+             */
+            success: false;
+            error: {
+                /** @enum {string} */
+                type: "Bad request";
+                /** @description Starts with "Validation failed: " and names each parameter that was refused and why, e.g. "q: Search term needs at least 3 letters or digits" or "parkId: parkId must be a UUID". */
+                message: string;
+                /**
+                 * @description Repeats the HTTP status.
+                 * @enum {integer}
+                 */
+                code?: 400;
+                /** @description One object per refused parameter. Each has a `message` and a `path` naming the parameter; its other fields are validation diagnostics and may change. */
+                details?: {
+                    [key: string]: unknown;
+                }[];
+            };
+        };
+        /** @description Response for GET /v1/search. */
+        SearchResponse: {
+            /** @description The search term, as received and trimmed. */
+            query: string;
+            /** @description Matches, best first. Empty when nothing matches. */
+            results: components["schemas"]["SearchResult"][];
+            /** @description True when more matched than were returned. Narrow the search with a longer term, types, parkId or destinationId. */
+            hasMore: boolean;
+        };
+        /** @description One match. Many rides share a name: tell them apart by park and destination, and rides from shows and restaurants by entityType. */
+        SearchResult: {
+            /** @description Entity id. Use it with GET /v1/entity/{id}, /live, /children and /schedule. A park and the destination it belongs to often share a name: use the PARK id for that park's waits and hours. */
+            id: string;
+            /** @description Entity name. */
+            name: string;
+            entityType: components["schemas"]["EntityType"];
+            /** @description Kind of attraction, so a ride can be told from a meet-and-greet or a parade. Null unless entityType is ATTRACTION, or when the kind is not recorded. */
+            attractionType?: components["schemas"]["AttractionType"] | null;
+            /**
+             * @description How the name matched. EXACT: the same name. PREFIX: the name starts with the term. WORD: a word, or every word, of the name starts with the term. CONTAINS: the term appears inside the name. FUZZY: close to a name, with typos forgiven. Results are ordered best first.
+             * @enum {string}
+             */
+            match: "EXACT" | "PREFIX" | "WORD" | "CONTAINS" | "FUZZY";
+            location?: components["schemas"]["EntityLocation"];
+            /** @description The park it is in. Null for a destination, a park, and anything not inside a park, such as a resort restaurant. */
+            park?: components["schemas"]["SearchResultRef"] | null;
+            /** @description The destination it is in, and where that is. For a destination, itself. */
+            destination?: components["schemas"]["SearchResultDestination"] | null;
+        };
+        /** @description A destination, by id and name, and where in the world it is. */
+        SearchResultDestination: {
+            /** @description Entity id. */
+            id: string;
+            /** @description Entity name. */
+            name: string;
+            /** @description ISO 3166-1 alpha-2 country code, for example US or GB. Hong Kong is HK and Macau is MO, never CN. Null until the destination has been placed. */
+            country: string | null;
+            /** @description State, province or nation in English, for example Florida or England. Never a county. Null where the country is no bigger than a region (HK, MO, SG), and until the destination has been placed. */
+            region: string | null;
+        };
+        /** @description A park or destination, by id and name. */
+        SearchResultRef: {
+            /** @description Entity id. */
+            id: string;
+            /** @description Entity name. */
+            name: string;
+        };
+        /** @description 503: search is busy, took too long, or has been switched off. Never cached. Wait the Retry-After header's number of seconds (2 when busy, 5 after a timeout, 60 when switched off), then retry once. */
+        SearchUnavailable: {
+            /**
+             * @description Always false.
+             * @enum {boolean}
+             */
+            success: false;
+            error: {
+                /** @enum {string} */
+                type: "Server error";
+                /** @description "Search is busy, try again shortly" or "Search is temporarily unavailable". */
+                message: string;
+                /** @enum {integer} */
+                code?: 503;
+            };
+        };
         /** @description Your plan and what is left of it. `rateLimit` is the request limit every call counts against, this one included. `historyRateLimit` is the hourly budget the history calls count against; reading it here does not spend it. Figures are per account, so every key on one account reports the same. */
         V1Me: {
             /** @description Your plan, e.g. "free", "pro", "business", "enterprise". */
@@ -1498,6 +1648,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanUnavailable"];
+                };
+            };
+        };
+    };
+    searchByName: {
+        parameters: {
+            query: {
+                /** @description What to look for: part of a name, in any case, with or without accents, apostrophes or punctuation. At least 3 letters or digits (2 for Chinese, Japanese or Korean), at most 100 characters and 6 words. Small typos are forgiven. */
+                q: string;
+                /** @description Only return these entity types, comma-separated: DESTINATION, PARK, ATTRACTION, SHOW, RESTAURANT, HOTEL. Default is all of them. */
+                types?: string;
+                /** @description How many results to return, 1 to 25. Default 10. */
+                limit?: number;
+                /** @description Only return things inside this park (the id of a PARK entity). */
+                parkId?: string;
+                /** @description Only return things inside this destination (the id of a DESTINATION entity). */
+                destinationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchInvalidQuery"];
+                };
+            };
+            /** @description Too many requests. Wait `retryAfter` seconds (also the Retry-After header). */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateLimited"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchUnavailable"];
                 };
             };
         };

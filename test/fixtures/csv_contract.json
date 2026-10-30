@@ -11,7 +11,7 @@
     "SDK, copy this file to both repos, and expect both suites to fail until they",
     "agree."
   ],
-  "fingerprint": "1b6ea478049dc7ca",
+  "fingerprint": "8cbd164fcfb9698c",
   "columns": [
     "parkId",
     "parkName",
@@ -36,6 +36,8 @@
     "singleRiderMax",
     "extremeWaitsStandby",
     "extremeWaitsSingleRider",
+    "implausibleWaitsStandby",
+    "implausibleWaitsSingleRider",
     "showCount",
     "inParkHoursScheduledMinutes",
     "inParkHoursOperatingMinutes",
@@ -53,6 +55,8 @@
     "inParkHoursSingleRiderMax",
     "inParkHoursExtremeWaitsStandby",
     "inParkHoursExtremeWaitsSingleRider",
+    "inParkHoursImplausibleWaitsStandby",
+    "inParkHoursImplausibleWaitsSingleRider",
     "changes"
   ]
 }
