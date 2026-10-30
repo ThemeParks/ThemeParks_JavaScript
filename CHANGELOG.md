@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`themeparks-backfill` writes four more columns:** `implausibleWaitsStandby`,
+  `implausibleWaitsSingleRider`, `inParkHoursImplausibleWaitsStandby` and
+  `inParkHoursImplausibleWaitsSingleRider`. They count wait readings above the
+  destination's plausibility ceiling (600 minutes, or 300 at the destinations the
+  history notes list), which the API leaves out of the day's statistics. The cells
+  are empty on a day with none, as `extremeWaits*` are. The two standby and
+  single-rider pairs sit after `extremeWaitsSingleRider` and after
+  `inParkHoursExtremeWaitsSingleRider`, so the columns after them move right. A
+  file started by an earlier version is refused on resume instead of being
+  extended under a shifted header: finish it with that version or start a new
+  file. The Python and JavaScript SDKs write the same 45 columns.
+
 ## [8.4.0] - 2026-09-29
 
 A minor release: the additions below are backwards
