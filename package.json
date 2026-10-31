@@ -52,12 +52,12 @@
     "eslint": "^10.10.0",
     "openapi-typescript": "^7.0.0",
     "prettier": "^3.2.0",
-    "tsup": "^8.0.0",
+    "tsup": "^9.0.0",
     "tsx": "^4.7.0",
     "typedoc": "^0.28.19",
     "typedoc-plugin-markdown": "^4.11.0",
-    "typescript": "^5.4.0",
-    "vitest": "^4.1.11",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5",
     "yaml": "^2.5.0"
   }
 }
