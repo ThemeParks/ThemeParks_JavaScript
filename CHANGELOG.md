@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [9.0.0] - 2026-10-30
+
+A major version because **the CSV header changed**: four columns were added in the
+middle of it, so a reader that takes columns by position gets the wrong ones
+rather than an error. Read by name. The library API is backward compatible. The
+schema is regenerated from the current spec.
 
 ### Added
 
